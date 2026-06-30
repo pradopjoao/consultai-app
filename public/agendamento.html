@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Consultaí — Agendamento</title>
+<style>
+  :root{--teal:#15A39A;--teal-deep:#0C4A52;--ink:#14333A;--coral:#FF6B4A;--soft:#F1FBF9;--mut:#5C7178;--line:#E3EFEC}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+  body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#dfeae8;display:flex;justify-content:center;min-height:100vh}
+  .app{width:100%;max-width:460px;background:var(--soft);min-height:100vh;display:flex;flex-direction:column;box-shadow:0 0 40px rgba(12,74,82,.12);position:relative}
+  .top{background:linear-gradient(135deg,var(--teal),var(--teal-deep));color:#fff;padding:16px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
+  .top svg{width:40px;height:40px;flex:none}
+  .top .w{font-size:22px;font-weight:800;letter-spacing:-.5px}.top .w .d{color:#FF8A6E}
+  .top .sub{font-size:12px;opacity:.85;margin-top:1px}
+  .prog{height:5px;background:#e7f1ee}.prog>i{display:block;height:100%;width:33%;background:var(--coral);transition:width .4s}
+  .stepname{font-size:11px;color:var(--mut);padding:8px 18px 0;text-transform:uppercase;letter-spacing:1.5px;font-weight:700}
+  .chat{flex:1;padding:14px 16px 130px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+  .msg{max-width:88%;padding:12px 14px;border-radius:16px;font-size:15px;line-height:1.45;animation:pop .25s}
+  .bot{background:#fff;color:var(--ink);border:1px solid var(--line);border-bottom-left-radius:5px;align-self:flex-start}
+  .me{background:var(--teal);color:#fff;border-bottom-right-radius:5px;align-self:flex-end}
+  .bot b{color:var(--teal-deep)}
+  @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-self:stretch;margin-top:2px}
+  .opt{background:#fff;border:1.5px solid var(--line);color:var(--teal-deep);padding:12px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+  .opt:hover{border-color:var(--teal);background:#f0faf8}
+  .form{align-self:stretch;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .form label{font-size:12px;font-weight:700;color:var(--mut)}
+  .form input,.form select{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:15px}
+  .form input:focus{outline:none;border-color:var(--teal)}
+  .bar{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;background:linear-gradient(0deg,var(--soft) 70%,transparent)}
+  .btn{width:100%;background:var(--teal-deep);color:#fff;border:none;padding:16px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer}
+  .btn:disabled{opacity:.5}.btn.coral{background:var(--coral)}
+  .pixbox{background:#fff;border:1px dashed var(--teal);border-radius:14px;padding:16px;text-align:center;align-self:stretch}
+  .pixbox img{width:190px;height:190px;margin:6px auto}
+  .pixbox .v{font-size:26px;font-weight:800;color:var(--teal-deep)}
+  .code{font-family:monospace;font-size:11px;background:var(--soft);padding:8px;border-radius:8px;margin-top:8px;word-break:break-all;color:var(--mut)}
+  .copy{margin-top:8px;background:var(--teal);color:#fff;border:none;padding:9px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+  .ok{align-self:stretch;background:#EAF7F4;border:1px solid #BfE4dd;border-radius:14px;padding:16px;color:var(--teal-deep)}
+  .ok b{display:block;font-size:17px;margin-bottom:4px}
+  .foot{font-size:10.5px;color:#9AAEB3;text-align:center;padding:6px 16px 0}
+  .typing{font-size:13px;color:var(--mut);font-style:italic;align-self:flex-start;padding-left:6px}
+  .err{align-self:stretch;background:#FCEDE9;border:1px solid #f3c9bd;color:#9a2a12;border-radius:12px;padding:12px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <svg viewBox="0 0 120 120"><rect x="14" y="16" width="92" height="74" rx="22" fill="#fff"/><path d="M34 86 L34 104 L52 86 Z" fill="#fff"/><polyline points="26,55 45,55 54,38 64,72 73,55 96,55" fill="none" stroke="#0C4A52" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="99" cy="27" r="16" fill="#FF6B4A"/><path d="M99 19 v16 M91 27 h16" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>
+    <div><div class="w">Consult<span class="d">aí</span></div><div class="sub">Agendamento de consulta online</div></div>
+  </div>
+  <div class="prog"><i id="bar"></i></div>
+  <div class="stepname" id="stepname">Passo 1 de 3 · Horário</div>
+  <div class="chat" id="chat"></div>
+  <div class="bar" id="actionbar"></div>
+</div>
+
+<script>
+/* ===== CONFIG =====
+   DEMO=true  -> roda com dados de exemplo (para pré-visualizar sem backend).
+   DEMO=false -> usa o backend real (mesmo domínio em /api/...). */
+const DEMO = false;
+const API = '';  // vazio = mesmo domínio. Ex.: 'https://api.consultai.app.br'
+
+const state = { date:null, time:null, codigoHorario:null, paciente:{} };
+const slotsByDate = {};
+const chat = document.getElementById('chat');
+const bar = document.getElementById('bar');
+const actionbar = document.getElementById('actionbar');
+const stepname = document.getElementById('stepname');
+const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function setStep(p,l){bar.style.width=p+'%';stepname.textContent=l;}
+function scroll(){chat.scrollTop=chat.scrollHeight;}
+function bot(h){const d=document.createElement('div');d.className='msg bot';d.innerHTML=h;chat.appendChild(d);scroll();return d;}
+function me(t){const d=document.createElement('div');d.className='msg me';d.textContent=t;chat.appendChild(d);scroll();}
+function err(t){const d=document.createElement('div');d.className='err';d.textContent=t;chat.appendChild(d);scroll();}
+function clearBar(){actionbar.innerHTML='';}
+function typing(then){const t=document.createElement('div');t.className='typing';t.textContent='Assistente está digitando…';chat.appendChild(t);scroll();setTimeout(()=>{t.remove();then();},600);}
+function hoje(){return new Date().toISOString().slice(0,10);}
+function rotulo(iso){const [y,m,d]=iso.split('-').map(Number);const dt=new Date(y,m-1,d);return DIAS[dt.getDay()]+' '+String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0');}
+
+async function api(path,opts){
+  const r=await fetch(API+path,opts);
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||j.ok===false) throw new Error(j.erro||('Erro '+r.status));
+  return j;
+}
+
+/* ----- carregar horários ----- */
+async function carregarSlots(){
+  if(DEMO){
+    const base=new Date(); const add=(n)=>{const d=new Date(base);d.setDate(base.getDate()+n);return d.toISOString().slice(0,10);};
+    [0,1,3,6].forEach((n,i)=>{slotsByDate[add(n)]=[{horario:'09:20',codigoHorario:100+i},{horario:'14:10',codigoHorario:200+i},{horario:'18:05',codigoHorario:300+i}];});
+    return;
+  }
+  const j=await api('/api/horarios?dataInicial='+hoje()+'&dias=14');
+  (j.slots||[]).forEach(s=>{ if(!s.data||!s.horario) return; (slotsByDate[s.data]=slotsByDate[s.data]||[]).push({horario:s.horario,codigoHorario:s.codigoHorario}); });
+}
+
+/* ----- fluxo ----- */
+function start(){
+  setStep(33,'Passo 1 de 3 · Horário');
+  bot('Oi! 👋 Sou o assistente da <b>Consultaí</b>. Vou te ajudar a marcar sua <b>consulta médica online</b> em menos de 1 minuto.');
+  typing(async ()=>{
+    bot('A consulta custa <b>R$ 40</b> (Pix), é por vídeo e dura cerca de 10–15 min. Vou ver os horários livres…');
+    try{
+      await carregarSlots();
+      const datas=Object.keys(slotsByDate).sort();
+      if(!datas.length){ bot('No momento não há horários abertos. Tente novamente mais tarde 🙏'); return; }
+      bot('Para que dia você prefere?');
+      askDate(datas);
+    }catch(e){ err('Não consegui carregar os horários agora ('+e.message+'). Tente recarregar a página.'); }
+  });
+}
+function askDate(datas){
+  const grid=document.createElement('div');grid.className='opts';
+  datas.forEach(iso=>{const b=document.createElement('button');b.className='opt';b.textContent=rotulo(iso);
+    b.onclick=()=>{state.date=iso;me(rotulo(iso));grid.remove();chooseTime();};grid.appendChild(b);});
+  chat.appendChild(grid);scroll();
+}
+function chooseTime(){
+  typing(()=>{
+    bot('Horários livres para <b>'+rotulo(state.date)+'</b>:');
+    const grid=document.createElement('div');grid.className='opts';
+    (slotsByDate[state.date]||[]).forEach(s=>{const b=document.createElement('button');b.className='opt';b.textContent=s.horario;
+      b.onclick=()=>{state.time=s.horario;state.codigoHorario=s.codigoHorario;me(s.horario+'h');grid.remove();identify();};grid.appendChild(b);});
+    chat.appendChild(grid);scroll();
+  });
+}
+function identify(){
+  setStep(66,'Passo 2 de 3 · Identificação');
+  typing(()=>{
+    bot('Boa! Reservei <b>'+rotulo(state.date)+' às '+state.time+'h</b>. Agora seus dados para o cadastro:');
+    const f=document.createElement('div');f.className='form';
+    f.innerHTML=`
+      <div><label>Nome completo</label><input id="f_nome" placeholder="Seu nome"></div>
+      <div><label>CPF</label><input id="f_cpf" inputmode="numeric" placeholder="000.000.000-00"></div>
+      <div><label>Celular (WhatsApp)</label><input id="f_tel" inputmode="numeric" placeholder="(11) 90000-0000"></div>
+      <div><label>E-mail</label><input id="f_email" type="email" placeholder="voce@email.com"></div>
+      <div><label>Data de nascimento</label><input id="f_nasc" placeholder="dd/mm/aaaa"></div>
+      <div><label>Sexo</label><select id="f_sexo"><option value="">Selecione</option><option value="F">Feminino</option><option value="M">Masculino</option></select></div>`;
+    chat.appendChild(f);scroll();
+    clearBar();
+    const btn=document.createElement('button');btn.className='btn';btn.textContent='Continuar para pagamento →';
+    btn.onclick=()=>{
+      const g=id=>document.getElementById(id).value.trim();
+      const nasc=g('f_nasc'); const [d,m,a]=nasc.split('/');
+      const p={nome:g('f_nome'),telefone:g('f_tel'),email:g('f_email'),dataNascimento:(a&&m&&d)?`${a}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`:'',sexo:g('f_sexo')};
+      if(!p.nome||!p.email||!p.sexo||!p.dataNascimento){ alert('Preencha nome, e-mail, nascimento e sexo.'); return; }
+      state.paciente=p;me(p.nome);clearBar();payment();
+    };
+    actionbar.appendChild(btn);
+  });
+}
+async function payment(){
+  setStep(100,'Passo 3 de 3 · Pagamento');
+  typing(async ()=>{
+    bot('Falta só o pagamento da consulta — <b>R$ 40 no Pix</b>, aprovação na hora:');
+    try{
+      let pay;
+      if(DEMO){ pay={paymentId:'DEMO123',copiaECola:'00020126...CONSULTAI-PIX-DEMO...5802BR',qrBase64:null}; }
+      else{
+        const r=await api('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({...state.paciente,data:state.date,horario:state.time,codigoHorario:state.codigoHorario})});
+        pay=r;
+      }
+      const box=document.createElement('div');box.className='pixbox';
+      box.innerHTML='<div class="v">R$ 40,00</div><div style="font-size:13px;color:var(--mut)">Pix • aprovação imediata</div>'+
+        (pay.qrBase64?('<img alt="QR Code Pix" src="data:image/png;base64,'+pay.qrBase64+'">'):'')+
+        '<div class="code">'+(pay.copiaECola||'')+'</div>'+
+        '<button class="copy" id="cp">Copiar código Pix</button>';
+      chat.appendChild(box);scroll();
+      document.getElementById('cp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(pay.copiaECola||'');document.getElementById('cp').textContent='Copiado ✓';};
+      clearBar();
+      const btn=document.createElement('button');btn.className='btn coral';btn.textContent= DEMO?'Simular pagamento':'Já paguei';
+      btn.onclick=()=>{ btn.disabled=true;btn.textContent='Confirmando…'; aguardarPagamento(pay.paymentId,btn); };
+      actionbar.appendChild(btn);
+      if(!DEMO) iniciarPolling(pay.paymentId);
+    }catch(e){ err('Não consegui gerar o Pix ('+e.message+'). Tente novamente.'); }
+  });
+}
+let pollTimer=null;
+function iniciarPolling(id){ pollTimer=setInterval(()=>checarStatus(id),5000); }
+async function checarStatus(id){
+  try{ const j=await api('/api/checkout/'+id); if(j.status==='approved'){ clearInterval(pollTimer); concluir(j.protocolo); } }catch(e){}
+}
+async function aguardarPagamento(id,btn){
+  if(DEMO){ setTimeout(()=>concluir('CS-DEMO'),900); return; }
+  try{ const j=await api('/api/checkout/'+id); if(j.status==='approved'){ clearInterval(pollTimer); concluir(j.protocolo); } else { btn.disabled=false;btn.textContent='Ainda não caiu — verificar de novo'; } }
+  catch(e){ btn.disabled=false;btn.textContent='Tentar de novo'; }
+}
+function concluir(protocolo){
+  clearBar();
+  typing(()=>{
+    const ok=document.createElement('div');ok.className='ok';
+    ok.innerHTML='<b>Consulta confirmada! 🎉</b>'+(state.paciente.nome||'')+', sua consulta é <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>Enviaremos o link da videochamada no seu WhatsApp.'+(protocolo?(' Protocolo: <b>'+protocolo+'</b>.'):'');
+    chat.appendChild(ok);
+    bot('Receita ou atestado serão emitidos pelo médico <b>se indicados</b> na consulta, com assinatura digital válida em todo o Brasil. Até já! 👩‍⚕️');
+    const foot=document.createElement('div');foot.className='foot';foot.textContent='Consultaí · Telemedicina conforme a Resolução CFM nº 2.314/2022';
+    chat.appendChild(foot);scroll();
+  });
+}
+
+start();
+</script>
+</body>
+</html>
