@@ -26,6 +26,7 @@
   .opt:hover{border-color:var(--teal);background:#f0faf8}
   .form{align-self:stretch;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
   .form label{font-size:12px;font-weight:700;color:var(--mut)}
+  .req{color:var(--coral);font-weight:800}
   .form input,.form select{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:15px}
   .form input:focus{outline:none;border-color:var(--teal)}
   .bar{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;background:linear-gradient(0deg,var(--soft) 70%,transparent)}
@@ -79,6 +80,10 @@ function err(t){const d=document.createElement('div');d.className='err';d.textCo
 function clearBar(){actionbar.innerHTML='';}
 function typing(then){const t=document.createElement('div');t.className='typing';t.textContent='Assistente está digitando…';chat.appendChild(t);scroll();setTimeout(()=>{t.remove();then();},600);}
 function hoje(){return new Date().toISOString().slice(0,10);}
+function soDigitos(v){return (v||'').replace(/\D/g,'');}
+function maskCPF(v){v=soDigitos(v).slice(0,11);return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');}
+function maskTel(v){v=soDigitos(v).slice(0,11);if(v.length>10)return v.replace(/(\d{2})(\d{5})(\d{1,4})/,'($1) $2-$3');if(v.length>6)return v.replace(/(\d{2})(\d{4})(\d{1,4})/,'($1) $2-$3');if(v.length>2)return v.replace(/(\d{2})(\d{1,5})/,'($1) $2');return v.replace(/(\d{1,2})/,'($1');}
+function maskData(v){v=soDigitos(v).slice(0,8);if(v.length>4)return v.replace(/(\d{2})(\d{2})(\d{1,4})/,'$1/$2/$3');if(v.length>2)return v.replace(/(\d{2})(\d{1,2})/,'$1/$2');return v;}
 function rotulo(iso){const [y,m,d]=iso.split('-').map(Number);const dt=new Date(y,m-1,d);return DIAS[dt.getDay()]+' '+String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0');}
 
 async function api(path,opts){
@@ -135,20 +140,27 @@ function identify(){
     bot('Boa! Reservei <b>'+rotulo(state.date)+' às '+state.time+'h</b>. Agora seus dados para o cadastro:');
     const f=document.createElement('div');f.className='form';
     f.innerHTML=`
-      <div><label>Nome completo</label><input id="f_nome" placeholder="Seu nome"></div>
-      <div><label>CPF</label><input id="f_cpf" inputmode="numeric" placeholder="000.000.000-00"></div>
-      <div><label>Celular (WhatsApp)</label><input id="f_tel" inputmode="numeric" placeholder="(11) 90000-0000"></div>
-      <div><label>E-mail</label><input id="f_email" type="email" placeholder="voce@email.com"></div>
-      <div><label>Data de nascimento</label><input id="f_nasc" placeholder="dd/mm/aaaa"></div>
-      <div><label>Sexo</label><select id="f_sexo"><option value="">Selecione</option><option value="F">Feminino</option><option value="M">Masculino</option></select></div>`;
+      <div><label>Nome completo <span class="req">*</span></label><input id="f_nome" placeholder="Seu nome"></div>
+      <div><label>CPF <span class="req">*</span></label><input id="f_cpf" inputmode="numeric" placeholder="000.000.000-00" oninput="this.value=maskCPF(this.value)"></div>
+      <div><label>Celular (WhatsApp) <span class="req">*</span></label><input id="f_tel" inputmode="numeric" placeholder="(11) 90000-0000" oninput="this.value=maskTel(this.value)"></div>
+      <div><label>E-mail <span class="req">*</span></label><input id="f_email" type="email" placeholder="voce@email.com"></div>
+      <div><label>Data de nascimento <span class="req">*</span></label><input id="f_nasc" inputmode="numeric" placeholder="dd/mm/aaaa" oninput="this.value=maskData(this.value)"></div>
+      <div><label>Sexo biológico <span class="req">*</span></label><select id="f_sexo"><option value="">Selecione</option><option value="F">Feminino</option><option value="M">Masculino</option></select></div>`;
     chat.appendChild(f);scroll();
     clearBar();
     const btn=document.createElement('button');btn.className='btn';btn.textContent='Continuar para pagamento →';
     btn.onclick=()=>{
       const g=id=>document.getElementById(id).value.trim();
       const nasc=g('f_nasc'); const [d,m,a]=nasc.split('/');
-      const p={nome:g('f_nome'),telefone:g('f_tel'),email:g('f_email'),dataNascimento:(a&&m&&d)?`${a}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`:'',sexo:g('f_sexo')};
-      if(!p.nome||!p.email||!p.sexo||!p.dataNascimento){ alert('Preencha nome, e-mail, nascimento e sexo.'); return; }
+      const cpfDig=soDigitos(g('f_cpf')); const telDig=soDigitos(g('f_tel'));
+      const p={nome:g('f_nome'),cpf:g('f_cpf'),telefone:g('f_tel'),email:g('f_email'),
+        dataNascimento:(a&&m&&a.length===4)?`${a}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`:'',sexo:g('f_sexo')};
+      if(!p.nome){ alert('Informe seu nome completo.'); return; }
+      if(cpfDig.length!==11){ alert('Informe um CPF válido (11 números).'); return; }
+      if(telDig.length<10){ alert('Informe um celular válido com DDD.'); return; }
+      if(!/^\S+@\S+\.\S+$/.test(p.email)){ alert('Informe um e-mail válido.'); return; }
+      if(!p.dataNascimento){ alert('Informe a data de nascimento no formato dd/mm/aaaa.'); return; }
+      if(!p.sexo){ alert('Selecione uma opção no campo Sexo.'); return; }
       state.paciente=p;me(p.nome);clearBar();payment();
     };
     actionbar.appendChild(btn);
