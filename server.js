@@ -42,7 +42,52 @@ const {
   MP_ACCESS_TOKEN,
   PRECO = '40',
   PORT = 3000,
+  NOTIF_EMAIL_USER = '',   // Gmail que ENVIA o aviso (ex.: seuemail@gmail.com)
+  NOTIF_EMAIL_PASS = '',   // senha de app do Gmail (16 letras, sem espaços)
+  NOTIF_EMAIL_TO = '',     // quem RECEBE o aviso (se vazio, usa o próprio NOTIF_EMAIL_USER)
 } = process.env;
+
+/* ------------------- Aviso por e-mail (nova consulta) ------------------- */
+const nodemailer = require('nodemailer');
+const mailer = (NOTIF_EMAIL_USER && NOTIF_EMAIL_PASS)
+  ? nodemailer.createTransport({ service: 'gmail', auth: { user: NOTIF_EMAIL_USER, pass: NOTIF_EMAIL_PASS } })
+  : null;
+
+async function avisarNovaConsulta(p, protocolo, paymentId) {
+  if (!mailer) { console.log('[email] aviso não configurado (defina NOTIF_EMAIL_USER e NOTIF_EMAIL_PASS)'); return; }
+  const [y, m, d] = String(p.slot.data).split('-');
+  const dataBR = d + '/' + m + '/' + y;
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;border:1px solid #E3EFEC;border-radius:12px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#15A39A,#0C4A52);color:#fff;padding:18px 22px">
+        <h2 style="margin:0;font-size:20px">🩺 Nova consulta confirmada!</h2>
+      </div>
+      <div style="padding:22px;color:#14333A;font-size:15px;line-height:1.7">
+        <p style="margin:0 0 14px"><b>${p.paciente.nome || '—'}</b> pagou e agendou:</p>
+        <table style="border-collapse:collapse;width:100%;font-size:15px">
+          <tr><td style="padding:6px 0;color:#5C7178">📅 Data</td><td><b>${dataBR}</b></td></tr>
+          <tr><td style="padding:6px 0;color:#5C7178">🕐 Horário</td><td><b>${p.slot.horario}</b></td></tr>
+          <tr><td style="padding:6px 0;color:#5C7178">📱 WhatsApp</td><td>${p.paciente.telefone || '—'}</td></tr>
+          <tr><td style="padding:6px 0;color:#5C7178">✉️ E-mail</td><td>${p.paciente.email || '—'}</td></tr>
+          <tr><td style="padding:6px 0;color:#5C7178">🎂 Nascimento</td><td>${p.paciente.dataNascimento || '—'}</td></tr>
+          <tr><td style="padding:6px 0;color:#5C7178">📋 Protocolo</td><td>${protocolo}</td></tr>
+          <tr><td style="padding:6px 0;color:#5C7178">💳 Pagamento MP</td><td>${paymentId}</td></tr>
+        </table>
+        <p style="margin:16px 0 0;color:#5C7178;font-size:13px">A consulta já está na agenda do Shosp. Lembre de enviar o link da videochamada no WhatsApp do paciente.</p>
+      </div>
+    </div>`;
+  try {
+    await mailer.sendMail({
+      from: '"Consultaí" <' + NOTIF_EMAIL_USER + '>',
+      to: NOTIF_EMAIL_TO || NOTIF_EMAIL_USER,
+      subject: '🩺 Nova consulta: ' + dataBR + ' às ' + p.slot.horario + ' — ' + (p.paciente.nome || 'paciente'),
+      html,
+    });
+    console.log('[email] aviso de nova consulta enviado (' + dataBR + ' ' + p.slot.horario + ')');
+  } catch (e) {
+    console.error('[email] falha ao enviar aviso: ' + e.message);
+  }
+}
 
 // Reserva temporária dos dados do paciente até o Pix ser confirmado.
 // (em memória — para MVP. Em produção, troque por um banco de dados.)
@@ -261,6 +306,7 @@ async function efetivarAgendamento(paymentId) {
                 (r && (r.protocolo || r.codigo || r.id)) || ('CS-' + paymentId);
   pendentes.set(String(paymentId), p);
   console.log('[agenda] ✔ consulta agendada — ' + p.slot.data + ' ' + p.slot.horario + ' — ' + (p.paciente.nome || '') + ' — protocolo ' + p.protocolo);
+  avisarNovaConsulta(p, p.protocolo, paymentId); // e-mail em segundo plano (não trava a resposta)
   return { agendado: true, protocolo: p.protocolo };
 }
 
@@ -337,42 +383,15 @@ app.post('/api/webhook', async (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ ok: true, servico: 'consultai-backend' }));
 
-/* Rota TEMPORÁRIA de diagnóstico (remover depois que tudo estiver ok):
-   agenda um paciente de TESTE no último horário livre e cancela em seguida. */
-app.get('/api/diag-agenda-7k2p9', async (req, res) => {
-  const out = { passos: [] };
-  try {
-    const hoje = new Date().toISOString().slice(0, 10);
-    const ag = await shosp('/agenda/get/', {
-      codigoUnidade: COD_UNIDADE, codigoPrestador: COD_PRESTADOR,
-      dataInicial: hoje, diasMostrar: '14',
-    });
-    const slots = normalizarHorarios(ag);
-    const slot = slots[slots.length - 1];
-    if (!slot) throw new Error('nenhum horário livre para testar');
-    out.passos.push({ leitura: 'ok', totalSlots: slots.length, slotTeste: slot });
-    // Usa o MESMO motor da produção (inclui o tratamento de "paciente já cadastrado")
-    const r = await agendarNoShosp({
-      paciente: { nome: 'TESTE CONSULTAI - PODE EXCLUIR', telefone: '(11) 90000-0000',
-        email: 'teste@consultai.invalid', dataNascimento: '1990-01-01', sexo: 'M' },
-      slot: slot,
-    }, 'diagnóstico');
-    out.passos.push({ agendamentoTeste: r });
-    const cod = r && r.dados && r.dados.codigoAgendamento;
-    if (cod) {
-      try {
-        const c = await shosp('/agenda/cancelaragendamento', { codigoAgendamento: cod });
-        out.passos.push({ cancelamento: c });
-      } catch (e) {
-        out.passos.push({ cancelamentoFalhou: e.message, aviso: 'exclua manualmente o TESTE CONSULTAI da agenda' });
-      }
-    }
-    out.ok = true;
-  } catch (e) {
-    out.ok = false; out.erro = e.message;
-  }
-  res.json(out);
-});
+/* Despertador anti-cochilo: no plano gratuito o Render "dorme" após ~15 min
+   sem visitas (e o 1º acesso demora 50s+). Este auto-ping a cada 10 min
+   mantém o serviço acordado. */
+if (process.env.RENDER_EXTERNAL_URL) {
+  setInterval(() => {
+    fetch(process.env.RENDER_EXTERNAL_URL + '/api/health').catch(() => {});
+  }, 10 * 60 * 1000);
+  console.log('[despertador] auto-ping ativado a cada 10 min → ' + process.env.RENDER_EXTERNAL_URL);
+}
 
 // Página 404 personalizada (qualquer rota que não exista)
 app.use((req, res) => {
