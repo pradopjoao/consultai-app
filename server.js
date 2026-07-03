@@ -69,29 +69,53 @@ async function enviarEmail(para, assunto, html) {
 
 function dataBR(iso) { const [y, m, d] = String(iso).split('-'); return d + '/' + m + '/' + y; }
 
+/* Moldura padrão dos e-mails — identidade visual da Consultaí */
+const LOGO_URL = 'https://vemconsultai.com.br/apple-touch-icon.png';
+function emailShell(headline, corpo, corHeader) {
+  return `
+  <div style="background:#F1FBF9;padding:26px 12px;font-family:Arial,Helvetica,sans-serif">
+    <div style="max-width:540px;margin:0 auto;background:#ffffff;border:1px solid #E3EFEC;border-radius:16px;overflow:hidden">
+      <div style="background:${corHeader || '#0C4A52'};padding:22px 26px">
+        <table cellpadding="0" cellspacing="0" border="0"><tr>
+          <td><img src="${LOGO_URL}" width="42" height="42" alt="Consultaí" style="border-radius:10px;display:block"></td>
+          <td style="padding-left:12px;color:#ffffff;font-size:23px;font-weight:bold;letter-spacing:-.5px">Consult<span style="color:#FF8A6E">aí</span></td>
+        </tr></table>
+        <h2 style="margin:18px 0 0;color:#ffffff;font-size:21px;line-height:1.3">${headline}</h2>
+      </div>
+      <div style="padding:26px;color:#14333A;font-size:15px;line-height:1.7">${corpo}</div>
+      <div style="background:#F1FBF9;border-top:1px solid #E3EFEC;padding:16px 26px;color:#5C7178;font-size:12px;line-height:1.7">
+        <b style="color:#0C4A52">Consultaí</b> · uma iniciativa Octa Health<br>
+        Consulta médica online por R$ 40 · <a href="https://vemconsultai.com.br" style="color:#15A39A;text-decoration:none">vemconsultai.com.br</a><br>
+        Telemedicina conforme a Resolução CFM nº 2.314/2022
+      </div>
+    </div>
+  </div>`;
+}
+
+function cardConsulta(p, protocolo) {
+  return `
+    <div style="background:#F1FBF9;border:1.5px solid #15A39A;border-radius:14px;padding:18px 22px;margin:16px 0;text-align:center">
+      <div style="font-size:13px;color:#5C7178;letter-spacing:1px;text-transform:uppercase">Sua consulta</div>
+      <div style="font-size:28px;font-weight:bold;color:#0C4A52;margin:6px 0">${dataBR(p.slot.data)} · ${p.slot.horario}</div>
+      <div style="font-size:14px;color:#14333A">👨‍⚕️ Dr. João Pedro Vieira do Prado — CRM-SP 281.239</div>
+      <div style="font-size:12px;color:#5C7178;margin-top:6px">Protocolo ${protocolo}</div>
+    </div>`;
+}
+
 async function avisarNovaConsulta(p, protocolo, paymentId) {
   const dt = dataBR(p.slot.data);
-  const html = `
-    <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;border:1px solid #E3EFEC;border-radius:12px;overflow:hidden">
-      <div style="background:linear-gradient(135deg,#15A39A,#0C4A52);color:#fff;padding:18px 22px">
-        <h2 style="margin:0;font-size:20px">🩺 Nova consulta confirmada!</h2>
-      </div>
-      <div style="padding:22px;color:#14333A;font-size:15px;line-height:1.7">
-        <p style="margin:0 0 14px"><b>${p.paciente.nome || '—'}</b> pagou e agendou:</p>
-        <table style="border-collapse:collapse;width:100%;font-size:15px">
-          <tr><td style="padding:6px 0;color:#5C7178">📅 Data</td><td><b>${dt}</b></td></tr>
-          <tr><td style="padding:6px 0;color:#5C7178">🕐 Horário</td><td><b>${p.slot.horario}</b></td></tr>
-          <tr><td style="padding:6px 0;color:#5C7178">📱 WhatsApp</td><td>${p.paciente.telefone || '—'}</td></tr>
-          <tr><td style="padding:6px 0;color:#5C7178">✉️ E-mail</td><td>${p.paciente.email || '—'}</td></tr>
-          <tr><td style="padding:6px 0;color:#5C7178">🎂 Nascimento</td><td>${p.paciente.dataNascimento || '—'}</td></tr>
-          <tr><td style="padding:6px 0;color:#5C7178">📋 Protocolo</td><td>${protocolo}</td></tr>
-          <tr><td style="padding:6px 0;color:#5C7178">💳 Pagamento MP</td><td>${paymentId}</td></tr>
-        </table>
-        <p style="margin:16px 0 0;color:#5C7178;font-size:13px">A consulta já está na agenda do Shosp. Lembre de enviar o link da videochamada no WhatsApp do paciente.</p>
-      </div>
-    </div>`;
+  const corpo = `
+    <p style="margin:0"><b>${p.paciente.nome || '—'}</b> pagou e agendou:</p>
+    ${cardConsulta(p, protocolo)}
+    <table style="border-collapse:collapse;width:100%;font-size:15px">
+      <tr><td style="padding:5px 0;color:#5C7178">📱 WhatsApp</td><td>${p.paciente.telefone || '—'}</td></tr>
+      <tr><td style="padding:5px 0;color:#5C7178">✉️ E-mail</td><td>${p.paciente.email || '—'}</td></tr>
+      <tr><td style="padding:5px 0;color:#5C7178">🎂 Nascimento</td><td>${p.paciente.dataNascimento || '—'}</td></tr>
+      <tr><td style="padding:5px 0;color:#5C7178">💳 Pagamento MP</td><td>${paymentId}</td></tr>
+    </table>
+    <p style="margin:16px 0 0;color:#5C7178;font-size:13px">Já está na agenda do Shosp. Abra a consulta e <b>confirme o paciente</b> para gerar o link da telemedicina.</p>`;
   try {
-    if (await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, '🩺 Nova consulta: ' + dt + ' às ' + p.slot.horario + ' — ' + (p.paciente.nome || 'paciente'), html)) {
+    if (await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, '🩺 Nova consulta: ' + dt + ' às ' + p.slot.horario + ' — ' + (p.paciente.nome || 'paciente'), emailShell('🩺 Nova consulta confirmada!', corpo))) {
       console.log('[email] aviso interno enviado (' + dt + ' ' + p.slot.horario + ')');
     }
   } catch (e) { console.error('[email] falha no aviso interno: ' + e.message); }
@@ -100,25 +124,14 @@ async function avisarNovaConsulta(p, protocolo, paymentId) {
 async function confirmarPaciente(p, protocolo) {
   if (!p.paciente.email) return;
   const dt = dataBR(p.slot.data);
-  const html = `
-    <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;border:1px solid #E3EFEC;border-radius:12px;overflow:hidden">
-      <div style="background:linear-gradient(135deg,#15A39A,#0C4A52);color:#fff;padding:18px 22px">
-        <h2 style="margin:0;font-size:20px">Consulta confirmada! 🎉</h2>
-      </div>
-      <div style="padding:22px;color:#14333A;font-size:15px;line-height:1.7">
-        <p style="margin:0 0 14px">Olá, <b>${(p.paciente.nome || '').split(' ')[0]}</b>! Seu pagamento foi aprovado e sua consulta está marcada:</p>
-        <table style="border-collapse:collapse;width:100%;font-size:15px">
-          <tr><td style="padding:6px 0;color:#5C7178">📅 Data</td><td><b>${dt}</b></td></tr>
-          <tr><td style="padding:6px 0;color:#5C7178">🕐 Horário</td><td><b>${p.slot.horario}</b></td></tr>
-          <tr><td style="padding:6px 0;color:#5C7178">👨‍⚕️ Médico</td><td>Dr. João Pedro Vieira do Prado — CRM-SP 281.239</td></tr>
-          <tr><td style="padding:6px 0;color:#5C7178">📋 Protocolo</td><td>${protocolo}</td></tr>
-        </table>
-        <p style="margin:16px 0 0">📱 O <b>link da videochamada</b> será enviado no seu WhatsApp pouco antes da consulta. Fique atento!</p>
-        <p style="margin:12px 0 0;color:#5C7178;font-size:13px">Precisa reagendar? Fale com a gente no WhatsApp: (11) 97654-4002.<br>Consultaí · uma iniciativa Octa Health · Telemedicina conforme Resolução CFM nº 2.314/2022</p>
-      </div>
-    </div>`;
+  const corpo = `
+    <p style="margin:0">Olá, <b>${(p.paciente.nome || '').split(' ')[0]}</b>! 👋 Seu pagamento foi aprovado e sua consulta está marcada.</p>
+    ${cardConsulta(p, protocolo)}
+    <p style="margin:0 0 10px">📱 O <b>link da videochamada</b> chega no seu WhatsApp pouco antes do horário. Fique de olho!</p>
+    <p style="margin:0 0 10px;color:#5C7178;font-size:14px">Dicas para a consulta: esteja num lugar tranquilo, com boa internet, e tenha em mãos seus exames ou receitas anteriores, se tiver.</p>
+    <p style="margin:0;color:#5C7178;font-size:13px">Precisa reagendar? É só chamar no WhatsApp <a href="https://wa.me/5511976544002" style="color:#15A39A;text-decoration:none"><b>(11) 97654-4002</b></a>.</p>`;
   try {
-    if (await enviarEmail(p.paciente.email, '✅ Consulta confirmada — ' + dt + ' às ' + p.slot.horario + ' | Consultaí', html)) {
+    if (await enviarEmail(p.paciente.email, '✅ Consulta confirmada — ' + dt + ' às ' + p.slot.horario + ' | Consultaí', emailShell('Consulta confirmada! 🎉', corpo))) {
       console.log('[email] confirmação enviada ao paciente ' + p.paciente.email);
     }
   } catch (e) { console.error('[email] falha na confirmação ao paciente: ' + e.message); }
@@ -285,6 +298,31 @@ async function mpStatus(id) {
   return (await mpGetPayment(id)).status; // pending | approved | rejected ...
 }
 
+/* Garante que o paciente existe no cadastro com a ficha completa (incl. celular).
+   Tenta cadastrar via POST /cadastro/paciente; se já existir, busca o código. */
+async function garantirPaciente(paciente) {
+  const form = {
+    nome: paciente.nome,
+    sexo: paciente.sexo,
+    dataNascimento: paciente.dataNascimento,
+    telefone: paciente.telefone,
+    celular: paciente.telefone, // o número do chatbot é celular — grava nos 2 campos
+    email: paciente.email,
+  };
+  if (paciente.cpf) form.cpf = String(paciente.cpf).replace(/\D/g, '');
+  try {
+    const r = await shosp('/cadastro/paciente', form);
+    console.log('[cadastro] resposta: ' + JSON.stringify(r).slice(0, 250));
+    if (r && r.ret === '1') {
+      const cod = acharCodigoPaciente(r, paciente);
+      if (cod != null) return cod;
+    }
+  } catch (e) {
+    console.log('[cadastro] criação falhou (' + String(e.message).slice(0, 120) + ') — buscando existente…');
+  }
+  return await buscarPaciente(paciente);
+}
+
 /* Motor de agendamento no Shosp — usado pela produção E pelo diagnóstico.
    Trata a recusa "paciente já cadastrado" buscando o codigoPaciente e reagendando. */
 async function agendarNoShosp(p, tag) {
@@ -305,6 +343,12 @@ async function agendarNoShosp(p, tag) {
   };
   if (p.paciente.cpf) form.cpf = String(p.paciente.cpf).replace(/\D/g, '');
   if (COD_ESPECIALIDADE) form.codigoEspecialidade = COD_ESPECIALIDADE;
+
+  // Cadastra/acha o paciente ANTES (ficha completa, com celular) e agenda pelo código
+  try {
+    const codPrevio = await garantirPaciente(p.paciente);
+    if (codPrevio != null) { form.codigoPaciente = codPrevio; console.log('[agenda] usando codigoPaciente ' + codPrevio); }
+  } catch (e) { console.log('[agenda] garantirPaciente falhou: ' + e.message); }
 
   console.log('[agenda] enviando ao Shosp (' + tag + '): ' + JSON.stringify(form));
   let r = await shosp('/agenda/', form);
@@ -483,18 +527,11 @@ async function enviarLembreteWhats(m, paymentId) {
   const msg = 'Olá, ' + primeiro + '! 👋 Aqui é o Dr. João Pedro, da Consultaí. Sua consulta por vídeo começa às '
     + m.horario + '. ' + (sala ? ('Entre na sala por este link: ' + sala) : 'Segue o link da nossa sala de vídeo: ');
   const wa = 'https://wa.me/' + tel55 + '?text=' + encodeURIComponent(msg);
-  const html = `
-    <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;border:1px solid #E3EFEC;border-radius:12px;overflow:hidden">
-      <div style="background:#FF6B4A;color:#fff;padding:18px 22px">
-        <h2 style="margin:0;font-size:20px">⏰ Consulta começando em ~10 minutos!</h2>
-      </div>
-      <div style="padding:22px;color:#14333A;font-size:15px;line-height:1.7">
-        <p style="margin:0 0 8px"><b>${m.nome || '—'}</b> · hoje às <b>${m.horario}</b> · 📱 ${m.telefone || '—'}</p>
-        <p style="margin:0 0 18px;color:#5C7178;font-size:13.5px">Toque no botão: o WhatsApp abre com a mensagem pronta pro paciente${sala ? ' (link da sala já incluído)' : ' — só colar o link da sala do Shosp'}.</p>
-        <a href="${wa}" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;font-weight:bold;padding:14px 26px;border-radius:10px;font-size:16px">📲 Enviar WhatsApp pro paciente</a>
-      </div>
-    </div>`;
-  await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, '⏰ Consulta em ~10 min: ' + m.horario + ' — ' + (m.nome || ''), html);
+  const corpo = `
+    <p style="margin:0 0 8px"><b>${m.nome || '—'}</b> · hoje às <b>${m.horario}</b> · 📱 ${m.telefone || '—'}</p>
+    <p style="margin:0 0 18px;color:#5C7178;font-size:13.5px">Toque no botão: o WhatsApp abre com a mensagem pronta pro paciente${sala ? ' (link da sala já incluído)' : ' — só colar o link da sala do Shosp'}.</p>
+    <a href="${wa}" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;font-weight:bold;padding:14px 26px;border-radius:10px;font-size:16px">📲 Enviar WhatsApp pro paciente</a>`;
+  await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, '⏰ Consulta em ~10 min: ' + m.horario + ' — ' + (m.nome || ''), emailShell('⏰ Consulta começando em ~10 minutos!', corpo, '#FF6B4A'));
   console.log('[lembrete] enviado — consulta ' + m.data + ' ' + m.horario + ' (pagamento ' + paymentId + ')');
 }
 
