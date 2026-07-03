@@ -178,38 +178,67 @@ function chooseTime(){
     chat.appendChild(grid);scroll();
   });
 }
+/* Memória do paciente no navegador (recorrência sem fricção) */
+const LS_KEY='consultai_paciente';
+function lerPacienteSalvo(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'null'); }catch(e){ return null; } }
+function salvarPaciente(p){ try{ localStorage.setItem(LS_KEY, JSON.stringify(p)); }catch(e){} }
+
 function identify(){
   setStep(66,'Passo 2 de 3 · Identificação');
   typing(()=>{
     bot('Boa! Reservei <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>👨‍⚕️ Sua consulta será com o <b>Dr. João Pedro Vieira do Prado</b> — CRM-SP 281.239.');
-    bot('Agora seus dados para o cadastro:');
-    const f=document.createElement('div');f.className='form';
-    f.innerHTML=`
-      <div><label>Nome completo <span class="req">*</span></label><input id="f_nome" placeholder="Seu nome"></div>
-      <div><label>CPF <span class="req">*</span></label><input id="f_cpf" inputmode="numeric" placeholder="000.000.000-00" oninput="this.value=maskCPF(this.value)"></div>
-      <div><label>Celular (WhatsApp) <span class="req">*</span></label><input id="f_tel" inputmode="numeric" placeholder="(11) 90000-0000" oninput="this.value=maskTel(this.value)"></div>
-      <div><label>E-mail <span class="req">*</span></label><input id="f_email" type="email" placeholder="voce@email.com"></div>
-      <div><label>Data de nascimento <span class="req">*</span></label><input id="f_nasc" inputmode="numeric" placeholder="dd/mm/aaaa" oninput="this.value=maskData(this.value)"></div>
-      <div><label>Sexo biológico <span class="req">*</span></label><select id="f_sexo"><option value="">Selecione</option><option value="F">Feminino</option><option value="M">Masculino</option></select></div>`;
-    chat.appendChild(f);scroll();
-    clearBar();
-    const btn=document.createElement('button');btn.className='btn';btn.textContent='Continuar para pagamento →';
-    btn.onclick=()=>{
-      const g=id=>document.getElementById(id).value.trim();
-      const nasc=g('f_nasc'); const [d,m,a]=nasc.split('/');
-      const cpfDig=soDigitos(g('f_cpf')); const telDig=soDigitos(g('f_tel'));
-      const p={nome:g('f_nome'),cpf:g('f_cpf'),telefone:g('f_tel'),email:g('f_email'),
-        dataNascimento:(a&&m&&a.length===4)?`${a}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`:'',sexo:g('f_sexo')};
-      if(!p.nome){ alert('Informe seu nome completo.'); return; }
-      if(cpfDig.length!==11){ alert('Informe um CPF válido (11 números).'); return; }
-      if(telDig.length<10){ alert('Informe um celular válido com DDD.'); return; }
-      if(!/^\S+@\S+\.\S+$/.test(p.email)){ alert('Informe um e-mail válido.'); return; }
-      if(!p.dataNascimento){ alert('Informe a data de nascimento no formato dd/mm/aaaa.'); return; }
-      if(!p.sexo){ alert('Selecione uma opção no campo Sexo.'); return; }
-      state.paciente=p;me(p.nome);clearBar();payment();
-    };
-    actionbar.appendChild(btn);
+    const salvo=lerPacienteSalvo();
+    if(salvo&&salvo.nome&&salvo.cpf){
+      bot('Vi que você já tem cadastro por aqui 👋 Quer usar os dados de <b>'+salvo.nome+'</b>?');
+      const grid=document.createElement('div');grid.className='opts';
+      const b1=document.createElement('button');b1.className='opt';b1.textContent='✅ Sim, usar meus dados';
+      b1.onclick=()=>{grid.remove();me('Usar meus dados');state.paciente=salvo;clearBar();payment();};
+      const b2=document.createElement('button');b2.className='opt';b2.textContent='✏️ Preencher de novo';
+      b2.onclick=()=>{grid.remove();me('Preencher de novo');formCadastro(salvo);};
+      grid.appendChild(b1);grid.appendChild(b2);chat.appendChild(grid);scroll();
+      return;
+    }
+    formCadastro(null);
   });
+}
+
+function formCadastro(pre){
+  pre=pre||{};
+  bot('Agora seus dados para o cadastro:');
+  const f=document.createElement('div');f.className='form';
+  f.innerHTML=`
+    <div><label>Nome completo <span class="req">*</span></label><input id="f_nome" placeholder="Seu nome"></div>
+    <div><label>CPF <span class="req">*</span></label><input id="f_cpf" inputmode="numeric" placeholder="000.000.000-00" oninput="this.value=maskCPF(this.value)"></div>
+    <div><label>Celular (WhatsApp) <span class="req">*</span></label><input id="f_tel" inputmode="numeric" placeholder="(11) 90000-0000" oninput="this.value=maskTel(this.value)"></div>
+    <div><label>E-mail <span class="req">*</span></label><input id="f_email" type="email" placeholder="voce@email.com"></div>
+    <div><label>Data de nascimento <span class="req">*</span></label><input id="f_nasc" inputmode="numeric" placeholder="dd/mm/aaaa" oninput="this.value=maskData(this.value)"></div>
+    <div><label>Sexo <span class="req">*</span></label><select id="f_sexo"><option value="">Selecione</option><option value="F">Feminino</option><option value="M">Masculino</option></select></div>`;
+  chat.appendChild(f);scroll();
+  // pré-preenche com o que já se sabe
+  if(pre.nome) document.getElementById('f_nome').value=pre.nome;
+  if(pre.cpf) document.getElementById('f_cpf').value=pre.cpf;
+  if(pre.telefone) document.getElementById('f_tel').value=pre.telefone;
+  if(pre.email) document.getElementById('f_email').value=pre.email;
+  if(pre.dataNascimento){const pd=String(pre.dataNascimento).split('-');if(pd.length===3)document.getElementById('f_nasc').value=pd[2]+'/'+pd[1]+'/'+pd[0];}
+  if(pre.sexo) document.getElementById('f_sexo').value=pre.sexo;
+  clearBar();
+  const btn=document.createElement('button');btn.className='btn';btn.textContent='Continuar para pagamento →';
+  btn.onclick=()=>{
+    const g=id=>document.getElementById(id).value.trim();
+    const nasc=g('f_nasc'); const [d,m,a]=nasc.split('/');
+    const cpfDig=soDigitos(g('f_cpf')); const telDig=soDigitos(g('f_tel'));
+    const p={nome:g('f_nome'),cpf:g('f_cpf'),telefone:g('f_tel'),email:g('f_email'),
+      dataNascimento:(a&&m&&a.length===4)?`${a}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`:'',sexo:g('f_sexo')};
+    if(!p.nome){ alert('Informe seu nome completo.'); return; }
+    if(cpfDig.length!==11){ alert('Informe um CPF válido (11 números).'); return; }
+    if(telDig.length<10){ alert('Informe um celular válido com DDD.'); return; }
+    if(!/^\S+@\S+\.\S+$/.test(p.email)){ alert('Informe um e-mail válido.'); return; }
+    if(!p.dataNascimento){ alert('Informe a data de nascimento no formato dd/mm/aaaa.'); return; }
+    if(!p.sexo){ alert('Selecione uma opção no campo Sexo.'); return; }
+    salvarPaciente(p);
+    state.paciente=p;me(p.nome);clearBar();payment();
+  };
+  actionbar.appendChild(btn);
 }
 async function payment(){
   setStep(100,'Passo 3 de 3 · Pagamento');
