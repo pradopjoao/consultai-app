@@ -181,7 +181,8 @@ function chooseTime(){
 function identify(){
   setStep(66,'Passo 2 de 3 · Identificação');
   typing(()=>{
-    bot('Boa! Reservei <b>'+rotulo(state.date)+' às '+state.time+'h</b>. Agora seus dados para o cadastro:');
+    bot('Boa! Reservei <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>👨‍⚕️ Sua consulta será com o <b>Dr. João Pedro Vieira do Prado</b> — CRM-SP 281.239.');
+    bot('Agora seus dados para o cadastro:');
     const f=document.createElement('div');f.className='form';
     f.innerHTML=`
       <div><label>Nome completo <span class="req">*</span></label><input id="f_nome" placeholder="Seu nome"></div>
