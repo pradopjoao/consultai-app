@@ -298,6 +298,7 @@ async function agendarNoShosp(p, tag) {
     codigoHorario: p.slot.codigoHorario,
     nome: p.paciente.nome,
     telefone: p.paciente.telefone,
+    celular: p.paciente.telefone, // o Shosp tem 2 campos; o número do chatbot é celular
     email: p.paciente.email,
     dataNascimento: p.paciente.dataNascimento,
     sexo: p.paciente.sexo,
@@ -450,6 +451,87 @@ app.post('/api/webhook', async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => res.json({ ok: true, servico: 'consultai-backend' }));
+
+/* ------------- Lembrete de consulta (~10 min antes) via e-mail -------------
+   A cada 3 min, busca no Mercado Pago os pagamentos aprovados e, quando uma
+   consulta está a ~10 min de começar, envia um e-mail ao médico com um botão
+   que abre o WhatsApp do paciente com a mensagem pronta (1 toque = enviado). */
+const lembretesEnviados = new Set();
+
+async function mpBuscarAprovados() {
+  const fim = new Date().toISOString();
+  const ini = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+  const url = 'https://api.mercadopago.com/v1/payments/search?status=approved&range=date_approved' +
+    '&begin_date=' + encodeURIComponent(ini) + '&end_date=' + encodeURIComponent(fim) + '&limit=50';
+  const r = await fetch(url, { headers: { Authorization: 'Bearer ' + MP_ACCESS_TOKEN } });
+  const d = await r.json();
+  if (!r.ok) throw new Error('MP search ' + r.status + ': ' + JSON.stringify(d).slice(0, 150));
+  return d.results || [];
+}
+
+function minutosAteConsulta(dataISO, horario) {
+  const agoraSP = new Date(Date.now() - 3 * 3600 * 1000); // São Paulo = UTC-3
+  const alvo = new Date(dataISO + 'T' + horario + ':00Z');  // interpretado no "relógio SP"
+  return (alvo - agoraSP) / 60000;
+}
+
+async function enviarLembreteWhats(m, paymentId) {
+  const tel = String(m.telefone || '').replace(/\D/g, '');
+  const tel55 = tel.startsWith('55') ? tel : '55' + tel;
+  const primeiro = String(m.nome || '').trim().split(/\s+/)[0] || 'paciente';
+  const sala = process.env.SALA_LINK || '';
+  const msg = 'Olá, ' + primeiro + '! 👋 Aqui é o Dr. João Pedro, da Consultaí. Sua consulta por vídeo começa às '
+    + m.horario + '. ' + (sala ? ('Entre na sala por este link: ' + sala) : 'Segue o link da nossa sala de vídeo: ');
+  const wa = 'https://wa.me/' + tel55 + '?text=' + encodeURIComponent(msg);
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;border:1px solid #E3EFEC;border-radius:12px;overflow:hidden">
+      <div style="background:#FF6B4A;color:#fff;padding:18px 22px">
+        <h2 style="margin:0;font-size:20px">⏰ Consulta começando em ~10 minutos!</h2>
+      </div>
+      <div style="padding:22px;color:#14333A;font-size:15px;line-height:1.7">
+        <p style="margin:0 0 8px"><b>${m.nome || '—'}</b> · hoje às <b>${m.horario}</b> · 📱 ${m.telefone || '—'}</p>
+        <p style="margin:0 0 18px;color:#5C7178;font-size:13.5px">Toque no botão: o WhatsApp abre com a mensagem pronta pro paciente${sala ? ' (link da sala já incluído)' : ' — só colar o link da sala do Shosp'}.</p>
+        <a href="${wa}" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;font-weight:bold;padding:14px 26px;border-radius:10px;font-size:16px">📲 Enviar WhatsApp pro paciente</a>
+      </div>
+    </div>`;
+  await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, '⏰ Consulta em ~10 min: ' + m.horario + ' — ' + (m.nome || ''), html);
+  console.log('[lembrete] enviado — consulta ' + m.data + ' ' + m.horario + ' (pagamento ' + paymentId + ')');
+}
+
+async function rodarLembretes() {
+  try {
+    if (!BREVO_API_KEY || !NOTIF_EMAIL_FROM || !MP_ACCESS_TOKEN) return;
+    const pagos = await mpBuscarAprovados();
+    for (const pg of pagos) {
+      const m = pg.metadata || {};
+      if (!m.data || !m.horario || !m.telefone) continue;
+      const id = String(pg.id);
+      if (lembretesEnviados.has(id)) continue;
+      const min = minutosAteConsulta(m.data, m.horario);
+      if (min > 2 && min <= 12) {
+        lembretesEnviados.add(id);
+        await enviarLembreteWhats(m, id);
+      }
+    }
+  } catch (e) { console.error('[lembrete] erro: ' + e.message); }
+}
+setInterval(rodarLembretes, 3 * 60 * 1000);
+
+/* Rota TEMPORÁRIA de investigação: resposta CRUA da agenda do Shosp,
+   para descobrir se a API expõe o link da sala de telemedicina. */
+app.get('/api/diag-raw-3x8k', async (req, res) => {
+  try {
+    const hoje = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+    const agendaRaw = await shosp('/agenda/get/', {
+      codigoUnidade: COD_UNIDADE, codigoPrestador: COD_PRESTADOR,
+      dataInicial: hoje, diasMostrar: '7',
+    });
+    let porPaciente = null;
+    try { porPaciente = await shospGet('/agenda/get/porpaciente', { codigoPaciente: '12' }); }
+    catch (e) { porPaciente = 'erro: ' + e.message; }
+    res.json({ agendaRaw, porPaciente });
+  } catch (e) { res.status(500).json({ erro: e.message }); }
+});
 
 /* Despertador anti-cochilo: no plano gratuito o Render "dorme" após ~15 min
    sem visitas (e o 1º acesso demora 50s+). Este auto-ping a cada 10 min
