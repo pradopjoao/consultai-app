@@ -214,4 +214,10 @@ app.post('/api/webhook', async (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ ok: true, servico: 'consultai-backend' }));
 
+// Página 404 personalizada (qualquer rota que não exista)
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) return res.status(404).json({ ok: false, erro: 'rota não encontrada' });
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+});
+
 app.listen(PORT, () => console.log('Consultaí backend rodando na porta ' + PORT));
