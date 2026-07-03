@@ -89,7 +89,7 @@ function normalizarHorarios(data) {
 }
 
 /* --------------------------- Mercado Pago ------------------------------ */
-async function mpCriarPix({ valor, email, nome, idem }) {
+async function mpCriarPix({ valor, email, nome, idem, metadata }) {
   const r = await fetch('https://api.mercadopago.com/v1/payments', {
     method: 'POST',
     headers: {
@@ -102,6 +102,9 @@ async function mpCriarPix({ valor, email, nome, idem }) {
       description: 'Consulta médica online — Consultaí',
       payment_method_id: 'pix',
       payer: { email, first_name: (nome || '').split(' ')[0] || 'Paciente' },
+      // Os dados da reserva viajam DENTRO do pagamento: se o servidor
+      // reiniciar, a reserva é reconstruída a partir daqui.
+      metadata: metadata || {},
     }),
   });
   const d = await r.json();
@@ -110,19 +113,45 @@ async function mpCriarPix({ valor, email, nome, idem }) {
   return { id: d.id, copiaECola: tx.qr_code, qrBase64: tx.qr_code_base64, ticketUrl: tx.ticket_url };
 }
 
-async function mpStatus(id) {
+async function mpGetPayment(id) {
   const r = await fetch('https://api.mercadopago.com/v1/payments/' + id, {
     headers: { 'Authorization': 'Bearer ' + MP_ACCESS_TOKEN },
   });
   const d = await r.json();
   if (!r.ok) throw new Error('MercadoPago status ' + r.status + ': ' + JSON.stringify(d));
-  return d.status; // pending | approved | rejected | cancelled ...
+  return d;
+}
+
+async function mpStatus(id) {
+  return (await mpGetPayment(id)).status; // pending | approved | rejected ...
 }
 
 /* Cria o agendamento no Shosp (idempotente: só agenda uma vez por pagamento) */
 async function efetivarAgendamento(paymentId) {
-  const p = pendentes.get(String(paymentId));
-  if (!p) return { agendado: false, motivo: 'pagamento sem reserva associada' };
+  let p = pendentes.get(String(paymentId));
+  if (!p) {
+    // Reserva perdida (servidor reiniciou)? Reconstrói do metadata do pagamento.
+    // OBS: o Mercado Pago converte as chaves do metadata para minúsculas.
+    try {
+      const pay = await mpGetPayment(paymentId);
+      const m = pay.metadata || {};
+      if (m.data && m.horario && m.codigohorario != null) {
+        p = {
+          paciente: { nome: m.nome, telefone: m.telefone, email: m.email, dataNascimento: m.datanascimento, sexo: m.sexo },
+          slot: { data: m.data, horario: m.horario, codigoHorario: m.codigohorario },
+          booked: false,
+        };
+        pendentes.set(String(paymentId), p);
+        console.log('[recuperação] reserva reconstruída do metadata — pagamento ' + paymentId);
+      }
+    } catch (e) {
+      console.error('[recuperação] falhou ao ler pagamento ' + paymentId + ': ' + e.message);
+    }
+  }
+  if (!p) {
+    console.error('[agenda] pagamento ' + paymentId + ' sem reserva e sem metadata — impossível agendar');
+    return { agendado: false, motivo: 'pagamento sem reserva associada' };
+  }
   if (p.booked) return { agendado: true, protocolo: p.protocolo, jaAgendado: true };
 
   const form = {
@@ -142,9 +171,11 @@ async function efetivarAgendamento(paymentId) {
   if (COD_ESPECIALIDADE) form.codigoEspecialidade = COD_ESPECIALIDADE;
 
   const r = await shosp('/agenda/', form);
+  console.log('[agenda] resposta do Shosp para pagamento ' + paymentId + ': ' + JSON.stringify(r).slice(0, 400));
   p.booked = true;
   p.protocolo = (r && (r.protocolo || r.codigo || r.id)) || ('CS-' + paymentId);
   pendentes.set(String(paymentId), p);
+  console.log('[agenda] ✔ consulta agendada — ' + p.slot.data + ' ' + p.slot.horario + ' — ' + (p.paciente.nome || '') + ' — protocolo ' + p.protocolo);
   return { agendado: true, protocolo: p.protocolo };
 }
 
@@ -172,12 +203,16 @@ app.post('/api/checkout', async (req, res) => {
       return res.status(400).json({ ok: false, erro: 'dados incompletos' });
     }
     const idem = 'consultai-' + Date.now() + '-' + Math.floor(Math.random() * 1e6);
-    const pay = await mpCriarPix({ valor: PRECO, email, nome, idem });
+    const pay = await mpCriarPix({
+      valor: PRECO, email, nome, idem,
+      metadata: { nome, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario },
+    });
     pendentes.set(String(pay.id), {
       paciente: { nome, telefone, email, dataNascimento, sexo },
       slot: { data, horario, codigoHorario },
       booked: false,
     });
+    console.log('[checkout] Pix criado — pagamento ' + pay.id + ' — ' + data + ' ' + horario + ' — ' + nome);
     res.json({ ok: true, paymentId: pay.id, copiaECola: pay.copiaECola, qrBase64: pay.qrBase64, ticketUrl: pay.ticketUrl, valor: Number(PRECO) });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message });
@@ -194,6 +229,7 @@ app.get('/api/checkout/:id', async (req, res) => {
     }
     res.json({ ok: true, status });
   } catch (e) {
+    console.error('[checkout/status] erro no pagamento ' + req.params.id + ': ' + e.message);
     res.status(500).json({ ok: false, erro: e.message });
   }
 });
@@ -202,8 +238,10 @@ app.get('/api/checkout/:id', async (req, res) => {
 app.post('/api/webhook', async (req, res) => {
   try {
     const id = (req.body && req.body.data && req.body.data.id) || req.query['data.id'];
+    console.log('[webhook] notificação recebida do MP — id: ' + (id || '(sem id)'));
     if (id) {
       const status = await mpStatus(String(id));
+      console.log('[webhook] pagamento ' + id + ' status: ' + status);
       if (status === 'approved') await efetivarAgendamento(String(id));
     }
   } catch (e) {
