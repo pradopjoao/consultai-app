@@ -42,21 +42,35 @@ const {
   MP_ACCESS_TOKEN,
   PRECO = '40',
   PORT = 3000,
-  NOTIF_EMAIL_USER = '',   // Gmail que ENVIA o aviso (ex.: seuemail@gmail.com)
-  NOTIF_EMAIL_PASS = '',   // senha de app do Gmail (16 letras, sem espaços)
-  NOTIF_EMAIL_TO = '',     // quem RECEBE o aviso (se vazio, usa o próprio NOTIF_EMAIL_USER)
+  BREVO_API_KEY = '',      // chave da API do Brevo (envio de e-mail por HTTPS)
+  NOTIF_EMAIL_FROM = '',   // remetente validado no Brevo
+  NOTIF_EMAIL_TO = '',     // quem recebe o aviso interno (ex.: octahealth@hotmail.com)
 } = process.env;
 
-/* ------------------- Aviso por e-mail (nova consulta) ------------------- */
-const nodemailer = require('nodemailer');
-const mailer = (NOTIF_EMAIL_USER && NOTIF_EMAIL_PASS)
-  ? nodemailer.createTransport({ service: 'gmail', auth: { user: NOTIF_EMAIL_USER, pass: NOTIF_EMAIL_PASS } })
-  : null;
+/* --------- E-mails via Brevo (API HTTPS — o Render bloqueia SMTP) -------- */
+async function enviarEmail(para, assunto, html) {
+  if (!BREVO_API_KEY || !NOTIF_EMAIL_FROM) {
+    console.log('[email] não configurado (defina BREVO_API_KEY e NOTIF_EMAIL_FROM)');
+    return false;
+  }
+  const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json', 'accept': 'application/json' },
+    body: JSON.stringify({
+      sender: { name: 'Consultaí', email: NOTIF_EMAIL_FROM },
+      to: [{ email: para }],
+      subject: assunto,
+      htmlContent: html,
+    }),
+  });
+  if (!r.ok) throw new Error('Brevo ' + r.status + ': ' + (await r.text()).slice(0, 200));
+  return true;
+}
+
+function dataBR(iso) { const [y, m, d] = String(iso).split('-'); return d + '/' + m + '/' + y; }
 
 async function avisarNovaConsulta(p, protocolo, paymentId) {
-  if (!mailer) { console.log('[email] aviso não configurado (defina NOTIF_EMAIL_USER e NOTIF_EMAIL_PASS)'); return; }
-  const [y, m, d] = String(p.slot.data).split('-');
-  const dataBR = d + '/' + m + '/' + y;
+  const dt = dataBR(p.slot.data);
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;border:1px solid #E3EFEC;border-radius:12px;overflow:hidden">
       <div style="background:linear-gradient(135deg,#15A39A,#0C4A52);color:#fff;padding:18px 22px">
@@ -65,7 +79,7 @@ async function avisarNovaConsulta(p, protocolo, paymentId) {
       <div style="padding:22px;color:#14333A;font-size:15px;line-height:1.7">
         <p style="margin:0 0 14px"><b>${p.paciente.nome || '—'}</b> pagou e agendou:</p>
         <table style="border-collapse:collapse;width:100%;font-size:15px">
-          <tr><td style="padding:6px 0;color:#5C7178">📅 Data</td><td><b>${dataBR}</b></td></tr>
+          <tr><td style="padding:6px 0;color:#5C7178">📅 Data</td><td><b>${dt}</b></td></tr>
           <tr><td style="padding:6px 0;color:#5C7178">🕐 Horário</td><td><b>${p.slot.horario}</b></td></tr>
           <tr><td style="padding:6px 0;color:#5C7178">📱 WhatsApp</td><td>${p.paciente.telefone || '—'}</td></tr>
           <tr><td style="padding:6px 0;color:#5C7178">✉️ E-mail</td><td>${p.paciente.email || '—'}</td></tr>
@@ -77,16 +91,37 @@ async function avisarNovaConsulta(p, protocolo, paymentId) {
       </div>
     </div>`;
   try {
-    await mailer.sendMail({
-      from: '"Consultaí" <' + NOTIF_EMAIL_USER + '>',
-      to: NOTIF_EMAIL_TO || NOTIF_EMAIL_USER,
-      subject: '🩺 Nova consulta: ' + dataBR + ' às ' + p.slot.horario + ' — ' + (p.paciente.nome || 'paciente'),
-      html,
-    });
-    console.log('[email] aviso de nova consulta enviado (' + dataBR + ' ' + p.slot.horario + ')');
-  } catch (e) {
-    console.error('[email] falha ao enviar aviso: ' + e.message);
-  }
+    if (await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, '🩺 Nova consulta: ' + dt + ' às ' + p.slot.horario + ' — ' + (p.paciente.nome || 'paciente'), html)) {
+      console.log('[email] aviso interno enviado (' + dt + ' ' + p.slot.horario + ')');
+    }
+  } catch (e) { console.error('[email] falha no aviso interno: ' + e.message); }
+}
+
+async function confirmarPaciente(p, protocolo) {
+  if (!p.paciente.email) return;
+  const dt = dataBR(p.slot.data);
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;border:1px solid #E3EFEC;border-radius:12px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#15A39A,#0C4A52);color:#fff;padding:18px 22px">
+        <h2 style="margin:0;font-size:20px">Consulta confirmada! 🎉</h2>
+      </div>
+      <div style="padding:22px;color:#14333A;font-size:15px;line-height:1.7">
+        <p style="margin:0 0 14px">Olá, <b>${(p.paciente.nome || '').split(' ')[0]}</b>! Seu pagamento foi aprovado e sua consulta está marcada:</p>
+        <table style="border-collapse:collapse;width:100%;font-size:15px">
+          <tr><td style="padding:6px 0;color:#5C7178">📅 Data</td><td><b>${dt}</b></td></tr>
+          <tr><td style="padding:6px 0;color:#5C7178">🕐 Horário</td><td><b>${p.slot.horario}</b></td></tr>
+          <tr><td style="padding:6px 0;color:#5C7178">👨‍⚕️ Médico</td><td>Dr. João Pedro Vieira do Prado — CRM-SP 281.239</td></tr>
+          <tr><td style="padding:6px 0;color:#5C7178">📋 Protocolo</td><td>${protocolo}</td></tr>
+        </table>
+        <p style="margin:16px 0 0">📱 O <b>link da videochamada</b> será enviado no seu WhatsApp pouco antes da consulta. Fique atento!</p>
+        <p style="margin:12px 0 0;color:#5C7178;font-size:13px">Precisa reagendar? Fale com a gente no WhatsApp: (11) 97654-4002.<br>Consultaí · uma iniciativa Octa Health · Telemedicina conforme Resolução CFM nº 2.314/2022</p>
+      </div>
+    </div>`;
+  try {
+    if (await enviarEmail(p.paciente.email, '✅ Consulta confirmada — ' + dt + ' às ' + p.slot.horario + ' | Consultaí', html)) {
+      console.log('[email] confirmação enviada ao paciente ' + p.paciente.email);
+    }
+  } catch (e) { console.error('[email] falha na confirmação ao paciente: ' + e.message); }
 }
 
 // Reserva temporária dos dados do paciente até o Pix ser confirmado.
@@ -139,7 +174,8 @@ async function shospGet(pathname, queryObj) {
 }
 
 /* Acha o código do paciente na resposta da busca.
-   Na busca (/cadastro/paciente) o Shosp chama o código de "prontuario". */
+   Na busca (/cadastro/paciente) o Shosp chama o código de "prontuario".
+   Critério seguro: CPF igual > nome exato > resultado único. Nunca chuta. */
 function acharCodigoPaciente(data, alvo) {
   const lista = [];
   (function walk(n) {
@@ -150,17 +186,42 @@ function acharCodigoPaciente(data, alvo) {
     }
   })(data);
   if (!lista.length) return null;
-  let esc = null;
-  if (alvo && alvo.cpf) {
-    const c = String(alvo.cpf).replace(/\D/g, '');
-    esc = lista.find(x => String(x.cpf || '').replace(/\D/g, '') === c);
+  const cod = (x) => (x.prontuario != null ? x.prontuario : x.codigoPaciente);
+  const cpfA = alvo && alvo.cpf ? String(alvo.cpf).replace(/\D/g, '') : '';
+  if (cpfA) {
+    const m = lista.find(x => String(x.cpf || '').replace(/\D/g, '') === cpfA);
+    if (m) return cod(m);
   }
-  if (!esc && alvo && alvo.nome) {
-    const nm = String(alvo.nome).trim().toLowerCase();
-    esc = lista.find(x => String(x.nome || '').trim().toLowerCase() === nm);
+  const nmA = alvo && alvo.nome ? String(alvo.nome).trim().toLowerCase() : '';
+  if (nmA) {
+    const m = lista.find(x => String(x.nome || '').trim().toLowerCase() === nmA);
+    if (m) return cod(m);
   }
-  if (!esc) esc = lista[0];
-  return esc.prontuario != null ? esc.prontuario : esc.codigoPaciente;
+  if (lista.length === 1) return cod(lista[0]);
+  return null;
+}
+
+/* Busca em cascata: o Shosp exige que TODOS os parâmetros batam, então
+   se nome+cpf não achar (ex.: cadastro sem CPF), tenta combinações mais soltas. */
+async function buscarPaciente(paciente) {
+  const cpf = paciente.cpf ? String(paciente.cpf).replace(/\D/g, '') : '';
+  const primeiro = String(paciente.nome || '').trim().split(/\s+/)[0] || '';
+  const tentativas = [];
+  if (cpf) tentativas.push({ nome: paciente.nome, cpf });
+  tentativas.push({ nome: paciente.nome });
+  if (cpf && primeiro) tentativas.push({ nome: primeiro, cpf });
+  if (paciente.email) tentativas.push({ nome: primeiro || paciente.nome, email: paciente.email });
+  for (const q of tentativas) {
+    try {
+      const res = await shospGet('/cadastro/paciente', q);
+      console.log('[agenda] busca paciente ' + JSON.stringify(q) + ' → ' + JSON.stringify(res).slice(0, 300));
+      const cod = acharCodigoPaciente(res, paciente);
+      if (cod != null) return cod;
+    } catch (e) {
+      console.log('[agenda] busca ' + JSON.stringify(q) + ' falhou: ' + e.message);
+    }
+  }
+  return null;
 }
 
 /* Normaliza a resposta de /agenda/get/ em uma lista simples:
@@ -253,11 +314,8 @@ async function agendarNoShosp(p, tag) {
     const msg = (r && (r.msg || r.mensagem)) || JSON.stringify(r);
     if (/j[áa] foi cadastrado/i.test(msg)) {
       console.log('[agenda] paciente já existe no Shosp — buscando codigoPaciente…');
-      const query = { nome: p.paciente.nome };
-      if (p.paciente.cpf) query.cpf = String(p.paciente.cpf).replace(/\D/g, '');
-      const busca = await shospGet('/cadastro/paciente', query);
-      const cod = acharCodigoPaciente(busca, p.paciente);
-      if (!cod) throw new Error('Shosp: paciente já cadastrado, mas a busca não retornou o codigoPaciente');
+      const cod = await buscarPaciente(p.paciente);
+      if (cod == null) throw new Error('Shosp: paciente já cadastrado, mas nenhuma busca retornou o codigoPaciente');
       console.log('[agenda] codigoPaciente encontrado: ' + cod + ' — reagendando com ele…');
       r = await shosp('/agenda/', { ...form, codigoPaciente: cod });
       console.log('[agenda] resposta do reagendamento (' + tag + '): ' + JSON.stringify(r).slice(0, 400));
@@ -306,7 +364,8 @@ async function efetivarAgendamento(paymentId) {
                 (r && (r.protocolo || r.codigo || r.id)) || ('CS-' + paymentId);
   pendentes.set(String(paymentId), p);
   console.log('[agenda] ✔ consulta agendada — ' + p.slot.data + ' ' + p.slot.horario + ' — ' + (p.paciente.nome || '') + ' — protocolo ' + p.protocolo);
-  avisarNovaConsulta(p, p.protocolo, paymentId); // e-mail em segundo plano (não trava a resposta)
+  avisarNovaConsulta(p, p.protocolo, paymentId); // aviso interno em segundo plano
+  confirmarPaciente(p, p.protocolo);             // confirmação ao paciente em segundo plano
   return { agendado: true, protocolo: p.protocolo };
 }
 
@@ -321,7 +380,16 @@ app.get('/api/horarios', async (req, res) => {
       dataInicial,
       diasMostrar: dias,
     });
-    res.json({ ok: true, slots: normalizarHorarios(data) });
+    // Remove horários que já passaram (ou que começam em menos de 20 min),
+    // no fuso de São Paulo (UTC-3):
+    const MARGEM_MIN = 20;
+    const sp = new Date(Date.now() - 3 * 3600 * 1000 + MARGEM_MIN * 60 * 1000);
+    const hojeSP = sp.toISOString().slice(0, 10);
+    const horaMin = sp.toISOString().slice(11, 16);
+    const slots = normalizarHorarios(data).filter(s =>
+      String(s.data) > hojeSP || (String(s.data) === hojeSP && String(s.horario) >= horaMin)
+    );
+    res.json({ ok: true, slots });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message });
   }
