@@ -93,18 +93,29 @@ async function shospGet(pathname, queryObj) {
   return data;
 }
 
-/* Acha o codigoPaciente em qualquer formato de resposta da busca */
-function acharCodigoPaciente(data) {
-  let found = null;
+/* Acha o código do paciente na resposta da busca.
+   Na busca (/cadastro/paciente) o Shosp chama o código de "prontuario". */
+function acharCodigoPaciente(data, alvo) {
+  const lista = [];
   (function walk(n) {
-    if (found != null) return;
     if (Array.isArray(n)) { n.forEach(walk); return; }
     if (n && typeof n === 'object') {
-      if (n.codigoPaciente != null) { found = n.codigoPaciente; return; }
+      if (n.prontuario != null || n.codigoPaciente != null) { lista.push(n); return; }
       Object.values(n).forEach(walk);
     }
   })(data);
-  return found;
+  if (!lista.length) return null;
+  let esc = null;
+  if (alvo && alvo.cpf) {
+    const c = String(alvo.cpf).replace(/\D/g, '');
+    esc = lista.find(x => String(x.cpf || '').replace(/\D/g, '') === c);
+  }
+  if (!esc && alvo && alvo.nome) {
+    const nm = String(alvo.nome).trim().toLowerCase();
+    esc = lista.find(x => String(x.nome || '').trim().toLowerCase() === nm);
+  }
+  if (!esc) esc = lista[0];
+  return esc.prontuario != null ? esc.prontuario : esc.codigoPaciente;
 }
 
 /* Normaliza a resposta de /agenda/get/ em uma lista simples:
@@ -200,7 +211,7 @@ async function agendarNoShosp(p, tag) {
       const query = { nome: p.paciente.nome };
       if (p.paciente.cpf) query.cpf = String(p.paciente.cpf).replace(/\D/g, '');
       const busca = await shospGet('/cadastro/paciente', query);
-      const cod = acharCodigoPaciente(busca);
+      const cod = acharCodigoPaciente(busca, p.paciente);
       if (!cod) throw new Error('Shosp: paciente já cadastrado, mas a busca não retornou o codigoPaciente');
       console.log('[agenda] codigoPaciente encontrado: ' + cod + ' — reagendando com ele…');
       r = await shosp('/agenda/', { ...form, codigoPaciente: cod });
