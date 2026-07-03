@@ -62,6 +62,10 @@ async function shosp(pathname, formObj) {
   const txt = await r.text();
   let data; try { data = JSON.parse(txt); } catch { data = txt; }
   if (!r.ok) throw new Error('Shosp ' + r.status + ': ' + txt);
+  // O Shosp às vezes devolve uma TELA DE ERRO com status 200 — detecta e trata como falha:
+  if (typeof data === 'string' && /<script|alerta\(|algo deu errado|comportou mal/i.test(data)) {
+    throw new Error('Shosp retornou erro interno: ' + txt.replace(/\s+/g, ' ').slice(0, 200));
+  }
   return data;
 }
 
@@ -137,7 +141,7 @@ async function efetivarAgendamento(paymentId) {
       const m = pay.metadata || {};
       if (m.data && m.horario && m.codigohorario != null) {
         p = {
-          paciente: { nome: m.nome, telefone: m.telefone, email: m.email, dataNascimento: m.datanascimento, sexo: m.sexo },
+          paciente: { nome: m.nome, cpf: m.cpf, telefone: m.telefone, email: m.email, dataNascimento: m.datanascimento, sexo: m.sexo },
           slot: { data: m.data, horario: m.horario, codigoHorario: m.codigohorario },
           booked: false,
         };
@@ -168,8 +172,10 @@ async function efetivarAgendamento(paymentId) {
     dataNascimento: p.paciente.dataNascimento,
     sexo: p.paciente.sexo,
   };
+  if (p.paciente.cpf) form.cpf = String(p.paciente.cpf).replace(/\D/g, '');
   if (COD_ESPECIALIDADE) form.codigoEspecialidade = COD_ESPECIALIDADE;
 
+  console.log('[agenda] enviando ao Shosp (pagamento ' + paymentId + '): ' + JSON.stringify(form));
   const r = await shosp('/agenda/', form);
   console.log('[agenda] resposta do Shosp para pagamento ' + paymentId + ': ' + JSON.stringify(r).slice(0, 400));
   p.booked = true;
@@ -198,17 +204,17 @@ app.get('/api/horarios', async (req, res) => {
 
 app.post('/api/checkout', async (req, res) => {
   try {
-    const { nome, telefone, email, dataNascimento, sexo, data, horario, codigoHorario } = req.body;
+    const { nome, cpf, telefone, email, dataNascimento, sexo, data, horario, codigoHorario } = req.body;
     if (!nome || !email || !data || !horario || codigoHorario == null) {
       return res.status(400).json({ ok: false, erro: 'dados incompletos' });
     }
     const idem = 'consultai-' + Date.now() + '-' + Math.floor(Math.random() * 1e6);
     const pay = await mpCriarPix({
       valor: PRECO, email, nome, idem,
-      metadata: { nome, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario },
+      metadata: { nome, cpf, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario },
     });
     pendentes.set(String(pay.id), {
-      paciente: { nome, telefone, email, dataNascimento, sexo },
+      paciente: { nome, cpf, telefone, email, dataNascimento, sexo },
       slot: { data, horario, codigoHorario },
       booked: false,
     });
