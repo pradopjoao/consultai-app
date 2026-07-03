@@ -42,6 +42,22 @@
   .foot{font-size:10.5px;color:#9AAEB3;text-align:center;padding:6px 16px 0}
   .typing{font-size:13px;color:var(--mut);font-style:italic;align-self:flex-start;padding-left:6px}
   .err{align-self:stretch;background:#FCEDE9;border:1px solid #f3c9bd;color:#9a2a12;border-radius:12px;padding:12px;font-size:13px}
+
+  /* ===== Desktop/PC: vira um cartão de chat centralizado (não um mobile esticado) ===== */
+  @media(min-width:768px){
+    body{align-items:center;padding:28px;
+      background:radial-gradient(1200px 600px at 50% -10%,#eaf4f2,#d7e6e3)}
+    .app{max-width:520px;min-height:0;height:min(780px,calc(100vh - 56px));
+      border-radius:26px;overflow:hidden;box-shadow:0 30px 70px rgba(12,74,82,.22)}
+    .top{padding:18px 22px}
+    .chat{padding:18px 20px 128px}
+    .msg{max-width:82%;font-size:15px}
+    .bar{padding:16px 20px}
+    .opts{grid-template-columns:1fr 1fr 1fr}
+  }
+  @media(min-width:768px) and (max-height:720px){
+    .app{height:calc(100vh - 56px)}
+  }
 </style>
 </head>
 <body>

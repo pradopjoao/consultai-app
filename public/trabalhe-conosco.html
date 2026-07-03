@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Atestado Médico Online: como funciona e validade | Consultaí</title>
-<meta name="description" content="Atestado médico online com assinatura digital ICP-Brasil, emitido por médico com CRM após consulta por vídeo. Entenda como funciona e quando é válido.">
+<title>Trabalhe conosco | Consultaí</title>
+<meta name="description" content="Faça parte da Consultaí (Octa Health). Se você é médico(a) com CRM ativo ou quer somar com a gente, envie sua mensagem — vamos adorar te conhecer.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
       <a href="index.html">Início</a>
       <a href="index.html#como-funciona">Como funciona</a>
       <a href="consulta-medica-online.html">Consulta online</a>
-      <a href="atestado-medico-online.html" class="on">Atestado online</a>
+      <a href="atestado-medico-online.html">Atestado online</a>
       <a href="index.html#faq">Dúvidas</a>
       <a href="sobre.html">Sobre</a>
       <a class="mobcta" href="agendamento.html">Agendar consulta →</a>
@@ -32,39 +32,35 @@
 <section class="hero mini">
   <div class="blob b1"></div>
   <div class="wrap" style="position:relative">
-    <span class="pill">📄 Serviço</span>
-    <h1>Atestado médico online</h1>
-    <p class="sub">Emitido por um médico de verdade, após consulta por vídeo — com assinatura digital válida em todo o Brasil.</p>
-    <a class="btn" href="agendamento.html">Agendar consulta →</a>
+    <span class="pill">💚 Faça parte</span>
+    <h1>Trabalhe conosco</h1>
+    <p class="sub">É médico(a) com CRM ativo e quer atender pela telemedicina, ou tem uma ideia para somar com a Consultaí? Conte pra gente — respondemos por e-mail.</p>
   </div>
 </section>
 <section>
-  <div class="wrap"><div class="article">
-<h2>Como funciona o atestado online?</h2>
-<p>Na Consultaí, o atestado é uma consequência natural da consulta: você passa por uma avaliação médica real, por vídeo, e — <b>se o médico julgar clinicamente indicado</b> — recebe o atestado em formato digital, poucos minutos após o atendimento.</p>
-<div class="note"><b>Transparência:</b> não vendemos atestados. Nenhum serviço sério faz isso — atestado sem consulta é crime (art. 302 do Código Penal). O que oferecemos é uma consulta médica de verdade, rápida e acessível, na qual o médico decide a conduta.</div>
-<h2 id="validade">O atestado online é válido?</h2>
-<p>Sim. A Resolução CFM nº 2.314/2022 regulamenta a telemedicina no Brasil, e a Resolução CFM nº 2.381/2024 disciplina a emissão de documentos médicos digitais. O atestado da Consultaí é emitido por médico com CRM ativo e assinado digitalmente com certificado ICP-Brasil — o que garante validade jurídica em todo o território nacional, inclusive para empresas.</p>
-<h3>Como a empresa confere a autenticidade?</h3>
-<p>O documento digital acompanha um código/QR de verificação da assinatura ICP-Brasil, que qualquer empregador pode validar gratuitamente.</p>
-<h2>Quanto custa?</h2>
-<p>Você paga apenas a consulta: <b>R$ 40 no Pix</b>. Se o atestado for indicado, a emissão está incluída — sem custo adicional.</p>
-<h2>Passo a passo</h2>
-<ul>
-  <li>Agende o horário no nosso site (leva menos de 1 minuto);</li>
-  <li>Pague R$ 40 no Pix e confirme na hora;</li>
-  <li>Converse com o médico por vídeo;</li>
-  <li>Receba a orientação e, se indicado, o atestado digital no seu WhatsApp/e-mail.</li>
-</ul>
-  </div></div>
-</section>
-<div class="bandwrap">
-  <div class="band">
-    <h2>Pronto para ser atendido?</h2>
-    <p>Consulta médica online por R$ 40, sem sair de casa.</p>
-    <a class="btn" href="agendamento.html" style="background:#fff;color:var(--deep)">Iniciar consulta agora →</a>
+  <div class="wrap">
+    <form class="formcard" id="trabForm" onsubmit="return enviarTrab(event)">
+      <div class="frow">
+        <label for="t_nome">Nome <span style="color:var(--coral)">*</span></label>
+        <input id="t_nome" name="nome" type="text" placeholder="Seu nome completo" required>
+      </div>
+      <div class="frow">
+        <label for="t_email">E-mail <span style="color:var(--coral)">*</span></label>
+        <input id="t_email" name="email" type="email" placeholder="voce@email.com" required>
+      </div>
+      <div class="frow">
+        <label for="t_assunto">Assunto <span style="color:var(--coral)">*</span></label>
+        <input id="t_assunto" name="assunto" type="text" placeholder="Ex.: Sou médico(a) e quero atender" required>
+      </div>
+      <div class="frow">
+        <label for="t_msg">Mensagem <span style="color:var(--coral)">*</span></label>
+        <textarea id="t_msg" name="mensagem" placeholder="Escreva sua mensagem. Se for médico(a), pode incluir seu CRM e especialidade." required></textarea>
+      </div>
+      <button class="btn" type="submit">Enviar mensagem →</button>
+    </form>
+    <p class="formnote">Ao enviar, seu aplicativo de e-mail abre com a mensagem pronta para <b>consultai@octahealth.com</b>. Prefere e-mail direto? Escreva para <a href="mailto:consultai@octahealth.com" style="color:var(--teal);font-weight:600">consultai@octahealth.com</a>.</p>
   </div>
-</div>
+</section>
 <footer>
   <div class="wrap">
     <div class="cols">
@@ -113,6 +109,18 @@
 <a class="wa" href="https://wa.me/5511976544002?text=Ol%C3%A1%21%20Quero%20saber%20mais%20sobre%20a%20consulta%20m%C3%A9dica%20online%20da%20Consulta%C3%AD." target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
   <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M16.003 3C9.38 3 4 8.38 4 15c0 2.114.553 4.093 1.52 5.815L4 29l8.38-1.49A11.9 11.9 0 0016 27c6.62 0 12-5.38 12-12S22.62 3 16.003 3zm0 21.8c-1.86 0-3.6-.51-5.09-1.4l-.36-.21-4.97.88.9-4.84-.24-.37A9.76 9.76 0 016.2 15c0-5.4 4.4-9.8 9.8-9.8s9.8 4.4 9.8 9.8-4.4 9.8-9.797 9.8zm5.37-7.33c-.29-.14-1.72-.85-1.99-.95-.27-.1-.46-.14-.66.15-.19.29-.76.94-.93 1.13-.17.19-.34.22-.63.07-.29-.14-1.23-.45-2.35-1.44-.87-.77-1.45-1.72-1.62-2.01-.17-.29-.02-.44.13-.59.13-.13.29-.34.44-.51.15-.17.19-.29.29-.48.1-.19.05-.36-.02-.51-.07-.14-.66-1.59-.9-2.18-.24-.57-.48-.49-.66-.5l-.56-.01c-.19 0-.51.07-.77.36-.27.29-1.01.99-1.01 2.42s1.04 2.81 1.18 3c.14.19 2.03 3.1 4.92 4.35.69.3 1.22.47 1.64.6.69.22 1.31.19 1.81.11.55-.08 1.72-.7 1.96-1.38.24-.68.24-1.26.17-1.38-.07-.12-.26-.19-.55-.34z"/></svg>
 </a>
+<script>
+function enviarTrab(e){
+  e.preventDefault();
+  var g=function(id){return (document.getElementById(id).value||'').trim();};
+  var nome=g('t_nome'), email=g('t_email'), assunto=g('t_assunto'), msg=g('t_msg');
+  if(!nome||!email||!assunto||!msg){ return false; }
+  var subject='[Trabalhe conosco] '+assunto+' — '+nome;
+  var body='Nome: '+nome+'\nE-mail: '+email+'\nAssunto: '+assunto+'\n\n'+msg;
+  window.location.href='mailto:consultai@octahealth.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+  return false;
+}
+</script>
 <script>
 document.querySelectorAll('.hamburger').forEach(function(h){
   h.addEventListener('click',function(){

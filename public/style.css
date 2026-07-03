@@ -17,14 +17,22 @@ img{max-width:100%}
 
 /* Header */
 header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-.nav{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
+.nav{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px;position:relative}
 .logo{display:flex;align-items:center;gap:12px;text-decoration:none}
 .logo svg{width:40px;height:40px}
 .logo .w{font-family:'Poppins';font-weight:800;font-size:24px;color:var(--deep);letter-spacing:-.5px}
 .logo .w .d{color:var(--coral)}
-.menu{display:flex;align-items:center;gap:22px;font-size:14.5px;font-weight:600;color:var(--mut)}
+.menu{display:flex;align-items:center;gap:20px;font-size:14.5px;font-weight:600;color:var(--mut)}
 .menu a{text-decoration:none;transition:.15s;padding:4px 0;border-bottom:2px solid transparent}
 .menu a:hover,.menu a.on{color:var(--teal);border-bottom-color:var(--teal)}
+.nav-right{display:flex;align-items:center;gap:10px}
+/* Hamburger (menu mobile) */
+.hamburger{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;
+  width:44px;height:44px;background:none;border:none;cursor:pointer;padding:8px;border-radius:10px}
+.hamburger span{display:block;width:24px;height:2.5px;background:var(--deep);border-radius:2px;transition:.25s}
+.nav.open .hamburger span:nth-child(1){transform:translateY(7.5px) rotate(45deg)}
+.nav.open .hamburger span:nth-child(2){opacity:0}
+.nav.open .hamburger span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
 
 /* Hero */
 .hero{background:linear-gradient(160deg,#15A39A,#0C4A52);color:#fff;padding:72px 0 84px;position:relative;overflow:hidden}
@@ -141,7 +149,23 @@ footer a{color:#9FB4B8;text-decoration:none;transition:.15s}
 footer a:hover{color:#5BD6CB}
 footer .lk{display:block;padding:4px 0}
 footer .contact p{padding:3px 0}
+footer .contact .init{font-size:12.5px;color:#7C969B;margin-top:2px;letter-spacing:.3px}
+footer .contact .octa{color:#CDE0E3;font-weight:600;margin-top:12px}
+footer a.cta-ic{display:inline-flex;align-items:center;gap:8px;color:#9FB4B8;text-decoration:none;padding:4px 0;transition:.15s}
+footer a.cta-ic svg{width:16px;height:16px;fill:currentColor;flex:none;opacity:.9;transition:.15s}
+footer a.cta-ic:hover{color:#5BD6CB}
+footer a.cta-ic:hover svg{opacity:1}
 footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;line-height:1.8;color:#7C969B}
+
+/* Formulário de contato (Trabalhe conosco) */
+.formcard{max-width:640px;margin:6px auto 0;background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px;box-shadow:0 16px 40px rgba(12,74,82,.08)}
+.formcard .frow{margin-bottom:16px}
+.formcard label{display:block;font-size:13px;font-weight:700;color:var(--deep);margin-bottom:6px;font-family:'Poppins',sans-serif}
+.formcard input,.formcard select,.formcard textarea{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:15px;font-family:inherit;color:var(--ink);background:#fff;transition:.15s}
+.formcard input:focus,.formcard select:focus,.formcard textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(21,163,154,.12)}
+.formcard textarea{min-height:150px;resize:vertical;line-height:1.5}
+.formcard .btn{width:100%;border:none;cursor:pointer;margin-top:6px}
+.formnote{max-width:640px;margin:16px auto 0;text-align:center;color:var(--mut);font-size:13.5px;line-height:1.6}
 
 /* WhatsApp float */
 .wa{position:fixed;bottom:22px;right:22px;width:62px;height:62px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.28);z-index:60;transition:.15s}
@@ -166,10 +190,27 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
   .gridcards{grid-template-columns:1fr}
   h2.title{font-size:28px}
   .mock{max-width:340px;margin:0 auto}
-  .menu{display:none}
   .band h2{font-size:26px}
   section{padding:54px 0}
+  /* Menu vira dropdown acionado pelo hambúrguer */
+  .hamburger{display:flex}
+  .menu{
+    position:absolute;top:calc(100% + 1px);left:-22px;right:-22px;
+    flex-direction:column;align-items:stretch;gap:0;
+    background:#fff;border-bottom:1px solid var(--line);
+    box-shadow:0 16px 30px rgba(12,74,82,.12);
+    padding:0 22px;max-height:0;overflow:hidden;opacity:0;pointer-events:none;
+    transition:max-height .28s ease,opacity .2s ease,padding .28s ease}
+  .nav.open .menu{max-height:460px;opacity:1;pointer-events:auto;padding:8px 22px 14px}
+  .menu a{padding:14px 2px;border-bottom:1px solid var(--line);border-radius:0;font-size:15.5px}
+  .menu a:hover,.menu a.on{border-bottom-color:var(--line);color:var(--teal)}
+  .nav-right .btn.ghost{display:none}
+  .menu a.mobcta{display:block;margin-top:12px;background:var(--coral);color:#fff;text-align:center;
+    border:none;border-radius:12px;padding:14px;font-weight:700;font-family:'Poppins',sans-serif;
+    box-shadow:0 8px 20px rgba(255,107,74,.28)}
+  .menu a.mobcta:hover{color:#fff}
 }
+.menu a.mobcta{display:none}
 /* ===== Celular pequeno (até 400px) ===== */
 @media(max-width:400px){
   .hero h1{font-size:32px}

@@ -25,8 +25,12 @@
       <a href="atestado-medico-online.html">Atestado online</a>
       <a href="index.html#faq">Dúvidas</a>
       <a href="sobre.html">Sobre</a>
+      <a class="mobcta" href="agendamento.html">Agendar consulta →</a>
     </nav>
-    <a class="btn ghost" href="agendamento.html">Agendar consulta</a>
+    <div class="nav-right">
+      <a class="btn ghost" href="agendamento.html">Agendar consulta</a>
+      <button class="hamburger" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
   </div>
 </header>
 
@@ -51,10 +55,7 @@
         <b>Consultaí</b>
       </div>
       <div class="mbubble">Oi! 👋&nbsp; Para que dia você quer sua consulta?</div>
-      <div class="mopts"><div class="mopt">Hoje</div><div class="mopt">Amanhã</div><div class="mopt">Qua</div><div class="mopt">Qui</div></div>
-      <div class="mbubble" style="margin-top:10px">Horários livres 👇</div>
-      <div class="mopts"><div class="mopt">09:20</div><div class="mopt">14:10</div></div>
-      <div class="mocktip">👆 Toque para agendar de verdade</div>
+      <div class="mopts" id="mockDays"><div class="mopt">Hoje</div><div class="mopt">Amanhã</div></div>
     </a>
   </div>
 </section>
@@ -147,10 +148,13 @@
     <div class="cols">
       <div class="contact">
         <div class="w">Consultaí</div>
+        <div class="init">uma iniciativa Octa Health</div>
         <p style="margin:10px 0 14px;max-width:280px">Consulta médica online, acessível e de verdade. Saúde sem complicação.</p>
+        <p class="octa">Octa Health – Inovação digital em saúde</p>
         <p>CNPJ: 64.412.466/0001-87</p>
         <p>São Paulo – SP</p>
-        <p><a href="https://wa.me/5511976544002?text=Ol%C3%A1%21%20Quero%20saber%20mais%20sobre%20a%20consulta%20m%C3%A9dica%20online%20da%20Consulta%C3%AD.">WhatsApp: (11) 97654-4002</a></p>
+        <p><a class="cta-ic" href="tel:+5511976544002"><svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.5.6 3.6.1.4 0 .8-.3 1.1L6.6 10.8z"/></svg>(11) 97654-4002</a></p>
+        <p><a class="cta-ic" href="mailto:consultai@octahealth.com"><svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 2v.35l8 4.9 8-4.9V6H4zm16 2.7-7.48 4.58a1 1 0 0 1-1.04 0L4 8.7V18h16V8.7z"/></svg>consultai@octahealth.com</a></p>
       </div>
       <div>
         <h4>Serviços</h4>
@@ -166,6 +170,7 @@
         <a class="lk" href="index.html#como-funciona">Como funciona</a>
         <a class="lk" href="index.html#faq">Perguntas frequentes</a>
         <a class="lk" href="atestado-medico-online.html#validade">Validade do atestado</a>
+        <a class="lk" href="trabalhe-conosco.html">Trabalhe conosco</a>
       </div>
       <div>
         <h4>Legal</h4>
@@ -178,7 +183,7 @@
       Responsável técnico: Dr. João Pedro Vieira do Prado (diretor técnico) — CRM-SP 281.239. CNPJ 64.412.466/0001-87.<br>
       Telemedicina realizada conforme a Resolução CFM nº 2.314/2022. Documentos médicos emitidos conforme a Resolução CFM nº 2.381/2024, com assinatura digital ICP-Brasil. A emissão de receita, atestado ou pedido de exame depende de avaliação médica — não comercializamos documentos.<br>
       Este serviço não substitui atendimento de urgência ou emergência. Em caso de emergência, procure um pronto-socorro ou ligue 192 (SAMU).<br>
-      © 2026 Consultaí — Todos os direitos reservados.
+      © 2026 Octa Health. Todos os direitos reservados.
     </div>
   </div>
 </footer>
@@ -186,6 +191,28 @@
 <a class="wa" href="https://wa.me/5511976544002?text=Ol%C3%A1%21%20Quero%20saber%20mais%20sobre%20a%20consulta%20m%C3%A9dica%20online%20da%20Consulta%C3%AD." target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
   <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M16.003 3C9.38 3 4 8.38 4 15c0 2.114.553 4.093 1.52 5.815L4 29l8.38-1.49A11.9 11.9 0 0016 27c6.62 0 12-5.38 12-12S22.62 3 16.003 3zm0 21.8c-1.86 0-3.6-.51-5.09-1.4l-.36-.21-4.97.88.9-4.84-.24-.37A9.76 9.76 0 016.2 15c0-5.4 4.4-9.8 9.8-9.8s9.8 4.4 9.8 9.8-4.4 9.8-9.797 9.8zm5.37-7.33c-.29-.14-1.72-.85-1.99-.95-.27-.1-.46-.14-.66.15-.19.29-.76.94-.93 1.13-.17.19-.34.22-.63.07-.29-.14-1.23-.45-2.35-1.44-.87-.77-1.45-1.72-1.62-2.01-.17-.29-.02-.44.13-.59.13-.13.29-.34.44-.51.15-.17.19-.29.29-.48.1-.19.05-.36-.02-.51-.07-.14-.66-1.59-.9-2.18-.24-.57-.48-.49-.66-.5l-.56-.01c-.19 0-.51.07-.77.36-.27.29-1.01.99-1.01 2.42s1.04 2.81 1.18 3c.14.19 2.03 3.1 4.92 4.35.69.3 1.22.47 1.64.6.69.22 1.31.19 1.81.11.55-.08 1.72-.7 1.96-1.38.24-.68.24-1.26.17-1.38-.07-.12-.26-.19-.55-.34z"/></svg>
 </a>
+
+<script>
+/* Menu mobile (hambúrguer) */
+document.querySelectorAll('.hamburger').forEach(function(h){
+  h.addEventListener('click',function(){
+    var nav=h.closest('.nav'); var open=nav.classList.toggle('open');
+    h.setAttribute('aria-expanded',open?'true':'false');
+  });
+});
+/* Pop-up do hero: mostra os próximos dias a partir de hoje */
+(function(){
+  var el=document.getElementById('mockDays'); if(!el) return;
+  var dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  var hoje=new Date(), out=[];
+  for(var i=0;i<4;i++){
+    var d=new Date(hoje); d.setDate(hoje.getDate()+i);
+    var lbl = i===0 ? 'Hoje' : (i===1 ? 'Amanhã' : dias[d.getDay()]+' '+String(d.getDate()).padStart(2,'0'));
+    out.push('<div class="mopt">'+lbl+'</div>');
+  }
+  el.innerHTML=out.join('');
+})();
+</script>
 
 </body>
 </html>
