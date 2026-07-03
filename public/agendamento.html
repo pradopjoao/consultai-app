@@ -254,6 +254,7 @@ function concluir(protocolo){
     const ok=document.createElement('div');ok.className='ok';
     ok.innerHTML='<b>Consulta confirmada! 🎉</b>'+(state.paciente.nome||'')+', sua consulta é <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>Enviaremos o link da videochamada no seu WhatsApp.'+(protocolo?(' Protocolo: <b>'+protocolo+'</b>.'):'');
     chat.appendChild(ok);
+    bot('📧 Enviamos um <b>e-mail de confirmação</b> para <b>'+(state.paciente.email||'seu e-mail')+'</b> com todos os detalhes. Não achou? Dá uma olhada no <b>lixo eletrônico</b>.');
     bot('Receita ou atestado serão emitidos pelo médico <b>se indicados</b> na consulta, com assinatura digital válida em todo o Brasil. Até já! 👩‍⚕️');
     const foot=document.createElement('div');foot.className='foot';foot.textContent='Consultaí · Telemedicina conforme a Resolução CFM nº 2.314/2022';
     chat.appendChild(foot);scroll();
