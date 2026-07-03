@@ -82,6 +82,31 @@ async function shosp(pathname, formObj) {
   }
 }
 
+async function shospGet(pathname, queryObj) {
+  const qs = new URLSearchParams(queryObj).toString();
+  const r = await fetch(SHOSP_BASE + pathname + '?' + qs, {
+    headers: { 'x-api-key': SHOSP_API_KEY, 'id': SHOSP_ID, 'accept': 'application/json' },
+  });
+  const txt = await r.text();
+  let data; try { data = JSON.parse(txt); } catch { data = txt; }
+  if (!r.ok) throw new Error('Shosp GET ' + r.status + ': ' + txt);
+  return data;
+}
+
+/* Acha o codigoPaciente em qualquer formato de resposta da busca */
+function acharCodigoPaciente(data) {
+  let found = null;
+  (function walk(n) {
+    if (found != null) return;
+    if (Array.isArray(n)) { n.forEach(walk); return; }
+    if (n && typeof n === 'object') {
+      if (n.codigoPaciente != null) { found = n.codigoPaciente; return; }
+      Object.values(n).forEach(walk);
+    }
+  })(data);
+  return found;
+}
+
 /* Normaliza a resposta de /agenda/get/ em uma lista simples:
    [{ data:'YYYY-MM-DD', horario:'HH:MM', codigoHorario:123 }]
    OBS: a forma exata do JSON do Shosp só dá pra confirmar com uma chamada
@@ -189,10 +214,33 @@ async function efetivarAgendamento(paymentId) {
   if (COD_ESPECIALIDADE) form.codigoEspecialidade = COD_ESPECIALIDADE;
 
   console.log('[agenda] enviando ao Shosp (pagamento ' + paymentId + '): ' + JSON.stringify(form));
-  const r = await shosp('/agenda/', form);
+  let r = await shosp('/agenda/', form);
   console.log('[agenda] resposta do Shosp para pagamento ' + paymentId + ': ' + JSON.stringify(r).slice(0, 400));
+
+  // O Shosp sinaliza sucesso com ret:"1". ret:"0" é RECUSA (ex.: paciente já cadastrado).
+  if (!r || r.ret !== '1') {
+    const msg = (r && (r.msg || r.mensagem)) || JSON.stringify(r);
+    if (/j[áa] foi cadastrado/i.test(msg)) {
+      console.log('[agenda] paciente já existe no Shosp — buscando codigoPaciente…');
+      const query = { nome: p.paciente.nome };
+      if (p.paciente.cpf) query.cpf = String(p.paciente.cpf).replace(/\D/g, '');
+      const busca = await shospGet('/cadastro/paciente', query);
+      const cod = acharCodigoPaciente(busca);
+      if (!cod) throw new Error('Shosp: paciente já cadastrado, mas a busca não retornou o codigoPaciente');
+      console.log('[agenda] codigoPaciente encontrado: ' + cod + ' — reagendando com ele…');
+      r = await shosp('/agenda/', { ...form, codigoPaciente: cod });
+      console.log('[agenda] resposta do reagendamento: ' + JSON.stringify(r).slice(0, 400));
+      if (!r || r.ret !== '1') {
+        throw new Error('Shosp recusou o agendamento (mesmo com codigoPaciente): ' + ((r && (r.msg || r.mensagem)) || JSON.stringify(r)));
+      }
+    } else {
+      throw new Error('Shosp recusou o agendamento: ' + msg);
+    }
+  }
+
   p.booked = true;
-  p.protocolo = (r && (r.protocolo || r.codigo || r.id)) || ('CS-' + paymentId);
+  p.protocolo = (r && r.dados && (r.dados.codigoAgendamento || r.dados.protocolo)) ||
+                (r && (r.protocolo || r.codigo || r.id)) || ('CS-' + paymentId);
   pendentes.set(String(paymentId), p);
   console.log('[agenda] ✔ consulta agendada — ' + p.slot.data + ' ' + p.slot.horario + ' — ' + (p.paciente.nome || '') + ' — protocolo ' + p.protocolo);
   return { agendado: true, protocolo: p.protocolo };
