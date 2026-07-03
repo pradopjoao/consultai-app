@@ -168,6 +168,53 @@ async function mpStatus(id) {
   return (await mpGetPayment(id)).status; // pending | approved | rejected ...
 }
 
+/* Motor de agendamento no Shosp — usado pela produção E pelo diagnóstico.
+   Trata a recusa "paciente já cadastrado" buscando o codigoPaciente e reagendando. */
+async function agendarNoShosp(p, tag) {
+  const form = {
+    codigoPrestador: COD_PRESTADOR,
+    codigoUnidade: COD_UNIDADE,
+    codigoServico: COD_SERVICO,
+    codigoPlanoSaude: COD_PLANO,
+    data: p.slot.data,
+    horario: p.slot.horario,
+    codigoHorario: p.slot.codigoHorario,
+    nome: p.paciente.nome,
+    telefone: p.paciente.telefone,
+    email: p.paciente.email,
+    dataNascimento: p.paciente.dataNascimento,
+    sexo: p.paciente.sexo,
+  };
+  if (p.paciente.cpf) form.cpf = String(p.paciente.cpf).replace(/\D/g, '');
+  if (COD_ESPECIALIDADE) form.codigoEspecialidade = COD_ESPECIALIDADE;
+
+  console.log('[agenda] enviando ao Shosp (' + tag + '): ' + JSON.stringify(form));
+  let r = await shosp('/agenda/', form);
+  console.log('[agenda] resposta do Shosp (' + tag + '): ' + JSON.stringify(r).slice(0, 400));
+
+  // O Shosp sinaliza sucesso com ret:"1". ret:"0" é RECUSA (ex.: paciente já cadastrado).
+  if (!r || r.ret !== '1') {
+    const msg = (r && (r.msg || r.mensagem)) || JSON.stringify(r);
+    if (/j[áa] foi cadastrado/i.test(msg)) {
+      console.log('[agenda] paciente já existe no Shosp — buscando codigoPaciente…');
+      const query = { nome: p.paciente.nome };
+      if (p.paciente.cpf) query.cpf = String(p.paciente.cpf).replace(/\D/g, '');
+      const busca = await shospGet('/cadastro/paciente', query);
+      const cod = acharCodigoPaciente(busca);
+      if (!cod) throw new Error('Shosp: paciente já cadastrado, mas a busca não retornou o codigoPaciente');
+      console.log('[agenda] codigoPaciente encontrado: ' + cod + ' — reagendando com ele…');
+      r = await shosp('/agenda/', { ...form, codigoPaciente: cod });
+      console.log('[agenda] resposta do reagendamento (' + tag + '): ' + JSON.stringify(r).slice(0, 400));
+      if (!r || r.ret !== '1') {
+        throw new Error('Shosp recusou o agendamento (mesmo com codigoPaciente): ' + ((r && (r.msg || r.mensagem)) || JSON.stringify(r)));
+      }
+    } else {
+      throw new Error('Shosp recusou o agendamento: ' + msg);
+    }
+  }
+  return r;
+}
+
 /* Cria o agendamento no Shosp (idempotente: só agenda uma vez por pagamento) */
 async function efetivarAgendamento(paymentId) {
   let p = pendentes.get(String(paymentId));
@@ -196,47 +243,7 @@ async function efetivarAgendamento(paymentId) {
   }
   if (p.booked) return { agendado: true, protocolo: p.protocolo, jaAgendado: true };
 
-  const form = {
-    codigoPrestador: COD_PRESTADOR,
-    codigoUnidade: COD_UNIDADE,
-    codigoServico: COD_SERVICO,
-    codigoPlanoSaude: COD_PLANO,
-    data: p.slot.data,
-    horario: p.slot.horario,
-    codigoHorario: p.slot.codigoHorario,
-    nome: p.paciente.nome,
-    telefone: p.paciente.telefone,
-    email: p.paciente.email,
-    dataNascimento: p.paciente.dataNascimento,
-    sexo: p.paciente.sexo,
-  };
-  if (p.paciente.cpf) form.cpf = String(p.paciente.cpf).replace(/\D/g, '');
-  if (COD_ESPECIALIDADE) form.codigoEspecialidade = COD_ESPECIALIDADE;
-
-  console.log('[agenda] enviando ao Shosp (pagamento ' + paymentId + '): ' + JSON.stringify(form));
-  let r = await shosp('/agenda/', form);
-  console.log('[agenda] resposta do Shosp para pagamento ' + paymentId + ': ' + JSON.stringify(r).slice(0, 400));
-
-  // O Shosp sinaliza sucesso com ret:"1". ret:"0" é RECUSA (ex.: paciente já cadastrado).
-  if (!r || r.ret !== '1') {
-    const msg = (r && (r.msg || r.mensagem)) || JSON.stringify(r);
-    if (/j[áa] foi cadastrado/i.test(msg)) {
-      console.log('[agenda] paciente já existe no Shosp — buscando codigoPaciente…');
-      const query = { nome: p.paciente.nome };
-      if (p.paciente.cpf) query.cpf = String(p.paciente.cpf).replace(/\D/g, '');
-      const busca = await shospGet('/cadastro/paciente', query);
-      const cod = acharCodigoPaciente(busca);
-      if (!cod) throw new Error('Shosp: paciente já cadastrado, mas a busca não retornou o codigoPaciente');
-      console.log('[agenda] codigoPaciente encontrado: ' + cod + ' — reagendando com ele…');
-      r = await shosp('/agenda/', { ...form, codigoPaciente: cod });
-      console.log('[agenda] resposta do reagendamento: ' + JSON.stringify(r).slice(0, 400));
-      if (!r || r.ret !== '1') {
-        throw new Error('Shosp recusou o agendamento (mesmo com codigoPaciente): ' + ((r && (r.msg || r.mensagem)) || JSON.stringify(r)));
-      }
-    } else {
-      throw new Error('Shosp recusou o agendamento: ' + msg);
-    }
-  }
+  const r = await agendarNoShosp(p, 'pagamento ' + paymentId);
 
   p.booked = true;
   p.protocolo = (r && r.dados && (r.dados.codigoAgendamento || r.dados.protocolo)) ||
@@ -333,13 +340,12 @@ app.get('/api/diag-agenda-7k2p9', async (req, res) => {
     const slot = slots[slots.length - 1];
     if (!slot) throw new Error('nenhum horário livre para testar');
     out.passos.push({ leitura: 'ok', totalSlots: slots.length, slotTeste: slot });
-    const r = await shosp('/agenda/', {
-      codigoPrestador: COD_PRESTADOR, codigoUnidade: COD_UNIDADE,
-      codigoServico: COD_SERVICO, codigoPlanoSaude: COD_PLANO,
-      data: slot.data, horario: slot.horario, codigoHorario: slot.codigoHorario,
-      nome: 'TESTE CONSULTAI - PODE EXCLUIR', telefone: '(11) 90000-0000',
-      email: 'teste@consultai.invalid', dataNascimento: '1990-01-01', sexo: 'M',
-    });
+    // Usa o MESMO motor da produção (inclui o tratamento de "paciente já cadastrado")
+    const r = await agendarNoShosp({
+      paciente: { nome: 'TESTE CONSULTAI - PODE EXCLUIR', telefone: '(11) 90000-0000',
+        email: 'teste@consultai.invalid', dataNascimento: '1990-01-01', sexo: 'M' },
+      slot: slot,
+    }, 'diagnóstico');
     out.passos.push({ agendamentoTeste: r });
     const cod = r && r.dados && r.dados.codigoAgendamento;
     if (cod) {
