@@ -49,24 +49,37 @@ const {
 const pendentes = new Map();
 
 /* ----------------------------- Shosp ----------------------------------- */
-async function shosp(pathname, formObj) {
-  const r = await fetch(SHOSP_BASE + pathname, {
-    method: 'POST',
-    headers: {
-      'x-api-key': SHOSP_API_KEY,
-      'id': SHOSP_ID,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams(formObj).toString(),
-  });
+async function shospRequest(pathname, formObj, modo) {
+  const headers = { 'x-api-key': SHOSP_API_KEY, 'id': SHOSP_ID, 'accept': 'application/json' };
+  let body;
+  if (modo === 'multipart') {
+    body = new FormData(); // igual ao Swagger — o fetch define o boundary sozinho
+    Object.entries(formObj).forEach(([k, v]) => body.append(k, String(v)));
+  } else {
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    body = new URLSearchParams(formObj).toString();
+  }
+  const r = await fetch(SHOSP_BASE + pathname, { method: 'POST', headers, body });
   const txt = await r.text();
   let data; try { data = JSON.parse(txt); } catch { data = txt; }
   if (!r.ok) throw new Error('Shosp ' + r.status + ': ' + txt);
   // O Shosp às vezes devolve uma TELA DE ERRO com status 200 — detecta e trata como falha:
   if (typeof data === 'string' && /<script|alerta\(|algo deu errado|comportou mal/i.test(data)) {
-    throw new Error('Shosp retornou erro interno: ' + txt.replace(/\s+/g, ' ').slice(0, 200));
+    const e = new Error('Shosp retornou erro interno: ' + txt.replace(/\s+/g, ' ').slice(0, 200));
+    e.shospInterno = true;
+    throw e;
   }
   return data;
+}
+
+async function shosp(pathname, formObj) {
+  try {
+    return await shospRequest(pathname, formObj, 'urlencoded');
+  } catch (e) {
+    if (!e.shospInterno) throw e;
+    console.log('[shosp] erro interno com urlencoded em ' + pathname + ' — tentando multipart/form-data…');
+    return await shospRequest(pathname, formObj, 'multipart');
+  }
 }
 
 /* Normaliza a resposta de /agenda/get/ em uma lista simples:
@@ -257,6 +270,44 @@ app.post('/api/webhook', async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => res.json({ ok: true, servico: 'consultai-backend' }));
+
+/* Rota TEMPORÁRIA de diagnóstico (remover depois que tudo estiver ok):
+   agenda um paciente de TESTE no último horário livre e cancela em seguida. */
+app.get('/api/diag-agenda-7k2p9', async (req, res) => {
+  const out = { passos: [] };
+  try {
+    const hoje = new Date().toISOString().slice(0, 10);
+    const ag = await shosp('/agenda/get/', {
+      codigoUnidade: COD_UNIDADE, codigoPrestador: COD_PRESTADOR,
+      dataInicial: hoje, diasMostrar: '14',
+    });
+    const slots = normalizarHorarios(ag);
+    const slot = slots[slots.length - 1];
+    if (!slot) throw new Error('nenhum horário livre para testar');
+    out.passos.push({ leitura: 'ok', totalSlots: slots.length, slotTeste: slot });
+    const r = await shosp('/agenda/', {
+      codigoPrestador: COD_PRESTADOR, codigoUnidade: COD_UNIDADE,
+      codigoServico: COD_SERVICO, codigoPlanoSaude: COD_PLANO,
+      data: slot.data, horario: slot.horario, codigoHorario: slot.codigoHorario,
+      nome: 'TESTE CONSULTAI - PODE EXCLUIR', telefone: '(11) 90000-0000',
+      email: 'teste@consultai.invalid', dataNascimento: '1990-01-01', sexo: 'M',
+    });
+    out.passos.push({ agendamentoTeste: r });
+    const cod = r && r.dados && r.dados.codigoAgendamento;
+    if (cod) {
+      try {
+        const c = await shosp('/agenda/cancelaragendamento', { codigoAgendamento: cod });
+        out.passos.push({ cancelamento: c });
+      } catch (e) {
+        out.passos.push({ cancelamentoFalhou: e.message, aviso: 'exclua manualmente o TESTE CONSULTAI da agenda' });
+      }
+    }
+    out.ok = true;
+  } catch (e) {
+    out.ok = false; out.erro = e.message;
+  }
+  res.json(out);
+});
 
 // Página 404 personalizada (qualquer rota que não exista)
 app.use((req, res) => {
