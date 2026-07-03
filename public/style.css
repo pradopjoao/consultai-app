@@ -152,7 +152,7 @@ footer .lk{display:block;padding:4px 0}
 footer .contact p{padding:3px 0}
 footer .contact .init{font-size:12.5px;color:#7C969B;margin-top:2px;letter-spacing:.3px}
 footer .contact .octa{color:#CDE0E3;font-weight:600;margin-top:12px}
-footer a.cta-ic{display:inline-flex;align-items:center;gap:8px;color:#9FB4B8;text-decoration:none;padding:4px 0;transition:.15s}
+footer a.cta-ic{display:inline-flex;align-items:center;gap:8px;color:#9FB4B8;text-decoration:none;padding:4px 0;transition:.15s;overflow-wrap:anywhere}
 footer a.cta-ic svg{width:16px;height:16px;fill:currentColor;flex:none;opacity:.9;transition:.15s}
 footer a.cta-ic:hover{color:#5BD6CB}
 footer a.cta-ic:hover svg{opacity:1}
@@ -196,7 +196,7 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
   /* Menu vira dropdown acionado pelo hambúrguer */
   .hamburger{display:flex}
   .menu{
-    position:absolute;top:calc(100% + 1px);left:-22px;right:-22px;
+    position:absolute;top:calc(100% + 1px);left:0;right:0;
     flex-direction:column;align-items:stretch;gap:0;
     background:#fff;border-bottom:1px solid var(--line);
     box-shadow:0 16px 30px rgba(12,74,82,.12);
@@ -217,4 +217,5 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
   .btn{padding:14px 22px;font-size:15.5px}
   .pricebox .v{font-size:44px}
   .trustbar{grid-template-columns:1fr}
+  footer .cols{grid-template-columns:1fr;gap:26px}
 }
