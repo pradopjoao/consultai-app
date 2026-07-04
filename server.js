@@ -48,26 +48,30 @@ const {
 } = process.env;
 
 /* --------- E-mails via Brevo (API HTTPS — o Render bloqueia SMTP) -------- */
-async function enviarEmail(para, assunto, html) {
+async function enviarEmail(para, assunto, html, replyTo) {
   if (!BREVO_API_KEY || !NOTIF_EMAIL_FROM) {
     console.log('[email] não configurado (defina BREVO_API_KEY e NOTIF_EMAIL_FROM)');
     return false;
   }
   // aceita vários destinatários separados por vírgula
   const destinatarios = String(para).split(',').map(e => ({ email: e.trim() })).filter(d => d.email);
+  const corpo = {
+    sender: { name: 'Consultaí', email: NOTIF_EMAIL_FROM },
+    to: destinatarios,
+    subject: assunto,
+    htmlContent: html,
+  };
+  if (replyTo) corpo.replyTo = { email: replyTo }; // "responder" vai direto pra quem escreveu
   const r = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json', 'accept': 'application/json' },
-    body: JSON.stringify({
-      sender: { name: 'Consultaí', email: NOTIF_EMAIL_FROM },
-      to: destinatarios,
-      subject: assunto,
-      htmlContent: html,
-    }),
+    body: JSON.stringify(corpo),
   });
   if (!r.ok) throw new Error('Brevo ' + r.status + ': ' + (await r.text()).slice(0, 200));
   return true;
 }
+
+function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
 function dataBR(iso) { const [y, m, d] = String(iso).split('-'); return d + '/' + m + '/' + y; }
 
@@ -494,6 +498,37 @@ app.post('/api/webhook', async (req, res) => {
     console.error('webhook erro:', e.message);
   }
   res.sendStatus(200); // sempre 200 para o MP não reenviar infinitamente
+});
+
+// Formulário "Trabalhe conosco" — envia a mensagem por e-mail via Brevo
+app.post('/api/contato', async (req, res) => {
+  try {
+    const { nome, email, assunto, mensagem, site } = req.body || {};
+    if (site) return res.json({ ok: true }); // honeypot: robôs de spam preenchem este campo invisível
+    if (!nome || !email || !assunto || !mensagem) {
+      return res.status(400).json({ ok: false, erro: 'preencha todos os campos' });
+    }
+    const corpo = `
+      <p style="margin:0 0 10px">Nova mensagem enviada pelo site (página Trabalhe conosco):</p>
+      <table style="border-collapse:collapse;width:100%;font-size:15px">
+        <tr><td style="padding:5px 0;color:#5C7178">👤 Nome</td><td>${escHtml(String(nome).slice(0, 120))}</td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">✉️ E-mail</td><td>${escHtml(String(email).slice(0, 120))}</td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">📌 Assunto</td><td>${escHtml(String(assunto).slice(0, 150))}</td></tr>
+      </table>
+      <div style="background:#F1FBF9;border-radius:10px;padding:14px 16px;margin-top:12px;white-space:pre-wrap">${escHtml(String(mensagem).slice(0, 4000))}</div>
+      <p style="margin:14px 0 0;color:#5C7178;font-size:13px">Para responder, é só responder este e-mail — vai direto pro remetente.</p>`;
+    await enviarEmail(
+      NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM,
+      '💼 Trabalhe conosco: ' + String(assunto).slice(0, 80) + ' — ' + String(nome).slice(0, 60),
+      emailShell('💼 Nova mensagem — Trabalhe conosco', corpo),
+      String(email).slice(0, 120)
+    );
+    console.log('[contato] mensagem recebida de ' + String(email).slice(0, 120));
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[contato] erro: ' + e.message);
+    res.status(500).json({ ok: false, erro: 'não foi possível enviar agora' });
+  }
 });
 
 app.get('/api/health', (req, res) => res.json({ ok: true, servico: 'consultai-backend' }));
