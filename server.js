@@ -53,12 +53,14 @@ async function enviarEmail(para, assunto, html) {
     console.log('[email] não configurado (defina BREVO_API_KEY e NOTIF_EMAIL_FROM)');
     return false;
   }
+  // aceita vários destinatários separados por vírgula
+  const destinatarios = String(para).split(',').map(e => ({ email: e.trim() })).filter(d => d.email);
   const r = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json', 'accept': 'application/json' },
     body: JSON.stringify({
       sender: { name: 'Consultaí', email: NOTIF_EMAIL_FROM },
-      to: [{ email: para }],
+      to: destinatarios,
       subject: assunto,
       htmlContent: html,
     }),
