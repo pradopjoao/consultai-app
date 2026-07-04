@@ -19,7 +19,15 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public'))); // serve o chatbot
+
+// URLs limpas: redireciona /pagina.html -> /pagina (301, bom para SEO)
+app.get(/\.html$/, (req, res) => {
+  const limpo = req.path === '/index.html' ? '/' : req.path.slice(0, -5);
+  const qs = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+  res.redirect(301, limpo + qs);
+});
+// Serve os arquivos; "extensions:['html']" faz /trabalhe-conosco achar trabalhe-conosco.html
+app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 // CORS (caso o site fique em outro domínio que o backend)
 app.use((req, res, next) => {
