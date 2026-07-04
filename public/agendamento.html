@@ -257,6 +257,7 @@ async function payment(){
         '<div class="code">'+(pay.copiaECola||'')+'</div>'+
         '<button class="copy" id="cp">Copiar código Pix</button>';
       chat.appendChild(box);scroll();
+      if(window.fbq) fbq('track','InitiateCheckout',{value:40,currency:'BRL'}); // gerou o Pix
       document.getElementById('cp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(pay.copiaECola||'');document.getElementById('cp').textContent='Copiado ✓';};
       clearBar();
       const btn=document.createElement('button');btn.className='btn coral';btn.textContent= DEMO?'Simular pagamento':'Já paguei';
@@ -278,6 +279,8 @@ async function aguardarPagamento(id,btn){
 }
 function concluir(protocolo){
   clearBar();
+  // Evento de CONVERSÃO: paciente pagou. É isso que o Meta usa para otimizar os anúncios.
+  if(window.fbq) fbq('track','Purchase',{value:40,currency:'BRL',content_name:'Consulta médica online'});
   typing(()=>{
     const ok=document.createElement('div');ok.className='ok';
     ok.innerHTML='<b>Consulta confirmada! 🎉</b>'+(state.paciente.nome||'')+', sua consulta é <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>Enviaremos o link da videochamada no seu WhatsApp.'+(protocolo?(' Protocolo: <b>'+protocolo+'</b>.'):'');
