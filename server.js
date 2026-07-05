@@ -155,6 +155,22 @@ async function confirmarPaciente(p, protocolo) {
 // (em memória — para MVP. Em produção, troque por um banco de dados.)
 const pendentes = new Map();
 
+/* Trava de horário: quando um paciente gera o Pix, o horário fica "reservado"
+   por 12 min (tempo de vida do Pix). Enquanto travado, some da lista dos outros.
+   Pagou -> vira reserva firme. Não pagou -> destrava sozinho. Evita 2 pessoas
+   pagarem o mesmo horário. */
+const travas = new Map(); // chave `data|codigoHorario` -> expira em (ms)
+const TRAVA_MS = 12 * 60 * 1000;
+const chaveTrava = (data, cod) => String(data) + '|' + String(cod);
+function travar(data, cod) { travas.set(chaveTrava(data, cod), Date.now() + TRAVA_MS); }
+function destravar(data, cod) { travas.delete(chaveTrava(data, cod)); }
+function estaTravado(data, cod) {
+  const exp = travas.get(chaveTrava(data, cod));
+  if (!exp) return false;
+  if (Date.now() > exp) { travas.delete(chaveTrava(data, cod)); return false; } // expirou
+  return true;
+}
+
 /* ----------------------------- Shosp ----------------------------------- */
 async function shospRequest(pathname, formObj, modo) {
   const headers = { 'x-api-key': SHOSP_API_KEY, 'id': SHOSP_ID, 'accept': 'application/json' };
@@ -416,8 +432,19 @@ async function efetivarAgendamento(paymentId) {
   }
   if (p.booked) return { agendado: true, protocolo: p.protocolo, jaAgendado: true };
 
-  const r = await agendarNoShosp(p, 'pagamento ' + paymentId);
+  let r;
+  try {
+    r = await agendarNoShosp(p, 'pagamento ' + paymentId);
+  } catch (e) {
+    // REDE DE SEGURANÇA: paciente pagou mas o Shosp recusou (ex.: colisão de horário
+    // que escapou da trava). Alerta o médico na hora para resolver manualmente — o
+    // dinheiro já entrou, então honramos o atendimento de um jeito ou de outro.
+    console.error('[agenda] ⚠ FALHA pós-pagamento ' + paymentId + ': ' + e.message);
+    alertarFalhaAgendamento(p, paymentId, e.message);
+    throw e;
+  }
 
+  destravar(p.slot.data, p.slot.codigoHorario); // reserva virou firme
   p.booked = true;
   p.protocolo = (r && r.dados && (r.dados.codigoAgendamento || r.dados.protocolo)) ||
                 (r && (r.protocolo || r.codigo || r.id)) || ('CS-' + paymentId);
@@ -426,6 +453,23 @@ async function efetivarAgendamento(paymentId) {
   avisarNovaConsulta(p, p.protocolo, paymentId); // aviso interno em segundo plano
   confirmarPaciente(p, p.protocolo);             // confirmação ao paciente em segundo plano
   return { agendado: true, protocolo: p.protocolo };
+}
+
+/* Alerta urgente ao médico quando um pagamento aprovado NÃO virou agenda */
+async function alertarFalhaAgendamento(p, paymentId, motivo) {
+  try {
+    const corpo = `
+      <p style="margin:0 0 12px;color:#9a2a12;font-weight:bold">⚠️ Um paciente PAGOU mas a consulta não entrou na agenda. Resolva manualmente e entre em contato com ele.</p>
+      <table style="border-collapse:collapse;width:100%;font-size:15px">
+        <tr><td style="padding:5px 0;color:#5C7178">Paciente</td><td><b>${p.paciente.nome || '—'}</b></td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">Horário desejado</td><td>${dataBR(p.slot.data)} · ${p.slot.horario}</td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">WhatsApp</td><td>${p.paciente.telefone || '—'}</td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">E-mail</td><td>${p.paciente.email || '—'}</td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">Pagamento MP</td><td>${paymentId}</td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">Motivo</td><td>${String(motivo).slice(0, 160)}</td></tr>
+      </table>`;
+    await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, '🚨 URGENTE: pagamento sem agenda — ' + (p.paciente.nome || 'paciente'), emailShell('🚨 Pagamento sem agenda', corpo, '#c0392b'));
+  } catch (e) { console.error('[alerta] falhou: ' + e.message); }
 }
 
 /* ------------------------------ Rotas ---------------------------------- */
@@ -445,9 +489,9 @@ app.get('/api/horarios', async (req, res) => {
     const sp = new Date(Date.now() - 3 * 3600 * 1000 + MARGEM_MIN * 60 * 1000);
     const hojeSP = sp.toISOString().slice(0, 10);
     const horaMin = sp.toISOString().slice(11, 16);
-    const slots = normalizarHorarios(data).filter(s =>
-      String(s.data) > hojeSP || (String(s.data) === hojeSP && String(s.horario) >= horaMin)
-    );
+    const slots = normalizarHorarios(data)
+      .filter(s => String(s.data) > hojeSP || (String(s.data) === hojeSP && String(s.horario) >= horaMin))
+      .filter(s => !estaTravado(s.data, s.codigoHorario)); // esconde horários reservados em checkout
     res.json({ ok: true, slots });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message });
@@ -470,7 +514,8 @@ app.post('/api/checkout', async (req, res) => {
       slot: { data, horario, codigoHorario },
       booked: false,
     });
-    console.log('[checkout] Pix criado — pagamento ' + pay.id + ' — ' + data + ' ' + horario + ' — ' + nome);
+    travar(data, codigoHorario); // reserva o horário por 12 min — some da lista dos outros
+    console.log('[checkout] Pix criado — pagamento ' + pay.id + ' — ' + data + ' ' + horario + ' — ' + nome + ' (horário travado)');
     res.json({ ok: true, paymentId: pay.id, copiaECola: pay.copiaECola, qrBase64: pay.qrBase64, ticketUrl: pay.ticketUrl, valor: Number(PRECO) });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message });
