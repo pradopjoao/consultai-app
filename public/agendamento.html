@@ -300,6 +300,7 @@ async function payment(){
   });
 }
 let pollTimer=null;
+let concluido=false; // trava anti-duplicidade: garante que concluir() (e o Purchase) rode uma única vez
 function iniciarPolling(id){ pollTimer=setInterval(()=>checarStatus(id),5000); }
 async function checarStatus(id){
   try{ const j=await api('/api/checkout/'+id); if(j.status==='approved'){ clearInterval(pollTimer); concluir(j.protocolo); } }catch(e){}
@@ -310,9 +311,12 @@ async function aguardarPagamento(id,btn){
   catch(e){ btn.disabled=false;btn.textContent='Tentar de novo'; }
 }
 function concluir(protocolo){
+  if(concluido) return; // já concluído nesta sessão: evita Purchase e confirmação duplicados
+  concluido=true;
   clearBar();
   // Evento de CONVERSÃO: paciente pagou. É isso que o Meta usa para otimizar os anúncios.
-  if(window.fbq) fbq('track','Purchase',{value:40,currency:'BRL',content_name:'Consulta médica online'});
+  // eventID atrelado ao protocolo dá uma 2ª camada de dedupe do lado da Meta.
+  if(window.fbq) fbq('track','Purchase',{value:40,currency:'BRL',content_name:'Consulta médica online'}, protocolo?{eventID:'purchase_'+protocolo}:undefined);
   typing(()=>{
     const ok=document.createElement('div');ok.className='ok';
     ok.innerHTML='<b>Consulta confirmada! 🎉</b>'+(state.paciente.nome||'')+', sua consulta é <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>Enviaremos o link da videochamada no seu WhatsApp.'+(protocolo?(' Protocolo: <b>'+protocolo+'</b>.'):'');
