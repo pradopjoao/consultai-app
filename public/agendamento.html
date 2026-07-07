@@ -170,40 +170,29 @@ function askDate(datas){
 }
 function localISO(off){const d=new Date();d.setDate(d.getDate()+off);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function toMin(h){const[H,M]=h.split(':').map(Number);return H*60+M;}
-/* Hoje: 2 próximos + 2 tarde + 1 noite (sem "mostrar mais") — dá sensação de agenda concorrida */
-function curadoHoje(slots){
-  const escolhidos=[];const usados=new Set();
-  const add=s=>{if(s&&!usados.has(s.codigoHorario)){usados.add(s.codigoHorario);escolhidos.push(s);}};
-  slots.slice(0,2).forEach(add); // 2 mais próximos
-  const tarde=slots.filter(s=>toMin(s.horario)>=12*60&&toMin(s.horario)<18*60&&!usados.has(s.codigoHorario));
-  const noite=slots.filter(s=>toMin(s.horario)>=18*60&&!usados.has(s.codigoHorario));
-  if(tarde.length)add(tarde[Math.floor(tarde.length*0.33)]);
-  if(tarde.length>1)add(tarde[Math.floor(tarde.length*0.72)]);
-  if(noite.length)add(noite[Math.floor(noite.length*0.5)]);
-  // completa até 5 com o que sobrar, se algum bloco estiver vazio
-  for(const s of slots){if(escolhidos.length>=5)break;add(s);}
-  return escolhidos.sort((a,b)=>toMin(a.horario)-toMin(b.horario));
-}
-/* Espalha ~n horários ao longo do dia (amanhã) */
-function espalhar(slots,n){if(slots.length<=n)return slots.slice();const out=[];const step=slots.length/n;for(let i=0;i<n;i++)out.push(slots[Math.floor(i*step)]);return out;}
-
+/* Exibição tradicional: 8 horários por dia; "Mostrar mais" revela +8; o clique seguinte revela todos. */
 function chooseTime(){
   typing(()=>{
     bot('Horários livres para <b>'+rotulo(state.date)+'</b>:');
     const all=(slotsByDate[state.date]||[]).slice().sort((a,b)=>toMin(a.horario)-toMin(b.horario));
-    let mostra, resto=[];
-    if(state.date===localISO(0)){ mostra=curadoHoje(all); resto=[]; }               // hoje: curado, sem mostrar mais
-    else if(state.date===localISO(1)){ mostra=espalhar(all,10); resto=all.filter(s=>!mostra.includes(s)); } // amanhã: ~10 + mostrar mais
-    else { mostra=all.slice(0,8); resto=all.slice(8); }                              // depois: agenda cheia + mostrar mais
     const grid=document.createElement('div');grid.className='opts';
+    let maisBtn=null;
     const addChip=s=>{const b=document.createElement('button');b.className='opt';b.textContent=s.horario;
       b.onclick=()=>{state.time=s.horario;state.codigoHorario=s.codigoHorario;me(s.horario+'h');grid.remove();if(maisBtn)maisBtn.remove();identify();};grid.appendChild(b);};
-    mostra.forEach(addChip);
     chat.appendChild(grid);
-    let maisBtn=null;
-    if(resto.length){
-      maisBtn=document.createElement('button');maisBtn.className='opt';maisBtn.style.marginTop='8px';maisBtn.textContent='Mostrar mais horários ('+resto.length+')';
-      maisBtn.onclick=()=>{maisBtn.remove();resto.forEach(addChip);scroll();};
+    let shown=0;
+    const mostrarAte=fim=>{ fim=Math.min(fim,all.length); for(;shown<fim;shown++) addChip(all[shown]); };
+    mostrarAte(8); // 1º lote: 8 horários
+    if(shown<all.length){
+      maisBtn=document.createElement('button');maisBtn.className='opt';maisBtn.style.marginTop='8px';
+      maisBtn.textContent='Mostrar mais horários ('+(all.length-shown)+')';
+      maisBtn.onclick=()=>{                 // 2º clique: revela +8
+        mostrarAte(shown+8);
+        if(shown>=all.length){ maisBtn.remove(); }
+        else { maisBtn.textContent='Mostrar todos os horários ('+(all.length-shown)+')';
+               maisBtn.onclick=()=>{ mostrarAte(all.length); maisBtn.remove(); scroll(); }; } // 3º clique: revela todos
+        scroll();
+      };
       chat.appendChild(maisBtn);
     }
     scroll();
