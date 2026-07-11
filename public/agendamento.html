@@ -185,11 +185,11 @@ function chooseTime(){
     mostrarAte(8); // 1º lote: 8 horários
     if(shown<all.length){
       maisBtn=document.createElement('button');maisBtn.className='opt';maisBtn.style.marginTop='8px';
-      maisBtn.textContent='Mostrar mais horários ('+(all.length-shown)+')';
+      maisBtn.textContent='Mostrar mais horários';
       maisBtn.onclick=()=>{                 // 2º clique: revela +8
         mostrarAte(shown+8);
         if(shown>=all.length){ maisBtn.remove(); }
-        else { maisBtn.textContent='Mostrar todos os horários ('+(all.length-shown)+')';
+        else { maisBtn.textContent='Mostrar mais horários';
                maisBtn.onclick=()=>{ mostrarAte(all.length); maisBtn.remove(); scroll(); }; } // 3º clique: revela todos
         scroll();
       };
