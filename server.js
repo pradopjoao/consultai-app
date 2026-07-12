@@ -29,14 +29,33 @@ app.get(/\.html$/, (req, res) => {
 // Serve os arquivos; "extensions:['html']" faz /trabalhe-conosco achar trabalhe-conosco.html
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
-// CORS (caso o site fique em outro domínio que o backend)
+// CORS + headers de segurança
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
+  res.header('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://vemconsultai.com.br');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.header('X-Content-Type-Options', 'nosniff');
+  res.header('X-Frame-Options', 'SAMEORIGIN');
+  res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.header('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+
+// Rate limit simples em memória (sem dependência) — protege contra abuso/spam
+const _rl = new Map();
+function rateLimit(max, windowMs) {
+  return (req, res, next) => {
+    const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+    const key = ip + '|' + req.path;
+    const now = Date.now();
+    let e = _rl.get(key);
+    if (!e || now > e.reset) { e = { count: 0, reset: now + windowMs }; _rl.set(key, e); }
+    e.count++;
+    if (e.count > max) return res.status(429).json({ ok: false, erro: 'Muitas tentativas. Aguarde alguns minutos.' });
+    next();
+  };
+}
 
 const {
   SHOSP_BASE = 'https://sistema.shosp.com.br/api',
@@ -506,7 +525,7 @@ app.get('/api/horarios', async (req, res) => {
   }
 });
 
-app.post('/api/checkout', async (req, res) => {
+app.post('/api/checkout', rateLimit(8, 10 * 60 * 1000), async (req, res) => {
   try {
     const { nome, cpf, telefone, email, dataNascimento, sexo, data, horario, codigoHorario } = req.body;
     if (!nome || !email || !data || !horario || codigoHorario == null) {
@@ -570,7 +589,7 @@ app.post('/api/webhook', async (req, res) => {
 });
 
 // Formulário "Trabalhe conosco" — envia a mensagem por e-mail via Brevo
-app.post('/api/contato', async (req, res) => {
+app.post('/api/contato', rateLimit(5, 10 * 60 * 1000), async (req, res) => {
   try {
     const { nome, email, assunto, mensagem, site } = req.body || {};
     if (site) return res.json({ ok: true }); // honeypot: robôs de spam preenchem este campo invisível
