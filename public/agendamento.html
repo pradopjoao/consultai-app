@@ -234,6 +234,9 @@ function formCadastro(pre){
     <div><label>Data de nascimento <span class="req">*</span></label><input id="f_nasc" inputmode="numeric" placeholder="dd/mm/aaaa" oninput="this.value=maskData(this.value)"></div>
     <div><label>Sexo <span class="req">*</span></label><select id="f_sexo"><option value="">Selecione</option><option value="F">Feminino</option><option value="M">Masculino</option></select></div>`;
   chat.appendChild(f);scroll();
+  const consent=document.createElement('div');consent.className='foot';consent.style.cssText='text-align:left;padding:2px 4px 0;line-height:1.5';
+  consent.innerHTML='🔒 Seus dados são usados apenas para o seu atendimento. Ao continuar, você concorda com a <a href="/privacidade" target="_blank" style="color:var(--teal);font-weight:700;text-decoration:none">Política de Privacidade</a>.';
+  chat.appendChild(consent);scroll();
   // pré-preenche com o que já se sabe
   if(pre.nome) document.getElementById('f_nome').value=pre.nome;
   if(pre.cpf) document.getElementById('f_cpf').value=pre.cpf;
@@ -292,14 +295,14 @@ let pollTimer=null;
 let concluido=false; // trava anti-duplicidade: garante que concluir() (e o Purchase) rode uma única vez
 function iniciarPolling(id){ pollTimer=setInterval(()=>checarStatus(id),5000); }
 async function checarStatus(id){
-  try{ const j=await api('/api/checkout/'+id); if(j.status==='approved'){ clearInterval(pollTimer); concluir(j.protocolo); } }catch(e){}
+  try{ const j=await api('/api/checkout/'+id); if(j.status==='approved'){ clearInterval(pollTimer); concluir(j.protocolo, j.agendado); } }catch(e){}
 }
 async function aguardarPagamento(id,btn){
   if(DEMO){ setTimeout(()=>concluir('CS-DEMO'),900); return; }
-  try{ const j=await api('/api/checkout/'+id); if(j.status==='approved'){ clearInterval(pollTimer); concluir(j.protocolo); } else { btn.disabled=false;btn.textContent='Ainda não caiu — verificar de novo'; } }
+  try{ const j=await api('/api/checkout/'+id); if(j.status==='approved'){ clearInterval(pollTimer); concluir(j.protocolo, j.agendado); } else { btn.disabled=false;btn.textContent='Ainda não caiu — verificar de novo'; } }
   catch(e){ btn.disabled=false;btn.textContent='Tentar de novo'; }
 }
-function concluir(protocolo){
+function concluir(protocolo, agendado){
   if(concluido) return; // já concluído nesta sessão: evita Purchase e confirmação duplicados
   concluido=true;
   clearBar();
@@ -308,9 +311,15 @@ function concluir(protocolo){
   if(window.fbq) fbq('track','Purchase',{value:40,currency:'BRL',content_name:'Consulta médica online'}, protocolo?{eventID:'purchase_'+protocolo}:undefined);
   typing(()=>{
     const ok=document.createElement('div');ok.className='ok';
-    ok.innerHTML='<b>Consulta confirmada! 🎉</b>'+(state.paciente.nome||'')+', sua consulta é <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>Enviaremos o link da videochamada no seu WhatsApp.'+(protocolo?(' Protocolo: <b>'+protocolo+'</b>.'):'');
-    chat.appendChild(ok);
-    bot('📧 Enviamos um <b>e-mail de confirmação</b> para <b>'+(state.paciente.email||'seu e-mail')+'</b> com todos os detalhes. Não achou? Dá uma olhada no <b>lixo eletrônico</b>.');
+    if(agendado===false){
+      // Pagou, mas o agendamento não entrou (raro). Tranquiliza o paciente — o médico já foi avisado.
+      ok.innerHTML='<b>Pagamento recebido! ✅</b> '+(state.paciente.nome?((state.paciente.nome.split(' ')[0])+', '):'')+'estamos confirmando o seu horário de <b>'+rotulo(state.date)+' às '+state.time+'h</b> e você será contatado(a) no <b>WhatsApp</b> em instantes.';
+      chat.appendChild(ok);
+    } else {
+      ok.innerHTML='<b>Consulta confirmada! 🎉</b>'+(state.paciente.nome||'')+', sua consulta é <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>Enviaremos o link da videochamada no seu WhatsApp.'+(protocolo?(' Protocolo: <b>'+protocolo+'</b>.'):'');
+      chat.appendChild(ok);
+      bot('📧 Enviamos um <b>e-mail de confirmação</b> para <b>'+(state.paciente.email||'seu e-mail')+'</b> com todos os detalhes. Não achou? Dá uma olhada no <b>lixo eletrônico</b>.');
+    }
     bot('Receita ou atestado serão emitidos pelo médico <b>se indicados</b> na consulta, com assinatura digital válida em todo o Brasil. Até já! 👩‍⚕️');
     const foot=document.createElement('div');foot.className='foot';foot.textContent='Consultaí · Telemedicina conforme a Resolução CFM nº 2.314/2022';
     chat.appendChild(foot);scroll();
