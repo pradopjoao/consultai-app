@@ -119,13 +119,13 @@ function cardConsulta(p, protocolo) {
 async function avisarNovaConsulta(p, protocolo, paymentId) {
   const dt = dataBR(p.slot.data);
   const corpo = `
-    <p style="margin:0"><b>${p.paciente.nome || '—'}</b> pagou e agendou:</p>
+    <p style="margin:0"><b>${escHtml(p.paciente.nome || '—')}</b> pagou e agendou:</p>
     ${cardConsulta(p, protocolo)}
     <table style="border-collapse:collapse;width:100%;font-size:15px">
-      <tr><td style="padding:5px 0;color:#5C7178">📱 WhatsApp</td><td>${p.paciente.telefone || '—'}</td></tr>
-      <tr><td style="padding:5px 0;color:#5C7178">✉️ E-mail</td><td>${p.paciente.email || '—'}</td></tr>
-      <tr><td style="padding:5px 0;color:#5C7178">🎂 Nascimento</td><td>${p.paciente.dataNascimento || '—'}</td></tr>
-      <tr><td style="padding:5px 0;color:#5C7178">💳 Pagamento MP</td><td>${paymentId}</td></tr>
+      <tr><td style="padding:5px 0;color:#5C7178">📱 WhatsApp</td><td>${escHtml(p.paciente.telefone || '—')}</td></tr>
+      <tr><td style="padding:5px 0;color:#5C7178">✉️ E-mail</td><td>${escHtml(p.paciente.email || '—')}</td></tr>
+      <tr><td style="padding:5px 0;color:#5C7178">🎂 Nascimento</td><td>${escHtml(p.paciente.dataNascimento || '—')}</td></tr>
+      <tr><td style="padding:5px 0;color:#5C7178">💳 Pagamento MP</td><td>${escHtml(String(paymentId))}</td></tr>
     </table>
     <p style="margin:16px 0 0;color:#5C7178;font-size:13px">Já está na agenda do Shosp. Abra a consulta e <b>confirme o paciente</b> para gerar o link da telemedicina.</p>`;
   try {
@@ -139,7 +139,7 @@ async function confirmarPaciente(p, protocolo) {
   if (!p.paciente.email) return;
   const dt = dataBR(p.slot.data);
   const corpo = `
-    <p style="margin:0">Olá, <b>${(p.paciente.nome || '').split(' ')[0]}</b>! 👋 Seu pagamento foi aprovado e sua consulta está marcada.</p>
+    <p style="margin:0">Olá, <b>${escHtml((p.paciente.nome || '').split(' ')[0])}</b>! 👋 Seu pagamento foi aprovado e sua consulta está marcada.</p>
     ${cardConsulta(p, protocolo)}
     <p style="margin:0 0 10px">📱 O <b>link da videochamada</b> chega no seu WhatsApp pouco antes do horário. Fique de olho!</p>
     <p style="margin:0 0 10px;color:#5C7178;font-size:14px">Dicas para a consulta: esteja num lugar tranquilo, com boa internet, e tenha em mãos seus exames ou receitas anteriores, se tiver.</p>
@@ -154,6 +154,7 @@ async function confirmarPaciente(p, protocolo) {
 // Reserva temporária dos dados do paciente até o Pix ser confirmado.
 // (em memória — para MVP. Em produção, troque por um banco de dados.)
 const pendentes = new Map();
+const agendando = new Set(); // pagamentos em processo de agendamento — trava anti-corrida (polling + webhook)
 
 /* Trava de horário: quando um paciente gera o Pix, o horário fica "reservado"
    por 12 min (tempo de vida do Pix). Enquanto travado, some da lista dos outros.
@@ -431,11 +432,17 @@ async function efetivarAgendamento(paymentId) {
     return { agendado: false, motivo: 'pagamento sem reserva associada' };
   }
   if (p.booked) return { agendado: true, protocolo: p.protocolo, jaAgendado: true };
+  // Trava síncrona anti-corrida: o polling do navegador e o webhook do MP podem
+  // chamar quase juntos. Como marcamos ANTES de qualquer await, só o primeiro segue;
+  // o segundo sai aqui, evitando agendamento duplicado no Shosp.
+  if (agendando.has(String(paymentId))) return { agendado: false, emAndamento: true };
+  agendando.add(String(paymentId));
 
   let r;
   try {
     r = await agendarNoShosp(p, 'pagamento ' + paymentId);
   } catch (e) {
+    agendando.delete(String(paymentId)); // libera para nova tentativa
     // REDE DE SEGURANÇA: paciente pagou mas o Shosp recusou (ex.: colisão de horário
     // que escapou da trava). Alerta o médico na hora para resolver manualmente — o
     // dinheiro já entrou, então honramos o atendimento de um jeito ou de outro.
@@ -443,6 +450,7 @@ async function efetivarAgendamento(paymentId) {
     alertarFalhaAgendamento(p, paymentId, e.message);
     throw e;
   }
+  agendando.delete(String(paymentId));
 
   destravar(p.slot.data, p.slot.codigoHorario); // reserva virou firme
   p.booked = true;
@@ -461,10 +469,10 @@ async function alertarFalhaAgendamento(p, paymentId, motivo) {
     const corpo = `
       <p style="margin:0 0 12px;color:#9a2a12;font-weight:bold">⚠️ Um paciente PAGOU mas a consulta não entrou na agenda. Resolva manualmente e entre em contato com ele.</p>
       <table style="border-collapse:collapse;width:100%;font-size:15px">
-        <tr><td style="padding:5px 0;color:#5C7178">Paciente</td><td><b>${p.paciente.nome || '—'}</b></td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">Paciente</td><td><b>${escHtml(p.paciente.nome || '—')}</b></td></tr>
         <tr><td style="padding:5px 0;color:#5C7178">Horário desejado</td><td>${dataBR(p.slot.data)} · ${p.slot.horario}</td></tr>
-        <tr><td style="padding:5px 0;color:#5C7178">WhatsApp</td><td>${p.paciente.telefone || '—'}</td></tr>
-        <tr><td style="padding:5px 0;color:#5C7178">E-mail</td><td>${p.paciente.email || '—'}</td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">WhatsApp</td><td>${escHtml(p.paciente.telefone || '—')}</td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">E-mail</td><td>${escHtml(p.paciente.email || '—')}</td></tr>
         <tr><td style="padding:5px 0;color:#5C7178">Pagamento MP</td><td>${paymentId}</td></tr>
         <tr><td style="padding:5px 0;color:#5C7178">Motivo</td><td>${String(motivo).slice(0, 160)}</td></tr>
       </table>`;
@@ -527,8 +535,16 @@ app.get('/api/checkout/:id', async (req, res) => {
     const id = String(req.params.id);
     const status = await mpStatus(id);
     if (status === 'approved') {
-      const r = await efetivarAgendamento(id);
-      return res.json({ ok: true, status, ...r });
+      try {
+        const r = await efetivarAgendamento(id);
+        return res.json({ ok: true, status, ...r });
+      } catch (e) {
+        // Pagou, mas o agendamento falhou. NÃO derruba o fluxo do paciente:
+        // o alerta interno já foi disparado; devolvemos aprovado + agendado:false
+        // para o front mostrar "pagamento recebido, confirmando manualmente".
+        console.error('[checkout/status] pago mas sem agenda ' + id + ': ' + e.message);
+        return res.json({ ok: true, status, agendado: false });
+      }
     }
     res.json({ ok: true, status });
   } catch (e) {
@@ -643,22 +659,6 @@ async function rodarLembretes() {
   } catch (e) { console.error('[lembrete] erro: ' + e.message); }
 }
 setInterval(rodarLembretes, 3 * 60 * 1000);
-
-/* Rota TEMPORÁRIA de investigação: resposta CRUA da agenda do Shosp,
-   para descobrir se a API expõe o link da sala de telemedicina. */
-app.get('/api/diag-raw-3x8k', async (req, res) => {
-  try {
-    const hoje = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
-    const agendaRaw = await shosp('/agenda/get/', {
-      codigoUnidade: COD_UNIDADE, codigoPrestador: COD_PRESTADOR,
-      dataInicial: hoje, diasMostrar: '7',
-    });
-    let porPaciente = null;
-    try { porPaciente = await shospGet('/agenda/get/porpaciente', { codigoPaciente: '12' }); }
-    catch (e) { porPaciente = 'erro: ' + e.message; }
-    res.json({ agendaRaw, porPaciente });
-  } catch (e) { res.status(500).json({ erro: e.message }); }
-});
 
 /* Despertador anti-cochilo: no plano gratuito o Render "dorme" após ~15 min
    sem visitas (e o 1º acesso demora 50s+). Este auto-ping a cada 10 min
