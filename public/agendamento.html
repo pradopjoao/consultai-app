@@ -124,6 +124,10 @@ function clearBar(){actionbar.innerHTML='';}
 function typing(then){const t=document.createElement('div');t.className='typing';t.textContent='Assistente está digitando…';chat.appendChild(t);scroll();setTimeout(()=>{t.remove();then();},600);}
 function hoje(){return new Date().toISOString().slice(0,10);}
 function soDigitos(v){return (v||'').replace(/\D/g,'');}
+/* Lê os cookies do pixel (_fbp/_fbc) e o fbclid da URL para enviar ao servidor,
+   que os repassa à CAPI. Melhora o "casamento" do evento sem expor dado nenhum. */
+function getCookie(n){const m=document.cookie.match('(^|;)\\s*'+n+'\\s*=\\s*([^;]+)');return m?m.pop():'';}
+function getFbclid(){try{return new URLSearchParams(location.search).get('fbclid')||'';}catch(e){return '';}}
 function maskCPF(v){v=soDigitos(v).slice(0,11);return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');}
 function maskTel(v){v=soDigitos(v).slice(0,11);if(v.length>10)return v.replace(/(\d{2})(\d{5})(\d{1,4})/,'($1) $2-$3');if(v.length>6)return v.replace(/(\d{2})(\d{4})(\d{1,4})/,'($1) $2-$3');if(v.length>2)return v.replace(/(\d{2})(\d{1,5})/,'($1) $2');return v.replace(/(\d{1,2})/,'($1');}
 function maskData(v){v=soDigitos(v).slice(0,8);if(v.length>4)return v.replace(/(\d{2})(\d{2})(\d{1,4})/,'$1/$2/$3');if(v.length>2)return v.replace(/(\d{2})(\d{1,2})/,'$1/$2');return v;}
@@ -281,7 +285,8 @@ async function payment(){
       if(DEMO){ pay={paymentId:'DEMO123',copiaECola:'00020126...CONSULTAI-PIX-DEMO...5802BR',qrBase64:null}; }
       else{
         const r=await api('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({...state.paciente,data:state.date,horario:state.time,codigoHorario:state.codigoHorario})});
+          body:JSON.stringify({...state.paciente,data:state.date,horario:state.time,codigoHorario:state.codigoHorario,
+            _fbp:getCookie('_fbp'),_fbc:getCookie('_fbc'),fbclid:getFbclid(),pageUrl:location.href})});
         pay=r;
       }
       const box=document.createElement('div');box.className='pixbox';
@@ -290,7 +295,8 @@ async function payment(){
         '<div class="code">'+(pay.copiaECola||'')+'</div>'+
         '<button class="copy" id="cp">Copiar código Pix</button>';
       chat.appendChild(box);scroll();
-      if(window.fbq) fbq('track','InitiateCheckout',{value:40,currency:'BRL'}); // gerou o Pix
+      // gerou o Pix — mesmo eventID do servidor ('ic_'+paymentId) p/ deduplicar
+      if(window.fbq) fbq('track','InitiateCheckout',{value:40,currency:'BRL'}, pay.paymentId?{eventID:'ic_'+pay.paymentId}:undefined);
       document.getElementById('cp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(pay.copiaECola||'');document.getElementById('cp').textContent='Copiado ✓';};
       clearBar();
       const btn=document.createElement('button');btn.className='btn coral';btn.textContent= DEMO?'Simular pagamento':'Já paguei';
