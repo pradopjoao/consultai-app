@@ -15,6 +15,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 app.use(express.json());
@@ -27,7 +28,19 @@ app.get(/\.html$/, (req, res) => {
   res.redirect(301, limpo + qs);
 });
 // Serve os arquivos; "extensions:['html']" faz /trabalhe-conosco achar trabalhe-conosco.html
-app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
+// setHeaders define o cache com segurança: páginas HTML sempre revalidam (nunca
+// servem versão velha); imagens/CSS/JS podem ser guardados por 1 dia. Isso deixa
+// o "edge caching" do Render seguro de ligar — as rotas /api ganham "no-store" abaixo.
+app.use(express.static(path.join(__dirname, 'public'), {
+  extensions: ['html'],
+  setHeaders: (res, filePath) => {
+    if (/\.html$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  },
+}));
 
 // CORS + headers de segurança
 app.use((req, res, next) => {
@@ -38,6 +51,8 @@ app.use((req, res, next) => {
   res.header('X-Frame-Options', 'SAMEORIGIN');
   res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.header('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
+  // Nada de /api pode ser guardado em cache/edge — sempre resposta fresca (pagamento, horários).
+  if (req.path.startsWith('/api/')) res.header('Cache-Control', 'no-store');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -72,6 +87,10 @@ const {
   BREVO_API_KEY = '',      // chave da API do Brevo (envio de e-mail por HTTPS)
   NOTIF_EMAIL_FROM = '',   // remetente validado no Brevo
   NOTIF_EMAIL_TO = '',     // quem recebe o aviso interno (ex.: octahealth@hotmail.com)
+  // Meta CAPI (Conversions API) — envio de vendas pelo servidor, que o navegador perde.
+  META_DATASET_ID = '1369928625011386', // = ID do seu pixel (já preenchido)
+  META_CAPI_TOKEN = '',                 // GERAR no Gerenciador de Eventos → Conversions API
+  META_TEST_EVENT_CODE = '',            // opcional: só p/ testar em "Testar eventos"
 } = process.env;
 
 /* --------- E-mails via Brevo (API HTTPS — o Render bloqueia SMTP) -------- */
@@ -348,6 +367,85 @@ async function mpStatus(id) {
   return (await mpGetPayment(id)).status; // pending | approved | rejected ...
 }
 
+/* --------------------- Meta CAPI (Conversions API) ----------------------
+   Envia os eventos de conversão pelo SERVIDOR, direto à Meta. Isso recupera
+   as vendas que o pixel do navegador NÃO consegue registrar (o navegador
+   dentro do Instagram/Facebook bloqueia cookies e scripts). O mesmo evento é
+   deduplicado com o pixel pelo event_id — a Meta junta os dois e conta 1 só.
+   Dados pessoais (e-mail, telefone, CPF, nome) são enviados com hash SHA-256,
+   como a Meta exige. Sem META_CAPI_TOKEN definido, vira um no-op silencioso. */
+function _sha256(v) {
+  const s = String(v == null ? '' : v).trim().toLowerCase();
+  if (!s) return null;
+  return crypto.createHash('sha256').update(s).digest('hex');
+}
+function _hashTelefone(tel) {
+  let d = String(tel || '').replace(/\D/g, '');
+  if (!d) return null;
+  if (!d.startsWith('55')) d = '55' + d; // padrão internacional (Brasil)
+  return crypto.createHash('sha256').update(d).digest('hex');
+}
+function _construirUserData(paciente, tracking) {
+  const t = tracking || {};
+  const ud = {};
+  const nome = String(paciente.nome || '').trim();
+  const primeiro = nome.split(/\s+/)[0] || '';
+  const ultimo = nome.split(/\s+/).slice(1).join(' ');
+  const cpf = String(paciente.cpf || '').replace(/\D/g, '');
+  const em = _sha256(paciente.email);
+  const ph = _hashTelefone(paciente.telefone);
+  const fn = _sha256(primeiro);
+  const ln = _sha256(ultimo);
+  const ext = cpf ? crypto.createHash('sha256').update(cpf).digest('hex') : null;
+  if (em) ud.em = [em];
+  if (ph) ud.ph = [ph];
+  if (fn) ud.fn = [fn];
+  if (ln) ud.ln = [ln];
+  if (ext) ud.external_id = [ext];        // CPF com hash = casamento forte
+  if (t.ip) ud.client_ip_address = t.ip;  // IP e user-agent NÃO levam hash
+  if (t.ua) ud.client_user_agent = t.ua;
+  if (t.fbp) ud.fbp = t.fbp;              // cookies do pixel = casamento ainda melhor
+  if (t.fbc) ud.fbc = t.fbc;
+  return ud;
+}
+async function enviarEventoCapi(eventName, eventId, paciente, tracking, extra) {
+  if (!META_CAPI_TOKEN) {
+    console.log('[capi] não configurado (defina META_CAPI_TOKEN) — ' + eventName + ' não enviado');
+    return false;
+  }
+  try {
+    const evento = {
+      event_name: eventName,
+      event_time: Math.floor(Date.now() / 1000),
+      event_id: eventId, // MESMO id do pixel do navegador → deduplicação
+      action_source: 'website',
+      event_source_url: (tracking && tracking.eventSourceUrl) || 'https://vemconsultai.com.br/agendamento',
+      user_data: _construirUserData(paciente || {}, tracking),
+      custom_data: Object.assign({ currency: 'BRL', value: Number(PRECO) }, extra || {}),
+    };
+    const corpo = { data: [evento] };
+    if (META_TEST_EVENT_CODE) corpo.test_event_code = META_TEST_EVENT_CODE;
+    const url = 'https://graph.facebook.com/v21.0/' + META_DATASET_ID +
+      '/events?access_token=' + encodeURIComponent(META_CAPI_TOKEN);
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(corpo),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      console.error('[capi] erro ' + r.status + ' em ' + eventName + ': ' + JSON.stringify(d).slice(0, 250));
+      return false;
+    }
+    console.log('[capi] ✔ ' + eventName + ' enviado (event_id ' + eventId + ', ' +
+      Object.keys(evento.user_data).length + ' campos de casamento)');
+    return true;
+  } catch (e) {
+    console.error('[capi] falha ao enviar ' + eventName + ': ' + e.message);
+    return false;
+  }
+}
+
 /* Garante que o paciente existe no cadastro com a ficha completa (incl. celular).
    Tenta cadastrar via POST /cadastro/paciente; se já existir, busca o código. */
 async function garantirPaciente(paciente) {
@@ -437,6 +535,7 @@ async function efetivarAgendamento(paymentId) {
         p = {
           paciente: { nome: m.nome, cpf: m.cpf, telefone: m.telefone, email: m.email, dataNascimento: m.datanascimento, sexo: m.sexo },
           slot: { data: m.data, horario: m.horario, codigoHorario: m.codigohorario },
+          tracking: { fbp: m.fbp, fbc: m.fbc, eventSourceUrl: 'https://vemconsultai.com.br/agendamento' },
           booked: false,
         };
         pendentes.set(String(paymentId), p);
@@ -479,6 +578,9 @@ async function efetivarAgendamento(paymentId) {
   console.log('[agenda] ✔ consulta agendada — ' + p.slot.data + ' ' + p.slot.horario + ' — ' + (p.paciente.nome || '') + ' — protocolo ' + p.protocolo);
   avisarNovaConsulta(p, p.protocolo, paymentId); // aviso interno em segundo plano
   confirmarPaciente(p, p.protocolo);             // confirmação ao paciente em segundo plano
+  // VENDA pela CAPI: mesmo event_id do pixel do navegador ('purchase_'+protocolo) → sem contagem dupla.
+  enviarEventoCapi('Purchase', 'purchase_' + p.protocolo, p.paciente, p.tracking, { content_name: 'Consulta médica online' })
+    .catch(() => {}); // em segundo plano — não trava o agendamento
   return { agendado: true, protocolo: p.protocolo };
 }
 
@@ -531,18 +633,31 @@ app.post('/api/checkout', rateLimit(8, 10 * 60 * 1000), async (req, res) => {
     if (!nome || !email || !data || !horario || codigoHorario == null) {
       return res.status(400).json({ ok: false, erro: 'dados incompletos' });
     }
+    // Dados de rastreio p/ a CAPI (vêm do navegador do paciente): IP, aparelho e
+    // cookies do pixel (_fbp/_fbc). Melhoram muito o "casamento" do evento na Meta.
+    const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+    const ua = String(req.headers['user-agent'] || '');
+    const fbp = req.body._fbp || '';
+    let fbc = req.body._fbc || '';
+    if (!fbc && req.body.fbclid) fbc = 'fb.1.' + Date.now() + '.' + req.body.fbclid;
+    const tracking = { ip, ua, fbp, fbc, eventSourceUrl: req.body.pageUrl || 'https://vemconsultai.com.br/agendamento' };
+
     const idem = 'consultai-' + Date.now() + '-' + Math.floor(Math.random() * 1e6);
     const pay = await mpCriarPix({
       valor: PRECO, email, nome, idem,
-      metadata: { nome, cpf, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario },
+      // fbp/fbc viajam no metadata p/ sobreviver a um reinício do servidor
+      metadata: { nome, cpf, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario, fbp, fbc },
     });
     pendentes.set(String(pay.id), {
       paciente: { nome, cpf, telefone, email, dataNascimento, sexo },
       slot: { data, horario, codigoHorario },
+      tracking,
       booked: false,
     });
     travar(data, codigoHorario); // reserva o horário por 12 min — some da lista dos outros
     console.log('[checkout] Pix criado — pagamento ' + pay.id + ' — ' + data + ' ' + horario + ' — ' + nome + ' (horário travado)');
+    // Início de agendamento pela CAPI (mesmo id do pixel: 'ic_'+pay.id → sem duplicar).
+    enviarEventoCapi('InitiateCheckout', 'ic_' + pay.id, { nome, cpf, telefone, email }, tracking).catch(() => {});
     res.json({ ok: true, paymentId: pay.id, copiaECola: pay.copiaECola, qrBase64: pay.qrBase64, ticketUrl: pay.ticketUrl, valor: Number(PRECO) });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message });
