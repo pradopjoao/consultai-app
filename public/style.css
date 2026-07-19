@@ -2,8 +2,8 @@
 :root{--teal:#15A39A;--deep:#0C4A52;--ink:#14333A;--coral:#FF6B4A;--soft:#F1FBF9;--mut:#5C7178;--line:#E3EFEC}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
 html{scroll-behavior:smooth}
-body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);background:#fff;line-height:1.55}
-h1,h2,h3,.brandfont{font-family:'Poppins','Inter',sans-serif}
+body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,Arial,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji",sans-serif;color:var(--ink);background:#fff;line-height:1.55}
+h1,h2,h3,.brandfont{font-family:'Poppins','Inter',"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji",sans-serif}
 a{color:inherit}
 img{max-width:100%}
 .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
@@ -152,7 +152,7 @@ footer .lk{display:block;padding:4px 0}
 footer .contact p{padding:3px 0}
 footer .contact .init{font-size:12.5px;color:#7C969B;margin-top:2px;letter-spacing:.3px}
 footer .contact .octa{color:#CDE0E3;font-weight:600;margin-top:12px}
-footer a.cta-ic{display:inline-flex;align-items:center;gap:8px;color:#9FB4B8;text-decoration:none;padding:4px 0;transition:.15s;overflow-wrap:anywhere}
+footer a.cta-ic{display:inline-flex;align-items:center;gap:8px;color:#9FB4B8;text-decoration:none;padding:4px 0;transition:.15s;white-space:nowrap}
 footer a.cta-ic svg{width:16px;height:16px;fill:currentColor;flex:none;opacity:.9;transition:.15s}
 footer a.cta-ic:hover{color:#5BD6CB}
 footer a.cta-ic:hover svg{opacity:1}
