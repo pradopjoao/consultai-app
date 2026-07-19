@@ -29,6 +29,15 @@ fbq('init','1369928625011386');fbq('track','PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1369928625011386&ev=PageView&noscript=1"/></noscript>
 <!-- End Meta Pixel -->
+<!-- Google tag (gtag.js) — Google Ads -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18333144388"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-18333144388');
+</script>
+<!-- End Google tag -->
 <style>
   :root{--teal:#15A39A;--teal-deep:#0C4A52;--ink:#14333A;--coral:#FF6B4A;--soft:#F1FBF9;--mut:#5C7178;--line:#E3EFEC}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
@@ -128,6 +137,8 @@ function soDigitos(v){return (v||'').replace(/\D/g,'');}
    que os repassa à CAPI. Melhora o "casamento" do evento sem expor dado nenhum. */
 function getCookie(n){const m=document.cookie.match('(^|;)\\s*'+n+'\\s*=\\s*([^;]+)');return m?m.pop():'';}
 function getFbclid(){try{return new URLSearchParams(location.search).get('fbclid')||'';}catch(e){return '';}}
+/* Telefone no padrão internacional (+55...) para o "casamento de dados" do Google (conversões otimizadas) */
+function telE164(t){let d=soDigitos(t);if(!d)return '';if(d.indexOf('55')!==0)d='55'+d;return '+'+d;}
 function maskCPF(v){v=soDigitos(v).slice(0,11);return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');}
 function maskTel(v){v=soDigitos(v).slice(0,11);if(v.length>10)return v.replace(/(\d{2})(\d{5})(\d{1,4})/,'($1) $2-$3');if(v.length>6)return v.replace(/(\d{2})(\d{4})(\d{1,4})/,'($1) $2-$3');if(v.length>2)return v.replace(/(\d{2})(\d{1,5})/,'($1) $2');return v.replace(/(\d{1,2})/,'($1');}
 function maskData(v){v=soDigitos(v).slice(0,8);if(v.length>4)return v.replace(/(\d{2})(\d{2})(\d{1,4})/,'$1/$2/$3');if(v.length>2)return v.replace(/(\d{2})(\d{1,2})/,'$1/$2');return v;}
@@ -324,6 +335,16 @@ function concluir(protocolo, agendado){
   // Evento de CONVERSÃO: paciente pagou. É isso que o Meta usa para otimizar os anúncios.
   // eventID atrelado ao protocolo dá uma 2ª camada de dedupe do lado da Meta.
   if(window.fbq) fbq('track','Purchase',{value:40,currency:'BRL',content_name:'Consulta médica online'}, protocolo?{eventID:'purchase_'+protocolo}:undefined);
+  // Conversão do Google Ads (mesma venda). transaction_id evita contagem dupla se a página recarregar.
+  // O user_data alimenta as "conversões otimizadas" (Google criptografa no navegador).
+  if(window.gtag){
+    gtag('set','user_data',{email:(state.paciente.email||''),phone_number:telE164(state.paciente.telefone)});
+    gtag('event','conversion',{
+      'send_to':'AW-18333144388/Q9_hCLHFh9McEMSq9qVE',
+      'value':40,'currency':'BRL',
+      'transaction_id':(protocolo||'')
+    });
+  }
   typing(()=>{
     const ok=document.createElement('div');ok.className='ok';
     if(agendado===false){
