@@ -198,15 +198,19 @@ const agendando = new Set(); // pagamentos em processo de agendamento — trava 
    por 12 min (tempo de vida do Pix). Enquanto travado, some da lista dos outros.
    Pagou -> vira reserva firme. Não pagou -> destrava sozinho. Evita 2 pessoas
    pagarem o mesmo horário. */
-const travas = new Map(); // chave `data|codigoHorario` -> expira em (ms)
+const travas = new Map(); // chave `data|horario` -> expira em (ms)
 const TRAVA_MS = 12 * 60 * 1000;
-const chaveTrava = (data, cod) => String(data) + '|' + String(cod);
-function travar(data, cod) { travas.set(chaveTrava(data, cod), Date.now() + TRAVA_MS); }
-function destravar(data, cod) { travas.delete(chaveTrava(data, cod)); }
-function estaTravado(data, cod) {
-  const exp = travas.get(chaveTrava(data, cod));
+// IMPORTANTE: travar pelo HORÁRIO específico (ex.: "09:00"), NÃO pelo codigoHorario.
+// No Shosp, um mesmo codigoHorario cobre um BLOCO inteiro de horários (ex.: 07:00–19:20),
+// então travar pelo código escondia o dia todo por 12 min sempre que alguém iniciava um
+// checkout. Pelo horário, trava apenas aquele slot exato.
+const chaveTrava = (data, horario) => String(data) + '|' + String(horario);
+function travar(data, horario) { travas.set(chaveTrava(data, horario), Date.now() + TRAVA_MS); }
+function destravar(data, horario) { travas.delete(chaveTrava(data, horario)); }
+function estaTravado(data, horario) {
+  const exp = travas.get(chaveTrava(data, horario));
   if (!exp) return false;
-  if (Date.now() > exp) { travas.delete(chaveTrava(data, cod)); return false; } // expirou
+  if (Date.now() > exp) { travas.delete(chaveTrava(data, horario)); return false; } // expirou
   return true;
 }
 
@@ -570,7 +574,7 @@ async function efetivarAgendamento(paymentId) {
   }
   agendando.delete(String(paymentId));
 
-  destravar(p.slot.data, p.slot.codigoHorario); // reserva virou firme
+  destravar(p.slot.data, p.slot.horario); // reserva virou firme
   p.booked = true;
   p.protocolo = (r && r.dados && (r.dados.codigoAgendamento || r.dados.protocolo)) ||
                 (r && (r.protocolo || r.codigo || r.id)) || ('CS-' + paymentId);
@@ -620,7 +624,7 @@ app.get('/api/horarios', async (req, res) => {
     const horaMin = sp.toISOString().slice(11, 16);
     const slots = normalizarHorarios(data)
       .filter(s => String(s.data) > hojeSP || (String(s.data) === hojeSP && String(s.horario) >= horaMin))
-      .filter(s => !estaTravado(s.data, s.codigoHorario)); // esconde horários reservados em checkout
+      .filter(s => !estaTravado(s.data, s.horario)); // esconde APENAS o horário reservado em checkout
     res.json({ ok: true, slots });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message });
@@ -654,7 +658,7 @@ app.post('/api/checkout', rateLimit(8, 10 * 60 * 1000), async (req, res) => {
       tracking,
       booked: false,
     });
-    travar(data, codigoHorario); // reserva o horário por 12 min — some da lista dos outros
+    travar(data, horario); // reserva SÓ este horário por 12 min — some da lista dos outros
     console.log('[checkout] Pix criado — pagamento ' + pay.id + ' — ' + data + ' ' + horario + ' — ' + nome + ' (horário travado)');
     // Início de agendamento pela CAPI (mesmo id do pixel: 'ic_'+pay.id → sem duplicar).
     enviarEventoCapi('InitiateCheckout', 'ic_' + pay.id, { nome, cpf, telefone, email }, tracking).catch(() => {});
