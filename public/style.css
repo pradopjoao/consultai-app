@@ -240,3 +240,49 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
 @media(max-width:820px){.depoimentos{grid-template-columns:1fr}}
 
 .chip svg{width:17px;height:17px}}
+
+/* ===== Blog ===== */
+.crumb{font-size:13px;color:#D9F2EF;margin-bottom:14px}
+.crumb a{color:#fff;text-decoration:none;opacity:.9}
+.crumb a:hover{text-decoration:underline}
+.crumb span{margin:0 6px;opacity:.6}
+
+.meta-post{display:flex;align-items:center;gap:12px;margin:0 0 26px;padding-bottom:20px;border-bottom:1px solid var(--line);font-size:14px}
+.meta-post .av{flex:none;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--deep));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:15px}
+.meta-post b{color:var(--deep)}
+.meta-post .muted{color:var(--mut)}
+
+/* Post em destaque */
+.feat{display:block;text-decoration:none;background:linear-gradient(135deg,var(--teal),var(--deep));color:#fff;border-radius:24px;padding:40px 38px;margin:8px 0 40px;transition:transform .18s ease,box-shadow .18s ease}
+.feat:hover{transform:translateY(-4px);box-shadow:0 22px 44px rgba(12,74,82,.28)}
+.feat-tag{display:inline-block;background:rgba(255,255,255,.18);font-size:12px;font-weight:700;padding:5px 14px;border-radius:30px;margin-bottom:14px;letter-spacing:.3px}
+.feat h2{font-family:'Poppins',sans-serif;font-weight:800;font-size:30px;line-height:1.15;letter-spacing:-.6px;margin-bottom:12px}
+.feat p{color:#D9F2EF;font-size:17px;line-height:1.6;max-width:640px}
+.feat-link{display:inline-block;margin-top:18px;font-weight:700;font-family:'Poppins',sans-serif}
+
+/* Grade de cards */
+.grid-posts{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:8px}
+.pcard{display:block;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px 24px;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+a.pcard:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(21,163,154,.14);border-color:var(--teal)}
+.pcat{display:inline-block;font-size:12px;font-weight:700;color:var(--teal);background:var(--soft);padding:4px 12px;border-radius:20px;margin-bottom:12px;font-family:'Poppins',sans-serif}
+.pcard h3{font-family:'Poppins',sans-serif;font-weight:700;color:var(--deep);font-size:18px;line-height:1.3;margin-bottom:10px}
+.pcard p{color:#33474d;font-size:14.5px;line-height:1.55;margin-bottom:14px}
+.pcard .pmeta{font-size:12.5px;color:var(--mut)}
+.pcard.soon{opacity:.72}
+.pcard.soon .pcat{color:var(--mut);background:#f2f5f6}
+
+.blog-cta{text-align:center;margin:50px 0 8px}
+.blog-cta p{color:var(--mut);margin-bottom:16px;font-size:16px}
+
+@media(max-width:820px){
+  .grid-posts{grid-template-columns:1fr}
+  .feat{padding:32px 26px}
+  .feat h2{font-size:24px}
+}
+
+/* Barra de categorias do blog */
+.catbar{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:4px 0 30px}
+.cbtn{font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--mut);background:#fff;border:1.5px solid var(--line);border-radius:30px;padding:9px 18px;cursor:pointer;transition:.15s}
+.cbtn:hover{border-color:var(--teal);color:var(--teal)}
+.cbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+@media(max-width:520px){.cbtn{font-size:13px;padding:8px 14px}}
