@@ -242,7 +242,9 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
 .chip svg{width:17px;height:17px}}
 
 /* ===== Blog ===== */
-.crumb{font-size:13px;color:#D9F2EF;margin-bottom:14px}
+.crumb{font-size:13px;color:#D9F2EF;margin-bottom:34px}
+.article a{color:var(--teal);text-decoration:underline;text-underline-offset:2px}
+.article a:hover{color:var(--deep)}
 .crumb a{color:#fff;text-decoration:none;opacity:.9}
 .crumb a:hover{text-decoration:underline}
 .crumb span{margin:0 6px;opacity:.6}
