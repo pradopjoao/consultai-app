@@ -294,3 +294,25 @@ a.pcard:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(21,163,154,
 .cbtn:hover{border-color:var(--teal);color:var(--teal)}
 .cbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
 @media(max-width:520px){.cbtn{font-size:13px;padding:8px 14px}}
+
+/* Blocos do padrão editorial (blog) */
+.takeaways{background:#EAF7F4;border:1px solid #CDEBE5;border-radius:14px;padding:18px 22px;margin:22px 0}
+.takeaways b{display:block;color:var(--deep);font-family:'Poppins',sans-serif;margin-bottom:8px;font-size:15px}
+.takeaways ul{margin:0 0 0 18px}
+.takeaways li{margin-bottom:6px;line-height:1.55;color:#33474d}
+.leia{background:var(--soft);border-left:4px solid var(--coral);border-radius:8px;padding:14px 18px;margin:22px 0}
+.leia b{display:block;color:var(--deep);font-family:'Poppins',sans-serif;margin-bottom:6px;font-size:14px}
+.leia a{display:block;color:var(--teal);text-decoration:none;padding:3px 0;font-weight:600}
+.leia a:hover{text-decoration:underline}
+.fontes-sec{padding:44px 0 48px}
+.fontes-sec .wrap{max-width:760px}
+.fontes-sec h2{font-size:18px;color:var(--deep);font-family:'Poppins',sans-serif;margin-bottom:10px}
+.fontes-sec ul{margin:0 0 14px 18px}
+.fontes-sec li{margin-bottom:6px;font-size:14px}
+.fontes-sec a{color:var(--teal)}
+.fontes-sec .rev{font-size:13px;color:var(--mut);border-top:1px solid var(--line);padding-top:12px}
+
+/* Infográfico / imagens no artigo */
+.article figure{margin:28px 0}
+.article figure img{width:100%;height:auto;border-radius:16px;border:1px solid var(--line);display:block}
+.article figcaption{text-align:center;font-size:13.5px;color:var(--mut);margin-top:9px}
