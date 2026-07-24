@@ -213,13 +213,13 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
   /* Menu vira dropdown acionado pelo hambúrguer */
   .hamburger{display:flex}
   .menu{
-    position:absolute;top:calc(100% + 1px);left:0;right:0;
+    position:fixed;top:68px;left:0;right:0;
+    height:calc(100vh - 68px);
     flex-direction:column;align-items:stretch;gap:0;
-    background:#fff;border-bottom:1px solid var(--line);
-    box-shadow:0 16px 30px rgba(12,74,82,.12);
-    padding:0 22px;max-height:0;overflow:hidden;opacity:0;pointer-events:none;
-    transition:max-height .28s ease,opacity .2s ease,padding .28s ease}
-  .nav.open .menu{max-height:460px;opacity:1;pointer-events:auto;padding:8px 22px 14px}
+    background:#fff;border-bottom:none;box-shadow:none;
+    padding:0 22px;overflow-y:auto;opacity:0;pointer-events:none;
+    transition:opacity .22s ease}
+  .nav.open .menu{opacity:1;pointer-events:auto;padding:10px 22px 28px}
   .menu a{padding:14px 2px;border-bottom:1px solid var(--line);border-radius:0;font-size:15.5px}
   .menu a:hover,.menu a.on{border-bottom-color:var(--line);color:var(--teal)}
   .nav-right .btn.ghost{display:none}
@@ -253,12 +253,18 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
 .meta-post .muted{color:var(--mut)}
 
 /* Post em destaque */
-.feat{display:block;text-decoration:none;background:linear-gradient(135deg,var(--teal),var(--deep));color:#fff;border-radius:24px;padding:40px 38px;margin:8px 0 40px;transition:transform .18s ease,box-shadow .18s ease}
-.feat:hover{transform:translateY(-4px);box-shadow:0 22px 44px rgba(12,74,82,.28)}
-.feat-tag{display:inline-block;background:rgba(255,255,255,.18);font-size:12px;font-weight:700;padding:5px 14px;border-radius:30px;margin-bottom:14px;letter-spacing:.3px}
-.feat h2{font-family:'Poppins',sans-serif;font-weight:800;font-size:30px;line-height:1.15;letter-spacing:-.6px;margin-bottom:12px}
-.feat p{color:#D9F2EF;font-size:17px;line-height:1.6;max-width:640px}
-.feat-link{display:inline-block;margin-top:18px;font-weight:700;font-family:'Poppins',sans-serif}
+/* Hero do blog: mais baixo que os demais (só na listagem) */
+.hero.mini.blogtop{padding:34px 0 40px}
+.hero.mini.blogtop h1{font-size:34px}
+.hero.mini.blogtop .sub{font-size:16px;margin:14px 0 0;max-width:520px}
+.hero.mini.blogtop .pill{margin-bottom:14px}
+/* Destaque: card claro (mint) com faixa lateral — não briga com o verde do hero */
+.feat{display:block;text-decoration:none;background:var(--soft);border:1px solid var(--line);border-left:5px solid var(--teal);color:inherit;border-radius:18px;padding:28px 32px;margin:18px 0 34px;box-shadow:0 10px 26px rgba(12,74,82,.07);transition:transform .18s ease,box-shadow .18s ease}
+.feat:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(12,74,82,.12)}
+.feat-tag{display:inline-block;background:#FDE7E0;color:#C8401C;font-size:12px;font-weight:700;padding:5px 14px;border-radius:30px;margin-bottom:14px;letter-spacing:.3px}
+.feat h2{font-family:'Poppins',sans-serif;font-weight:800;font-size:25px;line-height:1.18;letter-spacing:-.5px;margin-bottom:10px;color:var(--deep)}
+.feat p{color:#5C7178;font-size:15.5px;line-height:1.6;max-width:660px}
+.feat-link{display:inline-block;margin-top:16px;font-weight:700;font-family:'Poppins',sans-serif;color:var(--teal)}
 
 /* Grade de cards */
 .grid-posts{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:8px}

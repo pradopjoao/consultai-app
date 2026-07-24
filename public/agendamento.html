@@ -269,7 +269,7 @@ function formCadastro(pre){
   if(pre.dataNascimento){const pd=String(pre.dataNascimento).split('-');if(pd.length===3)document.getElementById('f_nasc').value=pd[2]+'/'+pd[1]+'/'+pd[0];}
   if(pre.sexo) document.getElementById('f_sexo').value=pre.sexo;
   clearBar();
-  const btn=document.createElement('button');btn.className='btn';btn.textContent='Continuar para pagamento →';
+  const btn=document.createElement('button');btn.className='btn';btn.textContent='Continuar para pagamento';
   btn.onclick=()=>{
     const g=id=>document.getElementById(id).value.trim();
     const nasc=g('f_nasc'); const [d,m,a]=nasc.split('/');
