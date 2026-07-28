@@ -1,26 +1,21 @@
 /* =========================================================================
    Consultaí — Mini-backend (o "porteiro")
    Liga o chatbot de agendamento ao Shosp (agenda) e ao Mercado Pago (Pix).
-
    As chaves secretas NUNCA ficam neste arquivo: são lidas de variáveis de
    ambiente (.env / painel da hospedagem). Veja .env.example.
-
    Rotas:
      GET  /api/horarios        -> horários livres (Shosp /agenda/get/)
      POST /api/checkout        -> cria a cobrança Pix (Mercado Pago) e reserva os dados
      GET  /api/checkout/:id    -> verifica o pagamento; se aprovado, agenda no Shosp
      POST /api/webhook         -> aviso automático do Mercado Pago quando paga
    ========================================================================= */
-
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
-
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 // URLs limpas: redireciona /pagina.html -> /pagina (301, bom para SEO)
 app.get(/\.html$/, (req, res) => {
   const limpo = req.path === '/index.html' ? '/' : req.path.slice(0, -5);
@@ -41,7 +36,6 @@ app.use(express.static(path.join(__dirname, 'public'), {
     }
   },
 }));
-
 // CORS + headers de segurança
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://vemconsultai.com.br');
@@ -56,7 +50,6 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
-
 // Rate limit simples em memória (sem dependência) — protege contra abuso/spam
 const _rl = new Map();
 function rateLimit(max, windowMs) {
@@ -71,7 +64,6 @@ function rateLimit(max, windowMs) {
     next();
   };
 }
-
 const {
   SHOSP_BASE = 'https://sistema.shosp.com.br/api',
   SHOSP_API_KEY,
@@ -82,6 +74,12 @@ const {
   COD_PLANO = '1',
   COD_ESPECIALIDADE = '',
   MP_ACCESS_TOKEN,
+  // Segredo do webhook (painel do Mercado Pago → Suas integrações → Webhooks).
+  // Enquanto estiver vazio, a validação fica desligada e nada muda no fluxo atual.
+  MP_WEBHOOK_SECRET = '',
+  // '1' = recusa avisos com assinatura inválida. Deixe vazio no começo: assim o
+  // servidor só REGISTRA no log quando a assinatura não bate, sem bloquear nada.
+  MP_WEBHOOK_STRICT = '',
   PRECO = '40',
   PORT = 3000,
   BREVO_API_KEY = '',      // chave da API do Brevo (envio de e-mail por HTTPS)
@@ -92,7 +90,6 @@ const {
   META_CAPI_TOKEN = '',                 // GERAR no Gerenciador de Eventos → Conversions API
   META_TEST_EVENT_CODE = '',            // opcional: só p/ testar em "Testar eventos"
 } = process.env;
-
 /* --------- E-mails via Brevo (API HTTPS — o Render bloqueia SMTP) -------- */
 async function enviarEmail(para, assunto, html, replyTo) {
   if (!BREVO_API_KEY || !NOTIF_EMAIL_FROM) {
@@ -116,11 +113,8 @@ async function enviarEmail(para, assunto, html, replyTo) {
   if (!r.ok) throw new Error('Brevo ' + r.status + ': ' + (await r.text()).slice(0, 200));
   return true;
 }
-
 function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-
 function dataBR(iso) { const [y, m, d] = String(iso).split('-'); return d + '/' + m + '/' + y; }
-
 /* Moldura padrão dos e-mails — identidade visual da Consultaí */
 const LOGO_URL = 'https://vemconsultai.com.br/apple-touch-icon.png';
 function emailShell(headline, corpo, corHeader) {
@@ -143,7 +137,6 @@ function emailShell(headline, corpo, corHeader) {
     </div>
   </div>`;
 }
-
 function cardConsulta(p, protocolo) {
   return `
     <div style="background:#F1FBF9;border:1.5px solid #15A39A;border-radius:14px;padding:18px 22px;margin:16px 0;text-align:center">
@@ -153,7 +146,6 @@ function cardConsulta(p, protocolo) {
       <div style="font-size:12px;color:#5C7178;margin-top:6px">Protocolo ${protocolo}</div>
     </div>`;
 }
-
 async function avisarNovaConsulta(p, protocolo, paymentId) {
   const dt = dataBR(p.slot.data);
   const corpo = `
@@ -172,7 +164,6 @@ async function avisarNovaConsulta(p, protocolo, paymentId) {
     }
   } catch (e) { console.error('[email] falha no aviso interno: ' + e.message); }
 }
-
 async function confirmarPaciente(p, protocolo) {
   if (!p.paciente.email) return;
   const dt = dataBR(p.slot.data);
@@ -188,12 +179,10 @@ async function confirmarPaciente(p, protocolo) {
     }
   } catch (e) { console.error('[email] falha na confirmação ao paciente: ' + e.message); }
 }
-
 // Reserva temporária dos dados do paciente até o Pix ser confirmado.
 // (em memória — para MVP. Em produção, troque por um banco de dados.)
 const pendentes = new Map();
 const agendando = new Set(); // pagamentos em processo de agendamento — trava anti-corrida (polling + webhook)
-
 /* Trava de horário: quando um paciente gera o Pix, o horário fica "reservado"
    por 12 min (tempo de vida do Pix). Enquanto travado, some da lista dos outros.
    Pagou -> vira reserva firme. Não pagou -> destrava sozinho. Evita 2 pessoas
@@ -213,7 +202,6 @@ function estaTravado(data, horario) {
   if (Date.now() > exp) { travas.delete(chaveTrava(data, horario)); return false; } // expirou
   return true;
 }
-
 /* ----------------------------- Shosp ----------------------------------- */
 async function shospRequest(pathname, formObj, modo) {
   const headers = { 'x-api-key': SHOSP_API_KEY, 'id': SHOSP_ID, 'accept': 'application/json' };
@@ -237,7 +225,6 @@ async function shospRequest(pathname, formObj, modo) {
   }
   return data;
 }
-
 async function shosp(pathname, formObj) {
   try {
     return await shospRequest(pathname, formObj, 'urlencoded');
@@ -247,7 +234,6 @@ async function shosp(pathname, formObj) {
     return await shospRequest(pathname, formObj, 'multipart');
   }
 }
-
 async function shospGet(pathname, queryObj) {
   const qs = new URLSearchParams(queryObj).toString();
   const r = await fetch(SHOSP_BASE + pathname + '?' + qs, {
@@ -258,7 +244,6 @@ async function shospGet(pathname, queryObj) {
   if (!r.ok) throw new Error('Shosp GET ' + r.status + ': ' + txt);
   return data;
 }
-
 /* Acha o código do paciente na resposta da busca.
    Na busca (/cadastro/paciente) o Shosp chama o código de "prontuario".
    Critério seguro: CPF igual > nome exato > resultado único. Nunca chuta. */
@@ -286,7 +271,6 @@ function acharCodigoPaciente(data, alvo) {
   if (lista.length === 1) return cod(lista[0]);
   return null;
 }
-
 /* Busca em cascata: o Shosp exige que TODOS os parâmetros batam, então
    se nome+cpf não achar (ex.: cadastro sem CPF), tenta combinações mais soltas. */
 async function buscarPaciente(paciente) {
@@ -309,7 +293,6 @@ async function buscarPaciente(paciente) {
   }
   return null;
 }
-
 /* Normaliza a resposta de /agenda/get/ em uma lista simples:
    [{ data:'YYYY-MM-DD', horario:'HH:MM', codigoHorario:123 }]
    OBS: a forma exata do JSON do Shosp só dá pra confirmar com uma chamada
@@ -332,7 +315,6 @@ function normalizarHorarios(data) {
   })(data, null);
   return out;
 }
-
 /* --------------------------- Mercado Pago ------------------------------ */
 async function mpCriarPix({ valor, email, nome, idem, metadata }) {
   const r = await fetch('https://api.mercadopago.com/v1/payments', {
@@ -357,7 +339,6 @@ async function mpCriarPix({ valor, email, nome, idem, metadata }) {
   const tx = (d.point_of_interaction && d.point_of_interaction.transaction_data) || {};
   return { id: d.id, copiaECola: tx.qr_code, qrBase64: tx.qr_code_base64, ticketUrl: tx.ticket_url };
 }
-
 async function mpGetPayment(id) {
   const r = await fetch('https://api.mercadopago.com/v1/payments/' + id, {
     headers: { 'Authorization': 'Bearer ' + MP_ACCESS_TOKEN },
@@ -366,11 +347,42 @@ async function mpGetPayment(id) {
   if (!r.ok) throw new Error('MercadoPago status ' + r.status + ': ' + JSON.stringify(d));
   return d;
 }
-
 async function mpStatus(id) {
   return (await mpGetPayment(id)).status; // pending | approved | rejected ...
 }
-
+/* Confere se o aviso (webhook) veio mesmo do Mercado Pago.
+   O MP assina cada notificação com um segredo que fica no painel dele. Aqui a
+   gente refaz a mesma conta e compara. Sem MP_WEBHOOK_SECRET definido, a
+   checagem é ignorada e nada muda no funcionamento atual. */
+function validarAssinaturaMP(req) {
+  if (!MP_WEBHOOK_SECRET) return { ok: true, motivo: 'validação desligada (sem MP_WEBHOOK_SECRET)' };
+  try {
+    const bruto = String(req.headers['x-signature'] || '');
+    if (!bruto) return { ok: false, motivo: 'sem cabeçalho x-signature' };
+    const partes = {};
+    bruto.split(',').forEach((p) => {
+      const i = p.indexOf('=');
+      if (i > 0) partes[p.slice(0, i).trim()] = p.slice(i + 1).trim();
+    });
+    const ts = partes.ts, v1 = partes.v1;
+    if (!ts || !v1) return { ok: false, motivo: 'x-signature incompleto' };
+    const dataId = String((req.body && req.body.data && req.body.data.id) || req.query['data.id'] || '');
+    const reqId = String(req.headers['x-request-id'] || '');
+    // Modelo do MP: id:<data.id>;request-id:<x-request-id>;ts:<ts>;
+    // Partes ausentes são simplesmente omitidas.
+    let manifest = '';
+    if (dataId) manifest += 'id:' + dataId.toLowerCase() + ';';
+    if (reqId) manifest += 'request-id:' + reqId + ';';
+    manifest += 'ts:' + ts + ';';
+    const calculado = crypto.createHmac('sha256', MP_WEBHOOK_SECRET).update(manifest).digest('hex');
+    const a = Buffer.from(calculado, 'utf8');
+    const b = Buffer.from(String(v1), 'utf8');
+    const confere = a.length === b.length && crypto.timingSafeEqual(a, b);
+    return { ok: confere, motivo: confere ? '' : 'assinatura não confere' };
+  } catch (e) {
+    return { ok: false, motivo: 'erro ao validar: ' + e.message };
+  }
+}
 /* --------------------- Meta CAPI (Conversions API) ----------------------
    Envia os eventos de conversão pelo SERVIDOR, direto à Meta. Isso recupera
    as vendas que o pixel do navegador NÃO consegue registrar (o navegador
@@ -449,7 +461,6 @@ async function enviarEventoCapi(eventName, eventId, paciente, tracking, extra) {
     return false;
   }
 }
-
 /* Garante que o paciente existe no cadastro com a ficha completa (incl. celular).
    Tenta cadastrar via POST /cadastro/paciente; se já existir, busca o código. */
 async function garantirPaciente(paciente) {
@@ -474,7 +485,6 @@ async function garantirPaciente(paciente) {
   }
   return await buscarPaciente(paciente);
 }
-
 /* Motor de agendamento no Shosp — usado pela produção E pelo diagnóstico.
    Trata a recusa "paciente já cadastrado" buscando o codigoPaciente e reagendando. */
 async function agendarNoShosp(p, tag) {
@@ -495,17 +505,14 @@ async function agendarNoShosp(p, tag) {
   };
   if (p.paciente.cpf) form.cpf = String(p.paciente.cpf).replace(/\D/g, '');
   if (COD_ESPECIALIDADE) form.codigoEspecialidade = COD_ESPECIALIDADE;
-
   // Cadastra/acha o paciente ANTES (ficha completa, com celular) e agenda pelo código
   try {
     const codPrevio = await garantirPaciente(p.paciente);
     if (codPrevio != null) { form.codigoPaciente = codPrevio; console.log('[agenda] usando codigoPaciente ' + codPrevio); }
   } catch (e) { console.log('[agenda] garantirPaciente falhou: ' + e.message); }
-
   console.log('[agenda] enviando ao Shosp (' + tag + '): ' + JSON.stringify(form));
   let r = await shosp('/agenda/', form);
   console.log('[agenda] resposta do Shosp (' + tag + '): ' + JSON.stringify(r).slice(0, 400));
-
   // O Shosp sinaliza sucesso com ret:"1". ret:"0" é RECUSA (ex.: paciente já cadastrado).
   if (!r || r.ret !== '1') {
     const msg = (r && (r.msg || r.mensagem)) || JSON.stringify(r);
@@ -525,7 +532,6 @@ async function agendarNoShosp(p, tag) {
   }
   return r;
 }
-
 /* Cria o agendamento no Shosp (idempotente: só agenda uma vez por pagamento) */
 async function efetivarAgendamento(paymentId) {
   let p = pendentes.get(String(paymentId));
@@ -539,7 +545,9 @@ async function efetivarAgendamento(paymentId) {
         p = {
           paciente: { nome: m.nome, cpf: m.cpf, telefone: m.telefone, email: m.email, dataNascimento: m.datanascimento, sexo: m.sexo },
           slot: { data: m.data, horario: m.horario, codigoHorario: m.codigohorario },
-          tracking: { fbp: m.fbp, fbc: m.fbc, eventSourceUrl: 'https://vemconsultai.com.br/agendamento' },
+          // ip e ua também viajam no metadata: sem eles, o evento recuperado
+          // chegaria à Meta com menos sinais de casamento (EMQ mais baixo).
+          tracking: { ip: m.ip, ua: m.ua, fbp: m.fbp, fbc: m.fbc, eventSourceUrl: 'https://vemconsultai.com.br/agendamento' },
           booked: false,
         };
         pendentes.set(String(paymentId), p);
@@ -559,7 +567,6 @@ async function efetivarAgendamento(paymentId) {
   // o segundo sai aqui, evitando agendamento duplicado no Shosp.
   if (agendando.has(String(paymentId))) return { agendado: false, emAndamento: true };
   agendando.add(String(paymentId));
-
   let r;
   try {
     r = await agendarNoShosp(p, 'pagamento ' + paymentId);
@@ -573,7 +580,6 @@ async function efetivarAgendamento(paymentId) {
     throw e;
   }
   agendando.delete(String(paymentId));
-
   destravar(p.slot.data, p.slot.horario); // reserva virou firme
   p.booked = true;
   p.protocolo = (r && r.dados && (r.dados.codigoAgendamento || r.dados.protocolo)) ||
@@ -587,7 +593,6 @@ async function efetivarAgendamento(paymentId) {
     .catch(() => {}); // em segundo plano — não trava o agendamento
   return { agendado: true, protocolo: p.protocolo };
 }
-
 /* Alerta urgente ao médico quando um pagamento aprovado NÃO virou agenda */
 async function alertarFalhaAgendamento(p, paymentId, motivo) {
   try {
@@ -604,7 +609,6 @@ async function alertarFalhaAgendamento(p, paymentId, motivo) {
     await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, '🚨 URGENTE: pagamento sem agenda — ' + (p.paciente.nome || 'paciente'), emailShell('🚨 Pagamento sem agenda', corpo, '#c0392b'));
   } catch (e) { console.error('[alerta] falhou: ' + e.message); }
 }
-
 /* ------------------------------ Rotas ---------------------------------- */
 app.get('/api/horarios', async (req, res) => {
   try {
@@ -630,7 +634,6 @@ app.get('/api/horarios', async (req, res) => {
     res.status(500).json({ ok: false, erro: e.message });
   }
 });
-
 app.post('/api/checkout', rateLimit(8, 10 * 60 * 1000), async (req, res) => {
   try {
     const { nome, cpf, telefone, email, dataNascimento, sexo, data, horario, codigoHorario } = req.body;
@@ -645,12 +648,11 @@ app.post('/api/checkout', rateLimit(8, 10 * 60 * 1000), async (req, res) => {
     let fbc = req.body._fbc || '';
     if (!fbc && req.body.fbclid) fbc = 'fb.1.' + Date.now() + '.' + req.body.fbclid;
     const tracking = { ip, ua, fbp, fbc, eventSourceUrl: req.body.pageUrl || 'https://vemconsultai.com.br/agendamento' };
-
     const idem = 'consultai-' + Date.now() + '-' + Math.floor(Math.random() * 1e6);
     const pay = await mpCriarPix({
       valor: PRECO, email, nome, idem,
-      // fbp/fbc viajam no metadata p/ sobreviver a um reinício do servidor
-      metadata: { nome, cpf, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario, fbp, fbc },
+      // fbp/fbc/ip/ua viajam no metadata p/ sobreviver a um reinício do servidor
+      metadata: { nome, cpf, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario, fbp, fbc, ip, ua: ua.slice(0, 250) },
     });
     pendentes.set(String(pay.id), {
       paciente: { nome, cpf, telefone, email, dataNascimento, sexo },
@@ -667,7 +669,6 @@ app.post('/api/checkout', rateLimit(8, 10 * 60 * 1000), async (req, res) => {
     res.status(500).json({ ok: false, erro: e.message });
   }
 });
-
 app.get('/api/checkout/:id', async (req, res) => {
   try {
     const id = String(req.params.id);
@@ -690,13 +691,24 @@ app.get('/api/checkout/:id', async (req, res) => {
     res.status(500).json({ ok: false, erro: e.message });
   }
 });
-
 // Webhook do Mercado Pago (configure a URL no painel do MP)
 app.post('/api/webhook', async (req, res) => {
   try {
+    // Confere a assinatura do MP. Em modo normal apenas registra no log quando
+    // não bate; só bloqueia de verdade se MP_WEBHOOK_STRICT estiver ligado.
+    const v = validarAssinaturaMP(req);
+    if (!v.ok) {
+      console.warn('[webhook] ⚠ assinatura não validada: ' + v.motivo);
+      if (MP_WEBHOOK_STRICT === '1') {
+        console.warn('[webhook] modo estrito ativo — aviso recusado');
+        return res.sendStatus(401);
+      }
+    }
     const id = (req.body && req.body.data && req.body.data.id) || req.query['data.id'];
     console.log('[webhook] notificação recebida do MP — id: ' + (id || '(sem id)'));
     if (id) {
+      // Segurança de fato: nunca confiamos no corpo do aviso. Sempre perguntamos
+      // ao Mercado Pago qual é o status real do pagamento antes de agendar.
       const status = await mpStatus(String(id));
       console.log('[webhook] pagamento ' + id + ' status: ' + status);
       if (status === 'approved') await efetivarAgendamento(String(id));
@@ -706,7 +718,6 @@ app.post('/api/webhook', async (req, res) => {
   }
   res.sendStatus(200); // sempre 200 para o MP não reenviar infinitamente
 });
-
 // Formulário "Trabalhe conosco" — envia a mensagem por e-mail via Brevo
 app.post('/api/contato', rateLimit(5, 10 * 60 * 1000), async (req, res) => {
   try {
@@ -737,15 +748,12 @@ app.post('/api/contato', rateLimit(5, 10 * 60 * 1000), async (req, res) => {
     res.status(500).json({ ok: false, erro: 'não foi possível enviar agora' });
   }
 });
-
 app.get('/api/health', (req, res) => res.json({ ok: true, servico: 'consultai-backend' }));
-
 /* ------------- Lembrete de consulta (~10 min antes) via e-mail -------------
    A cada 3 min, busca no Mercado Pago os pagamentos aprovados e, quando uma
    consulta está a ~10 min de começar, envia um e-mail ao médico com um botão
    que abre o WhatsApp do paciente com a mensagem pronta (1 toque = enviado). */
 const lembretesEnviados = new Set();
-
 async function mpBuscarAprovados() {
   const fim = new Date().toISOString();
   const ini = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
@@ -756,13 +764,11 @@ async function mpBuscarAprovados() {
   if (!r.ok) throw new Error('MP search ' + r.status + ': ' + JSON.stringify(d).slice(0, 150));
   return d.results || [];
 }
-
 function minutosAteConsulta(dataISO, horario) {
   const agoraSP = new Date(Date.now() - 3 * 3600 * 1000); // São Paulo = UTC-3
   const alvo = new Date(dataISO + 'T' + horario + ':00Z');  // interpretado no "relógio SP"
   return (alvo - agoraSP) / 60000;
 }
-
 async function enviarLembreteWhats(m, paymentId) {
   const tel = String(m.telefone || '').replace(/\D/g, '');
   const tel55 = tel.startsWith('55') ? tel : '55' + tel;
@@ -778,7 +784,6 @@ async function enviarLembreteWhats(m, paymentId) {
   await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, '⏰ Consulta em ~10 min: ' + m.horario + ' — ' + (m.nome || ''), emailShell('⏰ Consulta começando em ~10 minutos!', corpo, '#FF6B4A'));
   console.log('[lembrete] enviado — consulta ' + m.data + ' ' + m.horario + ' (pagamento ' + paymentId + ')');
 }
-
 async function rodarLembretes() {
   try {
     if (!BREVO_API_KEY || !NOTIF_EMAIL_FROM || !MP_ACCESS_TOKEN) return;
@@ -797,21 +802,14 @@ async function rodarLembretes() {
   } catch (e) { console.error('[lembrete] erro: ' + e.message); }
 }
 setInterval(rodarLembretes, 3 * 60 * 1000);
-
-/* Despertador anti-cochilo: no plano gratuito o Render "dorme" após ~15 min
-   sem visitas (e o 1º acesso demora 50s+). Este auto-ping a cada 10 min
-   mantém o serviço acordado. */
-if (process.env.RENDER_EXTERNAL_URL) {
-  setInterval(() => {
-    fetch(process.env.RENDER_EXTERNAL_URL + '/api/health').catch(() => {});
-  }, 10 * 60 * 1000);
-  console.log('[despertador] auto-ping ativado a cada 10 min → ' + process.env.RENDER_EXTERNAL_URL);
-}
-
+/* OBS: aqui existia um "despertador" que dava um auto-ping a cada 10 min.
+   Ele servia para o plano gratuito do Render, que colocava o serviço para
+   dormir após ~15 min sem visitas. No plano Starter (pago) o serviço não
+   dorme, então o ping virou código morto e foi removido. Se um dia o plano
+   voltar a ser o gratuito, é só reativar essa rotina. */
 // Página 404 personalizada (qualquer rota que não exista)
 app.use((req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ ok: false, erro: 'rota não encontrada' });
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
-
 app.listen(PORT, () => console.log('Consultaí backend rodando na porta ' + PORT));
