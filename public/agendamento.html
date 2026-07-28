@@ -76,7 +76,6 @@ fbq('init','1369928625011386');fbq('track','PageView');
   .foot{font-size:10.5px;color:#9AAEB3;text-align:center;padding:6px 16px 0}
   .typing{font-size:13px;color:var(--mut);font-style:italic;align-self:flex-start;padding-left:6px}
   .err{align-self:stretch;background:#FCEDE9;border:1px solid #f3c9bd;color:#9a2a12;border-radius:12px;padding:12px;font-size:13px}
-
   /* ===== Desktop/PC: vira um cartão de chat centralizado (não um mobile esticado) ===== */
   @media(min-width:768px){
     body{align-items:center;padding:28px;
@@ -107,14 +106,12 @@ fbq('init','1369928625011386');fbq('track','PageView');
   <div class="chat" id="chat"></div>
   <div class="bar" id="actionbar"></div>
 </div>
-
 <script>
 /* ===== CONFIG =====
    DEMO=true  -> roda com dados de exemplo (para pré-visualizar sem backend).
    DEMO=false -> usa o backend real (mesmo domínio em /api/...). */
 const DEMO = false;
 const API = '';  // vazio = mesmo domínio. Ex.: 'https://api.consultai.app.br'
-
 const state = { date:null, time:null, codigoHorario:null, paciente:{} };
 const slotsByDate = {};
 const chat = document.getElementById('chat');
@@ -123,7 +120,6 @@ const actionbar = document.getElementById('actionbar');
 const stepname = document.getElementById('stepname');
 const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-
 function setStep(p,l){bar.style.width=p+'%';stepname.textContent=l;}
 function scroll(){chat.scrollTop=chat.scrollHeight;}
 function bot(h){const d=document.createElement('div');d.className='msg bot';d.innerHTML=h;chat.appendChild(d);scroll();return d;}
@@ -152,14 +148,12 @@ function cpfValido(cpf){
   let d2=(s*10)%11; if(d2===10) d2=0; return d2===+cpf[10];
 }
 function rotulo(iso){const [y,m,d]=iso.split('-').map(Number);const dt=new Date(y,m-1,d);return DIAS[dt.getDay()]+' '+String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0');}
-
 async function api(path,opts){
   const r=await fetch(API+path,opts);
   const j=await r.json().catch(()=>({}));
   if(!r.ok||j.ok===false) throw new Error(j.erro||('Erro '+r.status));
   return j;
 }
-
 /* ----- carregar horários ----- */
 async function carregarSlots(){
   if(DEMO){
@@ -170,7 +164,6 @@ async function carregarSlots(){
   const j=await api('/api/horarios?dataInicial='+hoje()+'&dias=14');
   (j.slots||[]).forEach(s=>{ if(!s.data||!s.horario) return; (slotsByDate[s.data]=slotsByDate[s.data]||[]).push({horario:s.horario,codigoHorario:s.codigoHorario}); });
 }
-
 /* ----- fluxo ----- */
 function start(){
   setStep(33,'Passo 1 de 3 · Horário');
@@ -222,30 +215,42 @@ function chooseTime(){
     scroll();
   });
 }
-/* Memória do paciente no navegador (recorrência sem fricção) */
+/* Memória do paciente no navegador (recorrência sem fricção).
+   Usa localStorage: os dados FICAM salvos mesmo depois de fechar o navegador
+   ou desligar o aparelho (diferente de sessionStorage, que some ao fechar a aba).
+   É por aparelho/navegador — em outro celular, o paciente preenche de novo. */
 const LS_KEY='consultai_paciente';
 function lerPacienteSalvo(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'null'); }catch(e){ return null; } }
 function salvarPaciente(p){ try{ localStorage.setItem(LS_KEY, JSON.stringify(p)); }catch(e){} }
-
+/* Apaga os dados guardados neste aparelho. Essencial em celular compartilhado:
+   quem clica em "não sou eu" não pode ver nem herdar o cadastro de outra pessoa. */
+function esquecerPaciente(){ try{ localStorage.removeItem(LS_KEY); }catch(e){} }
+function primeiroNome(n){ return String(n||'').trim().split(/\s+/)[0] || ''; }
 function identify(){
   setStep(66,'Passo 2 de 3 · Identificação');
   typing(()=>{
     bot('Boa! Reservei <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>👨‍⚕️ Sua consulta será com o <b>Dr. João Pedro Vieira do Prado</b> — CRM-SP 281.239.');
     const salvo=lerPacienteSalvo();
     if(salvo&&salvo.nome&&salvo.cpf){
-      bot('Vi que você já tem cadastro por aqui 👋 Quer usar os dados de <b>'+salvo.nome+'</b>?');
+      // Mostra SÓ o primeiro nome: em celular compartilhado, não expõe o nome
+      // completo de quem agendou antes.
+      bot('Vi um cadastro salvo neste aparelho, em nome de <b>'+primeiroNome(salvo.nome)+'</b> 👋 É você?');
       const grid=document.createElement('div');grid.className='opts';
-      const b1=document.createElement('button');b1.className='opt';b1.textContent='✅ Sim, usar meus dados';
-      b1.onclick=()=>{grid.remove();me('Usar meus dados');state.paciente=salvo;clearBar();payment();};
-      const b2=document.createElement('button');b2.className='opt';b2.textContent='✏️ Preencher de novo';
-      b2.onclick=()=>{grid.remove();me('Preencher de novo');formCadastro(salvo);};
-      grid.appendChild(b1);grid.appendChild(b2);chat.appendChild(grid);scroll();
+      const b1=document.createElement('button');b1.className='opt';b1.textContent='✅ Sou eu, usar meus dados';
+      b1.onclick=()=>{grid.remove();me('Sou eu');state.paciente=salvo;clearBar();payment();};
+      const b2=document.createElement('button');b2.className='opt';b2.textContent='✏️ Sou eu, mas quero corrigir';
+      b2.onclick=()=>{grid.remove();me('Corrigir meus dados');formCadastro(salvo);};
+      const b3=document.createElement('button');b3.className='opt';b3.textContent='🙋 Não sou eu';
+      // "Não sou eu" APAGA o cadastro do aparelho e abre o formulário em branco.
+      b3.onclick=()=>{grid.remove();me('Não sou eu');esquecerPaciente();
+        bot('Sem problema! Apaguei os dados que estavam guardados aqui. Vamos começar do zero. 🔒');
+        formCadastro(null);};
+      grid.appendChild(b1);grid.appendChild(b2);grid.appendChild(b3);chat.appendChild(grid);scroll();
       return;
     }
     formCadastro(null);
   });
 }
-
 function formCadastro(pre){
   pre=pre||{};
   bot('Agora seus dados para o cadastro:');
@@ -361,7 +366,6 @@ function concluir(protocolo, agendado){
     chat.appendChild(foot);scroll();
   });
 }
-
 start();
 </script>
 </body>
