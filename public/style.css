@@ -127,8 +127,24 @@ h2.title{font-size:36px;font-weight:800;color:var(--deep);text-align:center;lett
 .tcard .em svg{width:40px;height:40px;vertical-align:middle}
 .tcard b{display:block;color:var(--deep);font-size:15px;margin-bottom:4px;font-family:'Poppins'}
 .tcard span{color:var(--mut);font-size:13px}
-.depoimentos{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px}
-.depo{background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:22px 24px;text-align:left}
+.depowrap{position:relative;margin-top:34px}
+.depoimentos{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  padding:4px 2px 6px;-ms-overflow-style:none;scrollbar-width:none}
+.depoimentos::-webkit-scrollbar{display:none}
+.depo{flex:0 0 calc((100% - 36px)/3);scroll-snap-align:start;display:flex;flex-direction:column;
+  background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:22px 24px;text-align:left}
+.depo-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:44px;height:44px;border-radius:50%;
+  background:#fff;border:1.5px solid var(--line);color:var(--deep);font-family:'Poppins',sans-serif;font-size:22px;
+  line-height:0;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 18px rgba(12,74,82,.16);transition:.15s;padding:0 0 3px}
+.depo-nav:hover{border-color:var(--teal);color:var(--teal);box-shadow:0 8px 22px rgba(21,163,154,.25)}
+.depo-nav[disabled]{opacity:.32;cursor:default;box-shadow:none}
+.depo-nav.prev{left:4px}
+.depo-nav.next{right:4px}
+@media(min-width:1180px){.depo-nav.prev{left:-20px}.depo-nav.next{right:-20px}}
+.depo-dots{display:flex;justify-content:center;align-items:center;gap:7px;margin-top:16px}
+.depo-dots i{width:7px;height:7px;border-radius:50%;background:#CFE0DD;display:block;transition:.22s}
+.depo-dots i.on{background:var(--teal);width:22px;border-radius:4px}
 .depo .stars{color:var(--teal);font-size:17px;letter-spacing:3px}
 .depo p{color:var(--ink);font-size:15px;line-height:1.55;margin:12px 0 16px}
 .depo .who{font-weight:700;color:var(--deep);font-family:'Poppins';font-size:14px}
@@ -239,7 +255,10 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
   footer .cols{grid-template-columns:1fr;gap:26px}
 }
 
-@media(max-width:820px){.depoimentos{grid-template-columns:1fr}}
+@media(max-width:820px){
+  .depo{flex:0 0 86%}
+  .depo-nav{display:none}   /* no celular o swipe com o dedo resolve melhor que seta */
+}
 
 .chip svg{width:17px;height:17px}
 

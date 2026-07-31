@@ -97,7 +97,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
         <div class="price-tag"><span class="v">R$ 40</span><span class="s">no Pix</span></div>
       </div>
       <div class="trust">
-        <span>✓ Atendimento por vídeo</span><span>✓ Médico com CRM-SP 281.239</span><span>✓ Sem mensalidade</span>
+        <span>✓ Atendimento por vídeo</span><span>✓ Médico com CRM ativo</span><span>✓ Sem mensalidade</span>
       </div>
     </div>
     <a class="mock mock-link" href="agendamento" aria-label="Abrir o agendamento">
@@ -184,7 +184,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
     <h2 class="title">Por que confiar na Consultaí</h2>
     <p class="lead">Tudo aqui é verificável, do registro do médico até a validade dos documentos.</p>
     <div class="trustbar">
-      <a class="tcard" href="https://portal.cfm.org.br/busca-medicos/" target="_blank" rel="noopener" style="text-decoration:none;display:block"><div class="em"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M8.5 20h7"/><circle cx="12" cy="3.1" r="1"/><path d="M5 7h14"/><path d="M5 7l-2.6 5.4a2.8 2.8 0 0 0 5.2 0L5 7z"/><path d="M19 7l-2.6 5.4a2.8 2.8 0 0 0 5.2 0L19 7z"/></svg></div><b>Médico com registro ativo</b><span>Dr. João Pedro Vieira do Prado, CRM-SP 281.239. Confira você mesmo na busca oficial do CFM &rsaquo;</span></a>
+      <div class="tcard"><div class="em"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M8.5 20h7"/><circle cx="12" cy="3.1" r="1"/><path d="M5 7h14"/><path d="M5 7l-2.6 5.4a2.8 2.8 0 0 0 5.2 0L5 7z"/><path d="M19 7l-2.6 5.4a2.8 2.8 0 0 0 5.2 0L19 7z"/></svg></div><b>Regulamentado pelo CFM</b><span>Telemedicina conforme a Resolução CFM nº 2.314/2022</span></div>
       <div class="tcard"><div class="em"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c3-.8 5.6-3 8.6-6.6"/><path d="M14.6 5.4l4 4L10 18l-4.6 1 1-4.6 8.2-9z"/><path d="M13 7l4 4"/></svg></div><b>Assinatura ICP-Brasil</b><span>Documentos digitais com validade jurídica em todo o país</span></div>
       <div class="tcard"><div class="em"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10.5" rx="2.2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14.4v2.6"/></svg></div><b>Pagamento seguro</b><span>Pix processado pelo Mercado Pago, confirmação na hora</span></div>
       <div class="tcard"><div class="em"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 2.8v5.2c0 4.4-3 7.9-7 9.7-4-1.8-7-5.3-7-9.7V5.8L12 3z"/><path d="M9 12l2 2 4-4.2"/></svg></div><b>Dados protegidos</b><span>Suas informações de saúde tratadas conforme a LGPD</span></div>
@@ -197,24 +197,68 @@ fbq('init','1369928625011386');fbq('track','PageView');
     <div class="kicker">Pacientes reais</div>
     <h2 class="title">Quem já se consultou conta como foi</h2>
     <p class="lead">Depoimentos enviados por pacientes atendidos pela Consultaí e publicados com autorização por escrito de cada um.</p>
-    <div class="depoimentos">
-      <div class="depo">
+    <div class="depowrap">
+      <button class="depo-nav prev" type="button" aria-label="Ver depoimentos anteriores">&lsaquo;</button>
+      <div class="depoimentos" id="depoTrack" role="list">
+      <div class="depo" role="listitem">
+        <div class="stars" aria-label="5 de 5 estrelas" title="5 de 5 estrelas">★★★★★</div>
         <p>&ldquo;Foi minha primeira consulta digital e tive uma boa experiência. Atendimento cordial e documentos entregues sem demora, melhor parte.&rdquo;</p>
         <div class="who">Carlos A.</div>
         <div class="city">Bauru/SP</div>
       </div>
-      <div class="depo">
-        <p>&ldquo;Gostei bastante da consulta. Me senti ouvida e saí com todas as orientações e os documentos que precisava do atendimento.&rdquo;</p>
-        <div class="who">Renata M.</div>
-        <div class="city">Rio de Janeiro/RJ</div>
+      <div class="depo" role="listitem">
+        <div class="stars" aria-label="5 de 5 estrelas" title="5 de 5 estrelas">★★★★★</div>
+        <p>&ldquo;A consulta foi bem organizada e o médico passou bastante confiança. No fim, deu tudo certo, sem dores de cabeça. Recomendo!!!&rdquo;</p>
+        <div class="who">Beatriz N.</div>
+        <div class="city">São José dos Campos/SP</div>
       </div>
-      <div class="depo">
+      <div class="depo" role="listitem">
+        <div class="stars" aria-label="5 de 5 estrelas" title="5 de 5 estrelas">★★★★★</div>
         <p>&ldquo;Médico educado e consulta bem tranquila. O processo é bem simples e no final recebi toda a documentação direitinho.&rdquo;</p>
         <div class="who">Pedro M.</div>
         <div class="city">Cuiabá/MT</div>
       </div>
+      <div class="depo" role="listitem">
+        <div class="stars" aria-label="5 de 5 estrelas" title="5 de 5 estrelas">★★★★★</div>
+        <p>&ldquo;Achei o atendimento muito bom. Sem enrolação, pessoal educado e consulta tranquila. Sempre que precisar, vou voltar&rdquo;</p>
+        <div class="who">Marcelo L.</div>
+        <div class="city">Campinas/SP</div>
+      </div>
+      <div class="depo" role="listitem">
+        <div class="stars" aria-label="5 de 5 estrelas" title="5 de 5 estrelas">★★★★★</div>
+        <p>&ldquo;Gostei bastante da consulta. Me senti ouvida e saí com todas as orientações e os documentos que precisava do atendimento.&rdquo;</p>
+        <div class="who">Renata M.</div>
+        <div class="city">Rio de Janeiro/RJ</div>
+      </div>
+      <div class="depo" role="listitem">
+        <div class="stars" aria-label="5 de 5 estrelas" title="5 de 5 estrelas">★★★★★</div>
+        <p>&ldquo;Minha experiência foi muito boa. A consulta aconteceu sem demora, tiraram minhas dúvidas e saí bem mais tranquila. Recomendo o atendimento.&rdquo;</p>
+        <div class="who">Priscila T.</div>
+        <div class="city">Ribeirão Preto/SP</div>
+      </div>
+      <div class="depo" role="listitem">
+        <div class="stars" aria-label="5 de 5 estrelas" title="5 de 5 estrelas">★★★★★</div>
+        <p>&ldquo;Atendimento rápido e organizado. O médico foi atencioso e explicou tudo com calma. Recebi os documentos sem complicação.&rdquo;</p>
+        <div class="who">Julia M.</div>
+        <div class="city">São Paulo/SP</div>
+      </div>
+      <div class="depo" role="listitem">
+        <div class="stars" aria-label="5 de 5 estrelas" title="5 de 5 estrelas">★★★★★</div>
+        <p>&ldquo;Fui muito bem atendida do começo ao fim. A consulta foi tranquila, tiraram minhas dúvidas e sai com toda a documentação certinha. Recomendo!!!&rdquo;</p>
+        <div class="who">Amanda R.</div>
+        <div class="city">São Paulo/SP</div>
+      </div>
+      <div class="depo" role="listitem">
+        <div class="stars" aria-label="5 de 5 estrelas" title="5 de 5 estrelas">★★★★★</div>
+        <p>&ldquo;Fui bem atendido e a consulta foi tranquila, o médico explicou tudo. Sa satisfeito com o atendimento.&rdquo;</p>
+        <div class="who">Eduardo C.</div>
+        <div class="city">Santos/SP</div>
+      </div>
+      </div>
+      <button class="depo-nav next" type="button" aria-label="Ver próximos depoimentos">&rsaquo;</button>
     </div>
-    <p class="depo-nota"><b>Depoimentos reais, publicados com autorização por escrito dos pacientes.</b> A emissão de receita, atestado ou pedido de exame depende de avaliação médica e ocorre apenas quando há indicação clínica. Não comercializamos documentos médicos.</p>
+    <div class="depo-dots" id="depoDots" aria-hidden="true"></div>
+    <p class="depo-nota"><b>Depoimentos e avaliações reais, enviados por pacientes atendidos e publicados com autorização por escrito de cada um.</b> A emissão de receita, atestado ou pedido de exame depende de avaliação médica e ocorre apenas quando há indicação clínica. Não comercializamos documentos médicos.</p>
   </div>
 </section>
 
@@ -279,7 +323,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
       </div>
     </div>
     <div class="legal">
-      Responsável técnico: Dr. João Pedro Vieira do Prado (diretor técnico) — CRM-SP 281.239. CNPJ 64.412.466/0001-87 · CRM-PJ 1043447/SP.<br>
+      Responsável técnico: Dr. João Pedro Vieira do Prado, Médico, diretor técnico — CRM-SP 281.239. CNPJ 64.412.466/0001-87 · CRM-PJ 1043447/SP.<br>
       Telemedicina realizada conforme a Resolução CFM nº 2.314/2022. Documentos médicos emitidos conforme a Resolução CFM nº 2.381/2024, com assinatura digital ICP-Brasil. A emissão de receita, atestado ou pedido de exame depende de avaliação médica — não comercializamos documentos.<br>
       Este serviço não substitui atendimento de urgência ou emergência. Em caso de emergência, procure um pronto-socorro ou ligue 192 (SAMU).<br>
       © 2026 Octa Health. Todos os direitos reservados.
@@ -299,6 +343,35 @@ document.querySelectorAll('.hamburger').forEach(function(h){
     h.setAttribute('aria-expanded',open?'true':'false');
   });
 });
+/* Carrossel de depoimentos: rola o trilho de verdade (scroll nativo),
+   entao no celular o swipe com o dedo ja funciona sem codigo extra.
+   Todos os depoimentos ficam no HTML, o Google le todos. */
+(function(){
+  var t=document.getElementById('depoTrack'); if(!t) return;
+  var prev=document.querySelector('.depo-nav.prev'),
+      next=document.querySelector('.depo-nav.next'),
+      dots=document.getElementById('depoDots'),
+      cards=t.querySelectorAll('.depo');
+  function passo(){ return cards.length ? cards[0].getBoundingClientRect().width+18 : 300; }
+  function porTela(){ return Math.max(1, Math.round(t.clientWidth/passo())); }
+  function pintar(){
+    var i=Math.round(t.scrollLeft/passo());
+    for(var k=0;k<dots.children.length;k++) dots.children[k].className=(k===i?'on':'');
+    prev.disabled = t.scrollLeft<=2;
+    next.disabled = t.scrollLeft >= t.scrollWidth-t.clientWidth-2;
+  }
+  function montar(){
+    var n=Math.max(1,cards.length-porTela()+1);
+    dots.innerHTML='';
+    for(var i=0;i<n;i++) dots.appendChild(document.createElement('i'));
+    pintar();
+  }
+  prev.addEventListener('click',function(){ t.scrollBy({left:-passo(),behavior:'smooth'}); });
+  next.addEventListener('click',function(){ t.scrollBy({left: passo(),behavior:'smooth'}); });
+  var d1; t.addEventListener('scroll',function(){ clearTimeout(d1); d1=setTimeout(pintar,90); });
+  var d2; window.addEventListener('resize',function(){ clearTimeout(d2); d2=setTimeout(montar,150); });
+  montar();
+})();
 /* Pop-up do hero: mostra os próximos dias a partir de hoje */
 (function(){
   var el=document.getElementById('mockDays'); if(!el) return;

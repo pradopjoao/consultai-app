@@ -74,6 +74,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
   .segur .cnpj{display:block;margin-top:6px;font-size:11.5px;color:var(--mut)}
   .depoi{align-self:stretch;background:#fff;border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:14px;padding:13px 15px}
   .depoi .t{font-size:11px;font-weight:800;color:var(--teal);letter-spacing:.6px;margin-bottom:6px;text-transform:uppercase}
+  .depoi .st{color:var(--teal);font-size:14px;letter-spacing:2px;margin-bottom:6px}
   .depoi .q{font-size:14px;line-height:1.5;color:var(--ink)}
   .depoi .s{margin-top:7px;font-size:12px;color:var(--mut)}
   .pixbox img{width:190px;height:190px;margin:6px auto}
@@ -315,7 +316,7 @@ async function payment(){
     chat.appendChild(seg);scroll();
     /* Depoimento real de paciente, publicado com autorizacao por escrito. */
     const dep=document.createElement('div');dep.className='depoi';
-    dep.innerHTML='<div class="t">Quem já passou por aqui</div><div class="q">&ldquo;Foi minha primeira consulta digital e tive uma boa experiência. Atendimento cordial e documentos entregues sem demora.&rdquo;</div><div class="s">Carlos A. · Bauru/SP</div>';
+    dep.innerHTML='<div class="t">Quem já passou por aqui</div><div class="st" aria-label="5 de 5 estrelas">★★★★★</div><div class="q">&ldquo;Foi minha primeira consulta digital e tive uma boa experiência. Atendimento cordial e documentos entregues sem demora.&rdquo;</div><div class="s">Carlos A. · Bauru/SP</div>';
     chat.appendChild(dep);scroll();
     try{
       let pay;
