@@ -16,27 +16,11 @@ const crypto = require('crypto');
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// URLs limpas: redireciona /pagina.html -> /pagina (301, bom para SEO)
-app.get(/\.html$/, (req, res) => {
-  const limpo = req.path === '/index.html' ? '/' : req.path.slice(0, -5);
-  const qs = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
-  res.redirect(301, limpo + qs);
-});
-// Serve os arquivos; "extensions:['html']" faz /trabalhe-conosco achar trabalhe-conosco.html
-// setHeaders define o cache com segurança: páginas HTML sempre revalidam (nunca
-// servem versão velha); imagens/CSS/JS podem ser guardados por 1 dia. Isso deixa
-// o "edge caching" do Render seguro de ligar — as rotas /api ganham "no-store" abaixo.
-app.use(express.static(path.join(__dirname, 'public'), {
-  extensions: ['html'],
-  setHeaders: (res, filePath) => {
-    if (/\.html$/i.test(filePath)) {
-      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
-    } else {
-      res.setHeader('Cache-Control', 'public, max-age=86400');
-    }
-  },
-}));
-// CORS + headers de segurança
+/* CORS + headers de segurança.
+   ATENCAO AO LUGAR: este bloco PRECISA vir antes do express.static.
+   Antes ele estava DEPOIS, e como o express.static responde e encerra a
+   requisicao, nenhuma pagina HTML do site recebia esses cabecalhos de
+   seguranca. So as rotas /api recebiam. Movido para ca em 31/07/2026. */
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://vemconsultai.com.br');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
@@ -50,6 +34,44 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+// URLs limpas: redireciona /pagina.html -> /pagina (301, bom para SEO).
+// Qualquer ".../index.html" cai na raiz da pasta: /index.html -> /  e
+// /blog/index.html -> /blog. Sem isso sobrava um endereço duplicado (/blog/index)
+// servindo exatamente a mesma página.
+app.get(/\.html$/, (req, res) => {
+  const limpo = req.path.endsWith('/index.html')
+    ? (req.path.slice(0, -'/index.html'.length) || '/')
+    : req.path.slice(0, -5);
+  const qs = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+  res.redirect(301, limpo + qs);
+});
+/* /blog é o ÚNICO endereço do site que é uma PASTA e não um arquivo .html.
+   Por padrão o express.static responde 301 de "/blog" para "/blog/", e esse
+   salto extra foi o que o Google marcou como "Erro de redirecionamento" no
+   Search Console (era a única página da lista, justamente por ser pasta).
+   Aqui entregamos o arquivo direto, com status 200, sem redirecionar.
+   O "redirect: false" logo abaixo desliga o 301 automático de pastas. */
+app.get('/blog', (req, res, next) => {
+  res.set('Cache-Control', 'public, max-age=0, must-revalidate');
+  res.sendFile(path.join(__dirname, 'public', 'blog', 'index.html'), (err) => {
+    if (err) next(err);
+  });
+});
+// Serve os arquivos; "extensions:['html']" faz /trabalhe-conosco achar trabalhe-conosco.html
+// setHeaders define o cache com segurança: páginas HTML sempre revalidam (nunca
+// servem versão velha); imagens/CSS/JS podem ser guardados por 1 dia. Isso deixa
+// o "edge caching" do Render seguro de ligar — as rotas /api ganham "no-store" abaixo.
+app.use(express.static(path.join(__dirname, 'public'), {
+  extensions: ['html'],
+  redirect: false,
+  setHeaders: (res, filePath) => {
+    if (/\.html$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  },
+}));
 // Rate limit simples em memória (sem dependência) — protege contra abuso/spam
 const _rl = new Map();
 function rateLimit(max, windowMs) {
