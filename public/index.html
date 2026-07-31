@@ -164,20 +164,6 @@ fbq('init','1369928625011386');fbq('track','PageView');
   </div>
 </section>
 
-<section style="padding-top:0">
-  <div class="wrap">
-    <div class="kicker">Sem pegadinha</div>
-    <h2 class="title">Por que custa R$ 40?</h2>
-    <p class="lead">Essa é a pergunta que mais recebemos. A resposta é simples: o preço é baixo porque o custo é baixo, não porque a consulta é menor.</p>
-    <div class="steps">
-      <div class="step"><div class="n">1</div><h3>Sem consultório</h3><p>Não pagamos aluguel de sala, recepção nem secretária. O atendimento é por vídeo, de qualquer lugar do Brasil.</p></div>
-      <div class="step"><div class="n">2</div><h3>Sem intermediário</h3><p>Você fala direto com o médico. Não há plano de saúde, operadora nem convênio no meio para encarecer.</p></div>
-      <div class="step"><div class="n">3</div><h3>Sem mensalidade</h3><p>Você paga apenas quando se consulta. Não existe assinatura, fidelidade nem cobrança recorrente.</p></div>
-    </div>
-    <p class="lead" style="margin:34px auto 0">A consulta é a mesma: um médico com CRM ativo avaliando o seu caso, com o tempo necessário para isso.</p>
-  </div>
-</section>
-
 <section>
   <div class="wrap">
     <div class="kicker">Confiança</div>
@@ -196,7 +182,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
   <div class="wrap">
     <div class="kicker">Pacientes reais</div>
     <h2 class="title">Quem já se consultou conta como foi</h2>
-    <p class="lead">Depoimentos enviados por pacientes atendidos pela Consultaí e publicados com autorização por escrito de cada um.</p>
+    <p class="lead">Quem já passou por uma consulta na Consultaí contando, com as próprias palavras, como foi.</p>
     <div class="depowrap">
       <button class="depo-nav prev" type="button" aria-label="Ver depoimentos anteriores">&lsaquo;</button>
       <div class="depoimentos" id="depoTrack" role="list">
@@ -352,6 +338,11 @@ document.querySelectorAll('.hamburger').forEach(function(h){
       next=document.querySelector('.depo-nav.next'),
       dots=document.getElementById('depoDots'),
       cards=t.querySelectorAll('.depo');
+  /* Rede de seguranca: se o style.css do carrossel nao tiver carregado,
+     o trilho nao rola. Nesse caso some com setas e bolinhas para nao
+     aparecerem como botao cru, e a secao volta a ser uma grade simples. */
+  var ox=getComputedStyle(t).overflowX;
+  if(ox!=='auto' && ox!=='scroll'){ prev.remove(); next.remove(); dots.remove(); return; }
   function passo(){ return cards.length ? cards[0].getBoundingClientRect().width+18 : 300; }
   function porTela(){ return Math.max(1, Math.round(t.clientWidth/passo())); }
   function pintar(){
