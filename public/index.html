@@ -59,6 +59,45 @@ fbq('init','1369928625011386');fbq('track','PageView');
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=6">
+<style>
+/* ============================================================
+   CARROSSEL DE DEPOIMENTOS - CSS EMBUTIDO DE PROPOSITO.
+   Fica aqui dentro, e nao no style.css, para a secao funcionar
+   mesmo que o style.css do servidor esteja desatualizado.
+   Usa o seletor #depoTrack, que tem prioridade sobre qualquer
+   regra .depoimentos que exista no arquivo externo.
+   ============================================================ */
+.depowrap{position:relative;margin-top:34px}
+#depoTrack{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;
+  scroll-behavior:smooth;padding:4px 2px 6px;
+  -ms-overflow-style:none;scrollbar-width:none}
+#depoTrack::-webkit-scrollbar{display:none}
+#depoTrack .depo{flex:0 0 calc((100% - 36px)/3);scroll-snap-align:start;
+  display:flex;flex-direction:column;margin:0}
+.depowrap .depo-nav{position:absolute;top:calc(50% - 22px);z-index:3;
+  width:44px;height:44px;border-radius:50%;background:#fff;
+  border:1.5px solid var(--line);color:var(--deep);
+  font-family:'Poppins',sans-serif;font-size:22px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;padding:0 0 3px;
+  box-shadow:0 6px 18px rgba(12,74,82,.16)}
+.depowrap .depo-nav:hover{border-color:var(--teal);color:var(--teal)}
+.depowrap .depo-nav[disabled]{opacity:.32;cursor:default;box-shadow:none}
+.depowrap .depo-nav.prev{left:4px}
+.depowrap .depo-nav.next{right:4px}
+@media(min-width:1180px){
+  .depowrap .depo-nav.prev{left:-20px}
+  .depowrap .depo-nav.next{right:-20px}
+}
+.depo-dots{display:flex;justify-content:center;align-items:center;gap:7px;margin-top:16px}
+.depo-dots i{width:7px;height:7px;border-radius:50%;background:#CFE0DD;display:block;transition:width .22s,background .22s}
+.depo-dots i.on{background:var(--teal);width:22px;border-radius:4px}
+@media(max-width:820px){
+  #depoTrack .depo{flex:0 0 86%}
+  /* No celular as setas somem: o swipe com o dedo e melhor e,
+     sem elas, acaba qualquer repintura durante a rolagem da pagina. */
+  .depowrap .depo-nav{display:none}
+}
+</style>
 </head>
 <body>
 
