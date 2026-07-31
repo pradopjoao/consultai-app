@@ -67,6 +67,15 @@ fbq('init','1369928625011386');fbq('track','PageView');
   .btn{width:100%;background:var(--teal-deep);color:#fff;border:none;padding:16px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer}
   .btn:disabled{opacity:.5}.btn.coral{background:var(--coral)}
   .pixbox{background:#fff;border:1px dashed var(--teal);border-radius:14px;padding:16px;text-align:center;align-self:stretch}
+  /* Confianca: aparece no instante em que o paciente le "Pix", que e exatamente
+     quando surge o receio de golpe. */
+  .segur{align-self:stretch;background:#EAF7F4;border:1px solid #CDEBE5;border-radius:14px;padding:13px 15px;font-size:13.5px;line-height:1.55;color:#20505A}
+  .segur b{color:var(--teal-deep)}
+  .segur .cnpj{display:block;margin-top:6px;font-size:11.5px;color:var(--mut)}
+  .depoi{align-self:stretch;background:#fff;border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:14px;padding:13px 15px}
+  .depoi .t{font-size:11px;font-weight:800;color:var(--teal);letter-spacing:.6px;margin-bottom:6px;text-transform:uppercase}
+  .depoi .q{font-size:14px;line-height:1.5;color:var(--ink)}
+  .depoi .s{margin-top:7px;font-size:12px;color:var(--mut)}
   .pixbox img{width:190px;height:190px;margin:6px auto}
   .pixbox .v{font-size:26px;font-weight:800;color:var(--teal-deep)}
   .code{font-family:monospace;font-size:11px;background:var(--soft);padding:8px;border-radius:8px;margin-top:8px;word-break:break-all;color:var(--mut)}
@@ -127,7 +136,11 @@ function me(t){const d=document.createElement('div');d.className='msg me';d.text
 function err(t){const d=document.createElement('div');d.className='err';d.textContent=t;chat.appendChild(d);scroll();}
 function clearBar(){actionbar.innerHTML='';}
 function typing(then){const t=document.createElement('div');t.className='typing';t.textContent='Assistente está digitando…';chat.appendChild(t);scroll();setTimeout(()=>{t.remove();then();},600);}
-function hoje(){return new Date().toISOString().slice(0,10);}
+/* Data de HOJE pelo relogio do paciente. NAO usar toISOString(), que devolve UTC:
+   no Brasil (UTC-3), depois das 21h ele ja retorna a data de amanha e o paciente
+   deixa de ver os horarios livres de hoje, justamente no horario de maior procura. */
+function localISO(off){const d=new Date();d.setDate(d.getDate()+off);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function hoje(){return localISO(0);}
 function soDigitos(v){return (v||'').replace(/\D/g,'');}
 /* Lê os cookies do pixel (_fbp/_fbc) e o fbclid da URL para enviar ao servidor,
    que os repassa à CAPI. Melhora o "casamento" do evento sem expor dado nenhum. */
@@ -157,7 +170,7 @@ async function api(path,opts){
 /* ----- carregar horários ----- */
 async function carregarSlots(){
   if(DEMO){
-    const base=new Date(); const add=(n)=>{const d=new Date(base);d.setDate(base.getDate()+n);return d.toISOString().slice(0,10);};
+    const add=(n)=>localISO(n);
     [0,1,3,6].forEach((n,i)=>{slotsByDate[add(n)]=[{horario:'09:20',codigoHorario:100+i},{horario:'14:10',codigoHorario:200+i},{horario:'18:05',codigoHorario:300+i}];});
     return;
   }
@@ -169,7 +182,7 @@ function start(){
   setStep(33,'Passo 1 de 3 · Horário');
   bot('Oi! 👋 Sou o assistente da <b>Consultaí</b>. Vou te ajudar a marcar sua <b>consulta médica online</b> em menos de 1 minuto.');
   typing(async ()=>{
-    bot('A consulta custa <b>R$ 40</b> (Pix), é por vídeo e dura cerca de 10–15 min. Vou ver os horários livres…');
+    bot('A consulta custa <b>R$ 40</b> (Pix), é por vídeo e dura cerca de 10 a 15 min. Vou ver os horários livres…');
     try{
       await carregarSlots();
       const datas=Object.keys(slotsByDate).sort();
@@ -185,7 +198,6 @@ function askDate(datas){
     b.onclick=()=>{state.date=iso;me(rotulo(iso));grid.remove();chooseTime();};grid.appendChild(b);});
   chat.appendChild(grid);scroll();
 }
-function localISO(off){const d=new Date();d.setDate(d.getDate()+off);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function toMin(h){const[H,M]=h.split(':').map(Number);return H*60+M;}
 /* Exibição tradicional: 8 horários por dia; "Mostrar mais" revela +8; o clique seguinte revela todos. */
 function chooseTime(){
@@ -229,7 +241,7 @@ function primeiroNome(n){ return String(n||'').trim().split(/\s+/)[0] || ''; }
 function identify(){
   setStep(66,'Passo 2 de 3 · Identificação');
   typing(()=>{
-    bot('Boa! Reservei <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>👨‍⚕️ Sua consulta será com o <b>Dr. João Pedro Vieira do Prado</b> — CRM-SP 281.239.');
+    bot('Boa! Reservei <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>👨‍⚕️ Sua consulta será com o <b>Dr. João Pedro Vieira do Prado</b>, CRM-SP 281.239.');
     const salvo=lerPacienteSalvo();
     if(salvo&&salvo.nome&&salvo.cpf){
       // Mostra SÓ o primeiro nome: em celular compartilhado, não expõe o nome
@@ -295,7 +307,16 @@ function formCadastro(pre){
 async function payment(){
   setStep(100,'Passo 3 de 3 · Pagamento');
   typing(async ()=>{
-    bot('Falta só o pagamento da consulta — <b>R$ 40 no Pix</b>, aprovação na hora:');
+    bot('Falta só o pagamento da consulta, <b>R$ 40 no Pix</b>, aprovação na hora:');
+    /* Antecipa a duvida: o paciente descobre AGORA qual nome vai aparecer no
+       aplicativo do banco, em vez de estranhar so na hora de pagar. */
+    const seg=document.createElement('div');seg.className='segur';
+    seg.innerHTML='🔒 O pagamento é processado pelo <b>Mercado Pago</b>. No seu banco vai aparecer o nome <b>OCTA HEALTH</b>, que é a empresa responsável pela Consultaí.<span class="cnpj">CNPJ 64.412.466/0001-87 · CRM-PJ 1043447/SP</span>';
+    chat.appendChild(seg);scroll();
+    /* Depoimento real de paciente, publicado com autorizacao por escrito. */
+    const dep=document.createElement('div');dep.className='depoi';
+    dep.innerHTML='<div class="t">Quem já passou por aqui</div><div class="q">&ldquo;Foi minha primeira consulta digital e tive uma boa experiência. Atendimento cordial e documentos entregues sem demora.&rdquo;</div><div class="s">Carlos A. · Bauru/SP</div>';
+    chat.appendChild(dep);scroll();
     try{
       let pay;
       if(DEMO){ pay={paymentId:'DEMO123',copiaECola:'00020126...CONSULTAI-PIX-DEMO...5802BR',qrBase64:null}; }
@@ -357,7 +378,7 @@ function concluir(protocolo, agendado){
       ok.innerHTML='<b>Pagamento recebido! ✅</b> '+(state.paciente.nome?((state.paciente.nome.split(' ')[0])+', '):'')+'estamos confirmando o seu horário de <b>'+rotulo(state.date)+' às '+state.time+'h</b> e você será contatado(a) no <b>WhatsApp</b> em instantes.';
       chat.appendChild(ok);
     } else {
-      ok.innerHTML='<b>Consulta confirmada! 🎉</b>'+(state.paciente.nome||'')+', sua consulta é <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>Enviaremos o link da videochamada no seu WhatsApp.'+(protocolo?(' Protocolo: <b>'+protocolo+'</b>.'):'');
+      ok.innerHTML='<b>Consulta confirmada! 🎉</b> '+(state.paciente.nome?(primeiroNome(state.paciente.nome)+', '):'')+'sua consulta é <b>'+rotulo(state.date)+' às '+state.time+'h</b>.<br>Enviaremos o link da videochamada no seu WhatsApp.'+(protocolo?(' Protocolo: <b>'+protocolo+'</b>.'):'');
       chat.appendChild(ok);
       bot('📧 Enviamos um <b>e-mail de confirmação</b> para <b>'+(state.paciente.email||'seu e-mail')+'</b> com todos os detalhes. Não achou? Dá uma olhada no <b>lixo eletrônico</b>.');
     }
