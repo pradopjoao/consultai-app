@@ -69,14 +69,9 @@ fbq('init','1369928625011386');fbq('track','PageView');
   .pixbox{background:#fff;border:1px dashed var(--teal);border-radius:14px;padding:16px;text-align:center;align-self:stretch}
   /* Confianca: aparece no instante em que o paciente le "Pix", que e exatamente
      quando surge o receio de golpe. */
-  .segur{align-self:stretch;background:#EAF7F4;border:1px solid #CDEBE5;border-radius:14px;padding:13px 15px;font-size:13.5px;line-height:1.55;color:#20505A}
+  .segur{align-self:stretch;background:#EAF7F4;border:1px solid #CDEBE5;border-radius:12px;padding:10px 13px;font-size:12px;line-height:1.5;color:#3A6670}
   .segur b{color:var(--teal-deep)}
-  .segur .cnpj{display:block;margin-top:6px;font-size:11.5px;color:var(--mut)}
-  .depoi{align-self:stretch;background:#fff;border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:14px;padding:13px 15px}
-  .depoi .t{font-size:11px;font-weight:800;color:var(--teal);letter-spacing:.6px;margin-bottom:6px;text-transform:uppercase}
-  .depoi .st{color:var(--teal);font-size:14px;letter-spacing:2px;margin-bottom:6px}
-  .depoi .q{font-size:14px;line-height:1.5;color:var(--ink)}
-  .depoi .s{margin-top:7px;font-size:12px;color:var(--mut)}
+  .segur .cnpj{display:block;margin-top:4px;font-size:10.5px;color:#7E959B}
   .pixbox img{width:190px;height:190px;margin:6px auto}
   .pixbox .v{font-size:26px;font-weight:800;color:var(--teal-deep)}
   .code{font-family:monospace;font-size:11px;background:var(--soft);padding:8px;border-radius:8px;margin-top:8px;word-break:break-all;color:var(--mut)}
@@ -309,15 +304,6 @@ async function payment(){
   setStep(100,'Passo 3 de 3 · Pagamento');
   typing(async ()=>{
     bot('Falta só o pagamento da consulta, <b>R$ 40 no Pix</b>, aprovação na hora:');
-    /* Antecipa a duvida: o paciente descobre AGORA qual nome vai aparecer no
-       aplicativo do banco, em vez de estranhar so na hora de pagar. */
-    const seg=document.createElement('div');seg.className='segur';
-    seg.innerHTML='🔒 O pagamento é processado pelo <b>Mercado Pago</b>. No seu banco vai aparecer o nome <b>OCTA HEALTH</b>, que é a empresa responsável pela Consultaí.<span class="cnpj">CNPJ 64.412.466/0001-87 · CRM-PJ 1043447/SP</span>';
-    chat.appendChild(seg);scroll();
-    /* Depoimento real de paciente, publicado com autorizacao por escrito. */
-    const dep=document.createElement('div');dep.className='depoi';
-    dep.innerHTML='<div class="t">Quem já passou por aqui</div><div class="st" aria-label="5 de 5 estrelas">★★★★★</div><div class="q">&ldquo;Foi minha primeira consulta digital e tive uma boa experiência. Atendimento cordial e documentos entregues sem demora.&rdquo;</div><div class="s">Carlos A. · Bauru/SP</div>';
-    chat.appendChild(dep);scroll();
     try{
       let pay;
       if(DEMO){ pay={paymentId:'DEMO123',copiaECola:'00020126...CONSULTAI-PIX-DEMO...5802BR',qrBase64:null}; }
@@ -333,6 +319,11 @@ async function payment(){
         '<div class="code">'+(pay.copiaECola||'')+'</div>'+
         '<button class="copy" id="cp">Copiar código Pix</button>';
       chat.appendChild(box);scroll();
+      /* O aviso do Mercado Pago vem DEPOIS do QR Code, de proposito: antes,
+         ele ficava fora da tela no momento em que o paciente abria o Pix. */
+      const seg=document.createElement('div');seg.className='segur';
+      seg.innerHTML='🔒 Pagamento processado pelo <b>Mercado Pago</b>. No seu banco aparece o nome <b>OCTA HEALTH</b>, a empresa responsável pela Consultaí.<span class="cnpj">CNPJ 64.412.466/0001-87 · CRM-PJ 1043447/SP</span>';
+      chat.appendChild(seg);scroll();
       // gerou o Pix — mesmo eventID do servidor ('ic_'+paymentId) p/ deduplicar
       if(window.fbq) fbq('track','InitiateCheckout',{value:40,currency:'BRL'}, pay.paymentId?{eventID:'ic_'+pay.paymentId}:undefined);
       document.getElementById('cp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(pay.copiaECola||'');document.getElementById('cp').textContent='Copiado ✓';};
