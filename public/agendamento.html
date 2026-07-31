@@ -3,7 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Consultaí — Agendamento</title>
+<title>Agendar consulta médica online | Consultaí</title>
+<meta name="description" content="Agende sua consulta médica online em menos de 1 minuto. Escolha o horário, pague R$ 40 no Pix e fale com um médico por vídeo, de qualquer lugar do Brasil.">
+<meta name="robots" content="index, follow">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"MedicalWebPage","name":"Agendar consulta médica online","url":"https://vemconsultai.com.br/agendamento","inLanguage":"pt-BR","about":{"@type":"MedicalProcedure","name":"Consulta médica por telemedicina"},"publisher":{"@type":"Organization","name":"Consultaí","alternateName":"Octa Health"},"potentialAction":{"@type":"ReserveAction","target":{"@type":"EntryPoint","urlTemplate":"https://vemconsultai.com.br/agendamento","actionPlatform":["http://schema.org/DesktopWebPlatform","http://schema.org/MobileWebPlatform"]},"result":{"@type":"Reservation","name":"Consulta médica online"}}}
+</script>
 <link rel="canonical" href="https://vemconsultai.com.br/agendamento">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -108,6 +113,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
   </div>
   <div class="prog"><i id="bar"></i></div>
   <div class="stepname" id="stepname">Passo 1 de 3 · Horário</div>
+  <h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Agendar consulta médica online por R$ 40</h1>
   <div class="chat" id="chat"></div>
   <div class="bar" id="actionbar"></div>
 </div>
@@ -315,7 +321,7 @@ async function payment(){
       }
       const box=document.createElement('div');box.className='pixbox';
       box.innerHTML='<div class="v">R$ 40,00</div><div style="font-size:13px;color:var(--mut)">Pix • aprovação imediata</div>'+
-        (pay.qrBase64?('<img alt="QR Code Pix" src="data:image/png;base64,'+pay.qrBase64+'">'):'')+
+        (pay.qrBase64?('<img alt="QR Code do Pix de R$ 40 para pagar a consulta na Consultaí" src="data:image/png;base64,'+pay.qrBase64+'">'):'')+
         '<div class="code">'+(pay.copiaECola||'')+'</div>'+
         '<button class="copy" id="cp">Copiar código Pix</button>';
       chat.appendChild(box);scroll();
