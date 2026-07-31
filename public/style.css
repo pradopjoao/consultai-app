@@ -1,4 +1,12 @@
 /* ============ Consultaí — Design System v2 ============ */
+/* ============================================================
+   VERSAO DO ARQUIVO: v6  ·  31/07/2026
+   Para saber qual style.css esta no servidor, abra
+   https://vemconsultai.com.br/style.css e procure (Ctrl+F) por:
+        VERSAO DO ARQUIVO
+   A linha acima diz a versao. Se nao existir essa linha,
+   o arquivo no ar e anterior a v6.
+   ============================================================ */
 :root{--teal:#15A39A;--deep:#0C4A52;--ink:#14333A;--coral:#FF6B4A;--soft:#F1FBF9;--mut:#5C7178;--line:#E3EFEC}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
 html{scroll-behavior:smooth}

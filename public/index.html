@@ -68,7 +68,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
    regra .depoimentos que exista no arquivo externo.
    ============================================================ */
 .depowrap{position:relative;margin-top:34px}
-#depoTrack{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;
+#depoTrack{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x proximity;overscroll-behavior-x:contain;
   scroll-behavior:smooth;padding:4px 2px 6px;
   -ms-overflow-style:none;scrollbar-width:none}
 #depoTrack::-webkit-scrollbar{display:none}
@@ -81,7 +81,10 @@ fbq('init','1369928625011386');fbq('track','PageView');
   display:flex;align-items:center;justify-content:center;padding:0 0 3px;
   box-shadow:0 6px 18px rgba(12,74,82,.16)}
 .depowrap .depo-nav:hover{border-color:var(--teal);color:var(--teal)}
-.depowrap .depo-nav[disabled]{opacity:.32;cursor:default;box-shadow:none}
+/* Quando nao ha para onde ir, a seta SOME por completo em vez de
+   ficar apagada. Padrao usado em carrossel de streaming. */
+.depowrap .depo-nav{transition:opacity .18s ease,visibility .18s ease}
+.depowrap .depo-nav[disabled]{opacity:0;visibility:hidden;pointer-events:none}
 .depowrap .depo-nav.prev{left:4px}
 .depowrap .depo-nav.next{right:4px}
 @media(min-width:1180px){
@@ -283,7 +286,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
       <button class="depo-nav next" type="button" aria-label="Ver próximos depoimentos">&rsaquo;</button>
     </div>
     <div class="depo-dots" id="depoDots" aria-hidden="true"></div>
-    <p class="depo-nota"><b>Depoimentos e avaliações reais, enviados por pacientes atendidos e publicados com autorização por escrito de cada um.</b> A emissão de receita, atestado ou pedido de exame depende de avaliação médica e ocorre apenas quando há indicação clínica. Não comercializamos documentos médicos.</p>
+    <p class="depo-nota">Depoimentos e avaliações reais, enviados por pacientes atendidos e publicados com autorização por escrito de cada um.</p>
   </div>
 </section>
 
@@ -384,14 +387,25 @@ document.querySelectorAll('.hamburger').forEach(function(h){
   if(ox!=='auto' && ox!=='scroll'){ prev.remove(); next.remove(); dots.remove(); return; }
   function passo(){ return cards.length ? cards[0].getBoundingClientRect().width+18 : 300; }
   function porTela(){ return Math.max(1, Math.round(t.clientWidth/passo())); }
+  /* Guarda a ultima posicao pintada. Se o navegador disparar 'scroll'
+     sem a posicao ter mudado (acontece no celular quando a pagina rola
+     por cima de um trilho com scroll-snap), nao mexemos em nada.
+     Era isso que fazia as bolinhas piscarem durante a leitura. */
+  var ultimo=-1;
   function pintar(){
     var i=Math.round(t.scrollLeft/passo());
-    for(var k=0;k<dots.children.length;k++) dots.children[k].className=(k===i?'on':'');
-    prev.disabled = t.scrollLeft<=2;
-    next.disabled = t.scrollLeft >= t.scrollWidth-t.clientWidth-2;
+    if(i!==ultimo){
+      ultimo=i;
+      for(var k=0;k<dots.children.length;k++) dots.children[k].className=(k===i?'on':'');
+    }
+    var noInicio = t.scrollLeft<=2,
+        noFim    = t.scrollLeft >= t.scrollWidth-t.clientWidth-2;
+    if(prev.disabled!==noInicio) prev.disabled=noInicio;
+    if(next.disabled!==noFim)    next.disabled=noFim;
   }
   function montar(){
     var n=Math.max(1,cards.length-porTela()+1);
+    ultimo=-1;
     dots.innerHTML='';
     for(var i=0;i<n;i++) dots.appendChild(document.createElement('i'));
     pintar();
