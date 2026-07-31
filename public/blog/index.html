@@ -13,7 +13,7 @@
 <meta property="og:site_name" content="Consultaí">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:title" content="Blog da Consultaí | Saúde explicada de forma simples">
-<meta property="og:description" content="Conteúdos sobre consulta online, atestado, receita e cuidados do dia a dia — escritos por médico, em linguagem clara.">
+<meta property="og:description" content="Conteúdos sobre consulta online, atestado, receita e cuidados do dia a dia, escritos por médico, em linguagem clara.">
 <meta property="og:url" content="https://vemconsultai.com.br/blog">
 <meta property="og:image" content="https://vemconsultai.com.br/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -35,6 +35,63 @@ fbq('init','1369928625011386');fbq('track','PageView');
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css?v=6">
+<style>
+/* ===========================================================
+   BLOG - LAYOUT REVISTA (opcao A)
+   CSS embutido DE PROPOSITO nesta pagina: assim o blog fica
+   bonito mesmo que o style.css do servidor esteja desatualizado.
+   Todas as classes comecam com "bm-" e nao existem no style.css,
+   entao nao ha risco de conflito com o resto do site.
+   =========================================================== */
+.bm-sec{padding-top:38px}
+.bm-feat{display:grid;grid-template-columns:1.05fr .95fr;gap:0;margin:0 0 30px;
+  border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#fff;
+  box-shadow:0 14px 34px rgba(12,74,82,.09);text-decoration:none;color:inherit;
+  transition:transform .18s ease,box-shadow .18s ease}
+.bm-feat:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(12,74,82,.14)}
+.bm-feat .bm-ft{padding:30px 34px;display:flex;flex-direction:column;justify-content:center}
+.bm-tag{display:inline-block;align-self:flex-start;background:#FDE7E0;color:#C8401C;
+  font-size:11.5px;font-weight:800;padding:5px 13px;border-radius:999px;letter-spacing:.5px;margin-bottom:14px}
+.bm-feat h2{font-family:'Poppins',sans-serif;font-weight:800;font-size:26px;line-height:1.2;
+  color:var(--deep);letter-spacing:-.4px;margin:0}
+.bm-feat p{margin:10px 0 0;color:var(--mut);font-size:15.5px;line-height:1.6}
+.bm-feat .bm-meta{margin-top:16px;font-size:13px;color:#93A7AC}
+.bm-fimg{background:var(--soft);overflow:hidden}
+.bm-fimg img{width:100%;height:100%;object-fit:cover;display:block}
+
+.bm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.bm-card{display:block;text-decoration:none;color:inherit;border:1px solid var(--line);
+  border-radius:18px;overflow:hidden;background:#fff;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+a.bm-card:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(21,163,154,.14);border-color:var(--teal)}
+.bm-ph{aspect-ratio:3/2;background:var(--soft);overflow:hidden}
+.bm-ph img{width:100%;height:100%;object-fit:cover;display:block}
+.bm-bd{padding:18px 20px 20px}
+.bm-cat{display:inline-block;font-size:11px;font-weight:800;color:var(--teal);background:var(--soft);
+  padding:4px 10px;border-radius:999px;margin-bottom:9px;letter-spacing:.3px;font-family:'Poppins',sans-serif}
+.bm-card h3{font-family:'Poppins',sans-serif;font-weight:700;font-size:16.5px;line-height:1.32;
+  color:var(--deep);margin:0}
+.bm-card .bm-meta{margin-top:11px;font-size:12.5px;color:#93A7AC}
+.bm-card.soon{opacity:.82}
+.bm-card.soon .bm-cat{color:var(--mut);background:#f2f5f6}
+.bm-more{display:block;margin:30px auto 0;background:#fff;border:1.5px solid var(--teal);color:var(--teal);
+  font-family:'Poppins',sans-serif;font-weight:700;font-size:15px;padding:13px 32px;border-radius:12px;cursor:pointer;
+  transition:background .16s ease,color .16s ease}
+.bm-more:hover{background:var(--teal);color:#fff}
+.bm-more[hidden]{display:none}
+.bm-vazio{text-align:center;color:var(--mut);font-size:15px;padding:26px 0 4px}
+
+@media(max-width:900px){
+  .bm-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:640px){
+  .bm-feat{grid-template-columns:1fr}
+  .bm-fimg{order:-1;aspect-ratio:3/2}
+  .bm-feat .bm-ft{padding:24px 22px 26px}
+  .bm-feat h2{font-size:22px}
+  .bm-feat p{font-size:15px}
+  .bm-grid{grid-template-columns:1fr;gap:18px}
+}
+</style>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -43,7 +100,16 @@ fbq('init','1369928625011386');fbq('track','PageView');
   "description": "Conteúdos sobre saúde, consulta online, atestado e receita, em linguagem clara.",
   "url": "https://vemconsultai.com.br/blog",
   "inLanguage": "pt-BR",
-  "publisher": { "@type": "Organization", "name": "Consultaí", "logo": { "@type": "ImageObject", "url": "https://vemconsultai.com.br/apple-touch-icon.png" } }
+  "publisher": { "@type": "Organization", "name": "Consultaí", "logo": { "@type": "ImageObject", "url": "https://vemconsultai.com.br/apple-touch-icon.png" } },
+  "blogPost": [
+    { "@type": "BlogPosting", "headline": "Atestado retroativo: é possível?", "url": "https://vemconsultai.com.br/blog/atestado-retroativo-e-possivel", "datePublished": "2026-07-31", "image": "https://vemconsultai.com.br/blog/img/capas/retroativo.jpg", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
+    { "@type": "BlogPosting", "headline": "Dor de garganta: quando é viral e quando é bacteriana", "url": "https://vemconsultai.com.br/blog/dor-de-garganta-viral-ou-bacteriana", "datePublished": "2026-07-30", "image": "https://vemconsultai.com.br/blog/img/capas/garganta.jpg", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
+    { "@type": "BlogPosting", "headline": "Quantos dias de atestado para dor nas costas?", "url": "https://vemconsultai.com.br/blog/quantos-dias-atestado-dor-nas-costas", "datePublished": "2026-07-29", "image": "https://vemconsultai.com.br/blog/img/capas/quantos-dias.jpg", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
+    { "@type": "BlogPosting", "headline": "Receita digital: como funciona e onde é aceita", "url": "https://vemconsultai.com.br/blog/receita-digital-como-funciona", "datePublished": "2026-07-28", "image": "https://vemconsultai.com.br/blog/img/capas/receita.jpg", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
+    { "@type": "BlogPosting", "headline": "A empresa pode descontar o dia do atestado?", "url": "https://vemconsultai.com.br/blog/empresa-pode-descontar-dia-do-atestado", "datePublished": "2026-07-27", "image": "https://vemconsultai.com.br/blog/img/capas/descontar.jpg", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
+    { "@type": "BlogPosting", "headline": "Infecção urinária: sinais comuns e quando procurar um médico", "url": "https://vemconsultai.com.br/blog/infeccao-urinaria-sintomas", "datePublished": "2026-07-26", "image": "https://vemconsultai.com.br/blog/img/capas/itu.jpg", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
+    { "@type": "BlogPosting", "headline": "Consulta online dá atestado? Entenda a validade", "url": "https://vemconsultai.com.br/blog/consulta-online-da-atestado", "datePublished": "2026-07-24", "image": "https://vemconsultai.com.br/blog/img/capas/consulta-online-atestado.jpg", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } }
+  ]
 }
 </script>
 </head>
@@ -74,13 +140,16 @@ fbq('init','1369928625011386');fbq('track','PageView');
     <p class="sub">Textos escritos por médico, em linguagem clara, para você entender melhor a sua saúde e saber quando procurar ajuda.</p>
   </div>
 </section>
-<section>
+<section class="bm-sec">
   <div class="wrap">
-    <a class="feat" href="/blog/consulta-online-da-atestado">
-      <div class="feat-tag">Em destaque · Atestado</div>
-      <h2>Consulta online dá atestado? Entenda como funciona e a validade</h2>
-      <p>Sim, quando há indicação clínica, o médico pode emitir o atestado ao final da consulta por vídeo. Veja como funciona, quando é possível e por que o documento tem validade em todo o Brasil.</p>
-      <span class="feat-link">Ler artigo</span>
+    <a class="bm-feat" href="/blog/atestado-retroativo-e-possivel">
+      <div class="bm-ft">
+        <span class="bm-tag">EM DESTAQUE</span>
+        <h2>Atestado retroativo: é possível?</h2>
+        <p>Depende de uma diferença que muda tudo. Veja quando o documento pode ser emitido depois da falta e quando o pedido vira documento falso.</p>
+        <div class="bm-meta">Dr. João Pedro · 31 de julho de 2026 · 7 min de leitura</div>
+      </div>
+      <div class="bm-fimg"><img src="/blog/img/capas/retroativo.jpg" width="720" height="480" fetchpriority="high" alt="Infográfico sobre atestado retroativo: quando pode e quando não pode ser emitido"></div>
     </a>
     <div class="catbar" role="tablist" aria-label="Categorias do blog">
       <button class="cbtn on" data-cat="all">Todos</button>
@@ -89,56 +158,66 @@ fbq('init','1369928625011386');fbq('track','PageView');
       <button class="cbtn" data-cat="receita">Receita e exames</button>
       <button class="cbtn" data-cat="tele">Telemedicina</button>
     </div>
-    <div class="grid-posts">
-      <a class="pcard" href="/blog/consulta-online-da-atestado" data-cat="atestado">
-        <div class="pcat">Atestado e afastamento</div>
-        <h3>Consulta online dá atestado? Entenda a validade</h3>
-        <p>A resposta é sim, desde que haja avaliação médica. Explicamos quando o atestado pode ser emitido e por que ele vale em todo o país.</p>
-        <span class="pmeta">Dr. João Pedro · 5 min de leitura</span>
+    <div class="bm-grid" id="bmGrid">
+      <a class="bm-card" href="/blog/dor-de-garganta-viral-ou-bacteriana" data-cat="sintomas">
+        <div class="bm-ph"><img src="/blog/img/capas/garganta.jpg" width="720" height="480" loading="lazy" alt="Infográfico comparando dor de garganta viral e bacteriana"></div>
+        <div class="bm-bd">
+          <span class="bm-cat">SINTOMAS</span>
+          <h3>Dor de garganta: quando é viral e quando é bacteriana</h3>
+          <div class="bm-meta">30/07 · 7 min de leitura</div>
+        </div>
       </a>
-      <a class="pcard" href="/blog/infeccao-urinaria-sintomas" data-cat="sintomas">
-        <div class="pcat">Sintomas</div>
-        <h3>Infecção urinária: sinais comuns e quando procurar um médico</h3>
-        <p>Ardência ao urinar, vontade frequente e outros sinais que merecem atenção, e como a consulta online pode ajudar.</p>
-        <span class="pmeta">Dr. João Pedro · 6 min de leitura</span>
+      <a class="bm-card" href="/blog/quantos-dias-atestado-dor-nas-costas" data-cat="atestado">
+        <div class="bm-ph"><img src="/blog/img/capas/quantos-dias.jpg" width="720" height="480" loading="lazy" alt="Infográfico sobre quantos dias de atestado para dor nas costas"></div>
+        <div class="bm-bd">
+          <span class="bm-cat">ATESTADO E AFASTAMENTO</span>
+          <h3>Quantos dias de atestado para dor nas costas?</h3>
+          <div class="bm-meta">29/07 · 7 min de leitura</div>
+        </div>
       </a>
-      <a class="pcard" href="/blog/empresa-pode-descontar-dia-do-atestado" data-cat="atestado">
-        <div class="pcat">Atestado e afastamento</div>
-        <h3>A empresa pode descontar o dia do atestado?</h3>
-        <p>Com atestado válido a falta é justificada e o dia não deve ser descontado. Veja o que diz a lei, os prazos e o que a empresa pode exigir.</p>
-        <span class="pmeta">Dr. João Pedro · 6 min de leitura</span>
+      <a class="bm-card" href="/blog/receita-digital-como-funciona" data-cat="receita">
+        <div class="bm-ph"><img src="/blog/img/capas/receita.jpg" width="720" height="480" loading="lazy" alt="Infográfico com o passo a passo da receita digital"></div>
+        <div class="bm-bd">
+          <span class="bm-cat">RECEITA E EXAMES</span>
+          <h3>Receita digital: como funciona e onde é aceita</h3>
+          <div class="bm-meta">28/07 · 6 min de leitura</div>
+        </div>
       </a>
-      <a class="pcard" href="/blog/receita-digital-como-funciona" data-cat="receita">
-        <div class="pcat">Receita e exames</div>
-        <h3>Receita digital: como funciona e onde é aceita</h3>
-        <p>Como você recebe o arquivo, como apresentar na farmácia e quais são os prazos de validade de cada tipo de medicamento.</p>
-        <span class="pmeta">Dr. João Pedro · 6 min de leitura</span>
+      <a class="bm-card" href="/blog/empresa-pode-descontar-dia-do-atestado" data-cat="atestado">
+        <div class="bm-ph"><img src="/blog/img/capas/descontar.jpg" width="720" height="480" loading="lazy" alt="Infográfico sobre o que a empresa pode e não pode fazer com o atestado"></div>
+        <div class="bm-bd">
+          <span class="bm-cat">ATESTADO E AFASTAMENTO</span>
+          <h3>A empresa pode descontar o dia do atestado?</h3>
+          <div class="bm-meta">27/07 · 6 min de leitura</div>
+        </div>
       </a>
-      <a class="pcard" href="/blog/quantos-dias-atestado-dor-nas-costas" data-cat="atestado">
-        <div class="pcat">Atestado e afastamento</div>
-        <h3>Quantos dias de atestado para dor nas costas?</h3>
-        <p>Não existe tabela de dias. Veja o que o médico avalia para definir o período e quais sinais pedem avaliação presencial imediata.</p>
-        <span class="pmeta">Dr. João Pedro · 7 min de leitura</span>
+      <a class="bm-card" href="/blog/infeccao-urinaria-sintomas" data-cat="sintomas">
+        <div class="bm-ph"><img src="/blog/img/capas/itu.jpg" width="720" height="480" loading="lazy" alt="Infográfico com os sinais de infecção urinária"></div>
+        <div class="bm-bd">
+          <span class="bm-cat">SINTOMAS</span>
+          <h3>Infecção urinária: sinais comuns e quando procurar um médico</h3>
+          <div class="bm-meta">26/07 · 6 min de leitura</div>
+        </div>
       </a>
-      <a class="pcard" href="/blog/dor-de-garganta-viral-ou-bacteriana" data-cat="sintomas">
-        <div class="pcat">Sintomas</div>
-        <h3>Dor de garganta: quando é viral e quando é bacteriana</h3>
-        <p>A maioria dos casos é viral e não precisa de antibiótico. Veja os sinais de cada quadro e quando procurar avaliação.</p>
-        <span class="pmeta">Dr. João Pedro · 7 min de leitura</span>
+      <a class="bm-card" href="/blog/consulta-online-da-atestado" data-cat="atestado">
+        <div class="bm-ph"><img src="/blog/img/capas/consulta-online-atestado.jpg" width="720" height="480" loading="lazy" alt="Capa do artigo: consulta online dá atestado?"></div>
+        <div class="bm-bd">
+          <span class="bm-cat">ATESTADO E AFASTAMENTO</span>
+          <h3>Consulta online dá atestado? Entenda a validade</h3>
+          <div class="bm-meta">24/07 · 5 min de leitura</div>
+        </div>
       </a>
-      <a class="pcard" href="/blog/atestado-retroativo-e-possivel" data-cat="atestado">
-        <div class="pcat">Atestado e afastamento</div>
-        <h3>Atestado retroativo: é possível?</h3>
-        <p>Depende de uma diferença que muda tudo. Veja quando o documento pode ser emitido depois e quando o pedido vira documento falso.</p>
-        <span class="pmeta">Dr. João Pedro · 7 min de leitura</span>
-      </a>
-      <div class="pcard soon" data-cat="tele">
-        <div class="pcat">Telemedicina</div>
-        <h3>Consulta online é segura? Como funciona a telemedicina no Brasil</h3>
-        <p>As regras do CFM, o sigilo dos seus dados e por que a consulta por vídeo é tão confiável quanto a presencial.</p>
-        <span class="pmeta">Em breve</span>
+      <div class="bm-card soon" data-cat="tele">
+        <div class="bm-ph"><img src="/blog/img/capas/telemedicina-segura.jpg" width="720" height="480" loading="lazy" alt="Capa do artigo: consulta online é segura?"></div>
+        <div class="bm-bd">
+          <span class="bm-cat">TELEMEDICINA</span>
+          <h3>Consulta online é segura? Como funciona a telemedicina no Brasil</h3>
+          <div class="bm-meta">Em breve</div>
+        </div>
       </div>
     </div>
+    <button class="bm-more" id="bmMore" type="button" hidden>Carregar mais artigos</button>
+    <p class="bm-vazio" id="bmVazio" hidden>Ainda não temos artigos publicados nesta categoria. Novos textos saem toda semana.</p>
     <div class="blog-cta">
       <p>Enquanto novos textos não saem, você já pode cuidar da sua saúde:</p>
       <a class="btn" href="/agendamento">Agendar consulta por R$ 40</a>
@@ -200,17 +279,42 @@ document.querySelectorAll('.hamburger').forEach(function(h){
     h.setAttribute('aria-expanded',open?'true':'false');
   });
 });
-// Filtro de categorias do blog
-document.querySelectorAll('.catbar .cbtn').forEach(function(b){
-  b.addEventListener('click',function(){
-    var cat=b.getAttribute('data-cat');
-    document.querySelectorAll('.catbar .cbtn').forEach(function(x){x.classList.remove('on');});
-    b.classList.add('on');
-    document.querySelectorAll('.grid-posts [data-cat]').forEach(function(card){
-      card.style.display=(cat==='all'||card.getAttribute('data-cat')===cat)?'':'none';
+/* Filtro de categorias + botao "Carregar mais artigos".
+   Mostramos LOTE cartoes por vez; o botao revela o proximo lote.
+   Ao trocar de categoria, a contagem volta ao inicio. */
+(function(){
+  var grid=document.getElementById('bmGrid'); if(!grid) return;
+  var LOTE=6,
+      cards=[].slice.call(grid.querySelectorAll('[data-cat]')),
+      botoes=[].slice.call(document.querySelectorAll('.catbar .cbtn')),
+      mais=document.getElementById('bmMore'),
+      vazio=document.getElementById('bmVazio'),
+      cat='all', mostrando=LOTE;
+
+  function casa(c){ return cat==='all' || c.getAttribute('data-cat')===cat; }
+
+  function pintar(){
+    var jaVistos=0;
+    cards.forEach(function(c){
+      if(!casa(c)){ c.style.display='none'; return; }
+      c.style.display = (jaVistos<mostrando) ? '' : 'none';
+      jaVistos++;
+    });
+    if(mais)  mais.hidden  = jaVistos<=mostrando;
+    if(vazio) vazio.hidden = jaVistos>0;
+  }
+
+  botoes.forEach(function(b){
+    b.addEventListener('click',function(){
+      cat=b.getAttribute('data-cat'); mostrando=LOTE;
+      botoes.forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      pintar();
     });
   });
-});
+  if(mais) mais.addEventListener('click',function(){ mostrando+=LOTE; pintar(); });
+  pintar();
+})();
 </script>
 </body>
 </html>
