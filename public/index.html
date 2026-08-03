@@ -431,55 +431,77 @@ fbq('init','1369928625011386');fbq('track','PageView');
   if(!alvo || !('IntersectionObserver' in window)) return;
   var obs = new IntersectionObserver(function(entradas){
     entradas.forEach(function(e){
-      document.body.classList.toggle('rolou', !e.isIntersecting);
+      /* add/remove explicitos. A forma toggle(nome, condicao), com dois
+         argumentos, lanca erro em WebKit antigo (o motor do Safari). */
+      if (e.isIntersecting) document.body.classList.remove('rolou');
+      else document.body.classList.add('rolou');
     });
   }, {threshold: 0});
   obs.observe(alvo);
 })();
 
 /* Menu mobile (hambúrguer).
-   Corrigido em 03/08/2026. Antes ele só abria e fechava no próprio botão:
-   quem tocava em "Dúvidas" (link de âncora, que rola a mesma página) via o
-   menu continuar cobrindo a tela toda. Agora ele fecha em quatro situações:
-   no botão, em qualquer link do menu, na tecla Esc e ao tocar fora dele.
-   A rolagem do fundo também trava enquanto o menu está aberto, senão o dedo
-   rola a página por baixo do menu. */
-document.querySelectorAll('.hamburger').forEach(function(h){
-  var nav = h.closest('.nav');
-  if(!nav) return;
-  var menu = nav.querySelector('.menu');
+   REESCRITO EM 03/08/2026, depois de travar no iPhone do Dr. João.
 
-  function pintar(aberto){
-    nav.classList.toggle('open', aberto);
-    h.setAttribute('aria-expanded', aberto ? 'true' : 'false');
-    /* trava a rolagem do fundo. O <html> tambem precisa entrar, senao em
-       alguns navegadores de celular a pagina continua deslizando por tras. */
-    document.body.style.overflow = aberto ? 'hidden' : '';
-    document.documentElement.style.overflow = aberto ? 'hidden' : '';
+   O que eu tinha colocado antes e tirei agora:
+   1) document.documentElement.style.overflow = 'hidden'  ->  trava a rolagem
+      no <html>. No Safari do iPhone isso briga com o .menu, que e
+      position:fixed com height:calc(100vh - 68px), e deixa a pagina presa.
+      Pior: eu tinha adicionado essa trava so para calar um teste automatico
+      que eu MESMO ja tinha concluido ser falso positivo. Risco sem beneficio.
+   2) nav.classList.toggle('open', aberto)  ->  a forma com DOIS argumentos.
+      WebKit antigo lanca TypeError quando recebe o segundo argumento. Se
+      lanca ali, a funcao inteira morre e o menu simplesmente nao abre.
+      Agora e add() e remove(), que funcionam em qualquer navegador.
+   3) fechar ao tocar fora  ->  no celular o menu ocupa a tela toda abaixo da
+      barra, medido: 0,68 ate 390x596. Nao existe "fora" para tocar. Era
+      codigo inutil que so somava risco.
+
+   O que ficou e so o que resolve o defeito de verdade: o menu fecha ao tocar
+   em qualquer link, inclusive nos de ancora da propria pagina.
+   O botao de abrir e fechar e registrado ANTES de tudo, e o resto vai dentro
+   de um try. Se qualquer coisa falhar, o menu continua abrindo e fechando. */
+(function(){
+  var botoes = document.querySelectorAll('.hamburger');
+  for (var i = 0; i < botoes.length; i++) {
+    (function(h){
+      var nav = h.closest ? h.closest('.nav') : null;
+      if (!nav) {
+        nav = h.parentNode;
+        while (nav && !(nav.classList && nav.classList.contains('nav'))) nav = nav.parentNode;
+      }
+      if (!nav) return;
+
+      function fechar(){
+        nav.classList.remove('open');
+        h.setAttribute('aria-expanded', 'false');
+      }
+
+      /* o essencial vem primeiro, para nunca depender do resto */
+      h.addEventListener('click', function(){
+        if (nav.classList.contains('open')) {
+          fechar();
+        } else {
+          nav.classList.add('open');
+          h.setAttribute('aria-expanded', 'true');
+        }
+      });
+
+      try {
+        var menu = nav.querySelector('.menu');
+        if (menu) {
+          var links = menu.getElementsByTagName('a');
+          for (var j = 0; j < links.length; j++) {
+            links[j].addEventListener('click', fechar);
+          }
+        }
+        document.addEventListener('keydown', function(e){
+          if (e.keyCode === 27 || e.key === 'Escape') fechar();
+        });
+      } catch (err) { /* silencio: o menu ja funciona sem isso */ }
+    })(botoes[i]);
   }
-  function fechar(){ if(nav.classList.contains('open')) pintar(false); }
-
-  h.addEventListener('click', function(e){
-    e.stopPropagation();
-    pintar(!nav.classList.contains('open'));
-  });
-
-  /* qualquer link do menu fecha, inclusive os de âncora da própria página */
-  if(menu) menu.querySelectorAll('a').forEach(function(a){
-    a.addEventListener('click', fechar);
-  });
-
-  document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' || e.key === 'Esc') fechar();
-  });
-
-  document.addEventListener('click', function(e){
-    if(!nav.classList.contains('open')) return;
-    if(menu && menu.contains(e.target)) return;
-    if(h.contains(e.target)) return;
-    fechar();
-  });
-});
+})();
 /* Carrossel de depoimentos: rola o trilho de verdade (scroll nativo),
    entao no celular o swipe com o dedo ja funciona sem codigo extra.
    Todos os depoimentos ficam no HTML, o Google le todos. */
