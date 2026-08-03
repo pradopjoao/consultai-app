@@ -332,26 +332,35 @@ fbq('init','1369928625011386');fbq('track','PageView');
 </a>
 <script>
 /* Menu mobile (hambúrguer).
-   REESCRITO EM 03/08/2026, depois de travar no iPhone do Dr. João.
+   REESCRITO EM 03/08/2026 e AJUSTADO no mesmo dia.
 
-   O que eu tinha colocado antes e tirei agora:
-   1) document.documentElement.style.overflow = 'hidden'  ->  trava a rolagem
-      no <html>. No Safari do iPhone isso briga com o .menu, que e
-      position:fixed com height:calc(100vh - 68px), e deixa a pagina presa.
-      Pior: eu tinha adicionado essa trava so para calar um teste automatico
-      que eu MESMO ja tinha concluido ser falso positivo. Risco sem beneficio.
-   2) nav.classList.toggle('open', aberto)  ->  a forma com DOIS argumentos.
-      WebKit antigo lanca TypeError quando recebe o segundo argumento. Se
-      lanca ali, a funcao inteira morre e o menu simplesmente nao abre.
-      Agora e add() e remove(), que funcionam em qualquer navegador.
-   3) fechar ao tocar fora  ->  no celular o menu ocupa a tela toda abaixo da
-      barra, medido: 0,68 ate 390x596. Nao existe "fora" para tocar. Era
-      codigo inutil que so somava risco.
+   Historico curto, para nao se repetir:
+   1) A primeira versao so fechava no X. Quem tocava em "Duvidas", um link de
+      ancora, via o menu continuar cobrindo a tela.
+   2) A segunda versao consertou isso, mas eu acrescentei
+      document.documentElement.style.overflow = 'hidden', que trava a rolagem
+      na raiz da pagina. No Safari do iPhone isso briga com o .menu, que e
+      position:fixed com height:calc(100vh - 68px), e prende a pagina. Tirado.
+      Nao volta. Se precisar travar rolagem, so no body e dentro de try.
+   3) Tambem usei nav.classList.toggle('open', aberto), a forma com DOIS
+      argumentos. WebKit antigo lanca TypeError e a funcao inteira morre, ou
+      seja, o menu nao abre. Trocado por add() e remove().
+   4) Eu tinha tirado o "fechar ao tocar fora" alegando que nao existia fora.
+      ERREI: medi um unico ponto, (20,600), que calhou de cair em cima de um
+      link. Medindo de verdade, sobra painel vazio abaixo do ultimo link:
+          iPhone SE 55px · iPhone 13 151px · Pixel 7 326px · iPad Mini 511px
+      Mais a faixa de 69px do cabecalho, que fica acima do painel.
+      Entao "fora" existe e e onde o dedo cai naturalmente. Voltou.
 
-   O que ficou e so o que resolve o defeito de verdade: o menu fecha ao tocar
-   em qualquer link, inclusive nos de ancora da propria pagina.
-   O botao de abrir e fechar e registrado ANTES de tudo, e o resto vai dentro
-   de um try. Se qualquer coisa falhar, o menu continua abrindo e fechando. */
+   COMO O "FORA" FOI FEITO, e por que nao e um listener no document:
+   no Safari do iPhone, clique em elemento nao interativo muitas vezes nao
+   chega ate o document. Por isso os ouvintes ficam PRESOS NO PROPRIO
+   elemento tocado: um no painel do menu, outro no cabecalho. E, enquanto o
+   menu esta aberto, o painel recebe cursor:pointer, que e o truque que faz o
+   WebKit tratar a area como clicavel. So no celular, e desfeito ao fechar.
+
+   O botao de abrir e fechar e registrado ANTES de tudo. O resto vai dentro de
+   um try. Se qualquer coisa falhar, o menu continua abrindo e fechando. */
 (function(){
   var botoes = document.querySelectorAll('.hamburger');
   for (var i = 0; i < botoes.length; i++) {
@@ -362,30 +371,57 @@ fbq('init','1369928625011386');fbq('track','PageView');
         while (nav && !(nav.classList && nav.classList.contains('nav'))) nav = nav.parentNode;
       }
       if (!nav) return;
+      var menu = nav.querySelector('.menu');
 
+      /* so vale como "celular" quando o hamburguer esta na tela */
+      function ehCelular(){
+        try { return getComputedStyle(h).display !== 'none'; } catch (e) { return false; }
+      }
+      function abrir(){
+        nav.classList.add('open');
+        h.setAttribute('aria-expanded', 'true');
+        if (menu && ehCelular()) menu.style.cursor = 'pointer';
+      }
       function fechar(){
         nav.classList.remove('open');
         h.setAttribute('aria-expanded', 'false');
+        if (menu) menu.style.cursor = '';
       }
 
       /* o essencial vem primeiro, para nunca depender do resto */
       h.addEventListener('click', function(){
-        if (nav.classList.contains('open')) {
-          fechar();
-        } else {
-          nav.classList.add('open');
-          h.setAttribute('aria-expanded', 'true');
-        }
+        if (nav.classList.contains('open')) fechar(); else abrir();
       });
 
       try {
-        var menu = nav.querySelector('.menu');
         if (menu) {
+          /* qualquer link fecha, inclusive os de ancora da propria pagina */
           var links = menu.getElementsByTagName('a');
           for (var j = 0; j < links.length; j++) {
             links[j].addEventListener('click', fechar);
           }
+          /* toque no fundo do painel, fora dos links */
+          menu.addEventListener('click', function(e){
+            if (e.target === menu) fechar();
+          });
         }
+
+        /* toque na faixa do cabecalho, que fica acima do painel */
+        var cab = h.closest ? h.closest('header') : null;
+        if (cab) {
+          cab.addEventListener('click', function(e){
+            if (!nav.classList.contains('open')) return;
+            if (menu && menu.contains(e.target)) return;
+            if (h === e.target || h.contains(e.target)) return;
+            var alvo = e.target;
+            while (alvo && alvo !== cab) {
+              if (alvo.tagName === 'A') return; /* o logo navega sozinho */
+              alvo = alvo.parentNode;
+            }
+            fechar();
+          });
+        }
+
         document.addEventListener('keydown', function(e){
           if (e.keyCode === 27 || e.key === 'Escape') fechar();
         });
