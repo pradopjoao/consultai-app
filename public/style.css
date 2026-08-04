@@ -146,7 +146,9 @@ h2.title{font-size:36px;font-weight:800;color:var(--deep);text-align:center;lett
 .tcard:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(12,74,82,.10)}
 .tcard .em{margin-bottom:10px;color:var(--teal);line-height:0}
 .tcard .em svg{width:40px;height:40px;vertical-align:middle}
-.tcard b{display:block;color:var(--deep);font-size:15px;margin-bottom:4px;font-family:'Poppins'}
+/* o ">" evita a mesma armadilha do .takeaways: sem ele, um negrito no meio
+   de uma frase dentro do cartao viraria bloco e partiria a frase. */
+.tcard > b{display:block;color:var(--deep);font-size:15px;margin-bottom:4px;font-family:'Poppins'}
 .tcard span{color:var(--mut);font-size:13px}
 .depowrap{position:relative;margin-top:34px}
 .depoimentos{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
@@ -339,11 +341,20 @@ a.pcard:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(21,163,154,
 
 /* Blocos do padrão editorial (blog) */
 .takeaways{background:#EAF7F4;border:1px solid #CDEBE5;border-radius:14px;padding:18px 22px;margin:22px 0}
-.takeaways b{display:block;color:var(--deep);font-family:'Poppins',sans-serif;margin-bottom:8px;font-size:15px}
+/* ATENCAO AO ">" DAQUI. Antes a regra era ".takeaways b", sem o sinal de
+   maior, entao ela pegava TODO <b> dentro da caixa, inclusive os que estao no
+   meio das frases dos itens. Resultado: qualquer palavra em negrito virava um
+   bloco proprio e partia a frase em tres pedacos na tela. Foi o que quebrou o
+   "Resumo rapido" dos artigos de diarreia e de infeccao urinaria.
+   O ">" limita a regra ao <b> que e FILHO DIRETO da caixa, que e o titulo. */
+.takeaways > b{display:block;color:var(--deep);font-family:'Poppins',sans-serif;margin-bottom:8px;font-size:15px}
+/* e o negrito dentro dos itens volta a ser negrito de frase, na linha */
+.takeaways li b{display:inline;color:var(--deep);font-family:inherit;font-size:inherit;font-weight:700;margin:0}
 .takeaways ul{margin:0 0 0 18px}
 .takeaways li{margin-bottom:6px;line-height:1.55;color:#33474d}
 .leia{background:var(--soft);border-left:4px solid var(--coral);border-radius:8px;padding:14px 18px;margin:22px 0}
-.leia b{display:block;color:var(--deep);font-family:'Poppins',sans-serif;margin-bottom:6px;font-size:14px}
+/* idem: so o <b> filho direto e titulo do bloco */
+.leia > b{display:block;color:var(--deep);font-family:'Poppins',sans-serif;margin-bottom:6px;font-size:14px}
 .leia a{display:block;color:var(--teal);text-decoration:none;padding:3px 0;font-weight:600}
 .leia a:hover{text-decoration:underline}
 .fontes-sec{padding:44px 0 48px}
