@@ -7,8 +7,8 @@
 <meta name="description" content="Atestado médico online com assinatura digital ICP-Brasil, emitido por médico com CRM após consulta por vídeo. Entenda como funciona e quando é válido.">
 <link rel="canonical" href="https://vemconsultai.com.br/atestado-medico-online">
 <meta name="robots" content="index, follow">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Consultaí">
 <meta property="og:locale" content="pt_BR">
@@ -34,7 +34,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="/style.css?v=7">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
 {"@type":"Question","name":"O atestado médico online é válido?","acceptedAnswer":{"@type":"Answer","text":"Sim. A telemedicina é regulamentada pela Resolução CFM nº 2.314/2022 e a emissão de documentos médicos digitais pela Resolução CFM nº 2.381/2024. O atestado é emitido por médico com CRM ativo e assinado digitalmente com certificado ICP-Brasil, o que garante validade jurídica em todo o território nacional, inclusive perante empresas."}},
@@ -54,26 +54,30 @@ fbq('init','1369928625011386');fbq('track','PageView');
     <nav class="menu">
       <a href="/">Início</a>
       <a href="/#como-funciona">Como funciona</a>
-      <a href="consulta-medica-online">Consulta online</a>
-      <a href="atestado-medico-online" class="on">Atestado online</a>
+      <a href="/consulta-medica-online">Consulta online</a>
+      <a href="/atestado-medico-online" class="on">Atestado online</a>
       <a href="/#faq">Dúvidas</a>
       <a href="/blog">Blog</a>
-      <a href="sobre">Sobre</a>
-      <a class="mobcta" href="agendamento">Agendar consulta</a>
+      <a href="/sobre">Sobre</a>
+      <a class="mobcta" href="/agendamento">Agendar consulta</a>
     </nav>
     <div class="nav-right">
-      <a class="btn ghost" href="agendamento">Agendar consulta</a>
+      <a class="btn ghost" href="/agendamento">Agendar consulta</a>
       <button class="hamburger" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
     </div>
   </div>
 </header>
+<!-- <main> marca onde comeca o conteudo principal. E invisivel: nao muda
+     um pixel. Serve para quem usa leitor de tela pular o cabecalho de uma
+     vez, em vez de ouvir o menu inteiro em cada pagina. -->
+<main id="conteudo">
 <section class="hero mini">
   <div class="blob b1"></div>
   <div class="wrap" style="position:relative">
     <span class="pill">📄 Serviço</span>
     <h1>Atestado médico online</h1>
     <p class="sub">Emitido por um médico de verdade, após consulta por vídeo, com assinatura digital válida em todo o Brasil.</p>
-    <a class="btn" href="agendamento">Agendar consulta</a>
+    <a class="btn" href="/agendamento">Agendar consulta</a>
   </div>
 </section>
 <section>
@@ -108,9 +112,10 @@ fbq('init','1369928625011386');fbq('track','PageView');
   <div class="band">
     <h2>Pronto para ser atendido?</h2>
     <p>Consulta médica online por R$ 40, sem sair de casa.</p>
-    <a class="btn" href="agendamento" style="background:#fff;color:var(--deep)">Iniciar consulta agora</a>
+    <a class="btn" href="/agendamento" style="background:#fff;color:var(--deep)">Iniciar consulta agora</a>
   </div>
 </div>
+</main>
 <footer>
   <div class="wrap">
     <div class="cols">
@@ -127,26 +132,26 @@ fbq('init','1369928625011386');fbq('track','PageView');
       </div>
       <div>
         <h4>Serviços</h4>
-        <a class="lk" href="consulta-medica-online">Consulta médica online</a>
-        <a class="lk" href="atestado-medico-online">Atestado médico online</a>
-        <a class="lk" href="consulta-medica-online#receita">Receita digital</a>
-        <a class="lk" href="consulta-medica-online#exames">Pedido de exames</a>
-        <a class="lk" href="agendamento">Agendar consulta</a>
+        <a class="lk" href="/consulta-medica-online">Consulta médica online</a>
+        <a class="lk" href="/atestado-medico-online">Atestado médico online</a>
+        <a class="lk" href="/consulta-medica-online#receita">Receita digital</a>
+        <a class="lk" href="/consulta-medica-online#exames">Pedido de exames</a>
+        <a class="lk" href="/agendamento">Agendar consulta</a>
       </div>
       <div>
         <h4>A Consultaí</h4>
-        <a class="lk" href="sobre">Sobre nós</a>
+        <a class="lk" href="/sobre">Sobre nós</a>
         <a class="lk" href="/blog">Blog</a>
         <a class="lk" href="/#como-funciona">Como funciona</a>
         <a class="lk" href="/#faq">Perguntas frequentes</a>
-        <a class="lk" href="atestado-medico-online#validade">Validade do atestado</a>
-        <a class="lk" href="trabalhe-conosco">Trabalhe conosco</a>
+        <a class="lk" href="/atestado-medico-online#validade">Validade do atestado</a>
+        <a class="lk" href="/trabalhe-conosco">Trabalhe conosco</a>
       </div>
       <div>
         <h4>Legal</h4>
-        <a class="lk" href="termos">Termos de uso</a>
-        <a class="lk" href="privacidade">Política de privacidade</a>
-        <a class="lk" href="privacidade#lgpd">Proteção de dados (LGPD)</a>
+        <a class="lk" href="/termos">Termos de uso</a>
+        <a class="lk" href="/privacidade">Política de privacidade</a>
+        <a class="lk" href="/privacidade#lgpd">Proteção de dados (LGPD)</a>
       </div>
     </div>
     <div class="legal">

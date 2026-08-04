@@ -7,7 +7,16 @@
    A linha acima diz a versao. Se nao existir essa linha,
    o arquivo no ar e anterior a v6.
    ============================================================ */
-:root{--teal:#15A39A;--deep:#0C4A52;--ink:#14333A;--coral:#FF6B4A;--soft:#F1FBF9;--mut:#5C7178;--line:#E3EFEC}
+/* ===== CORES DA MARCA =====
+   --coral (#FF6B4A) e o laranja da identidade: logo, bolha do banner, barras
+   decorativas. Ele NAO carrega texto.
+   --btn (#E52A00) e o mesmo laranja, mesmo matiz de 10,9 graus e mesma
+   saturacao, so mais escuro. Ele existe porque branco sobre #FF6B4A da
+   contraste de 2,82:1, e o texto do botao tem 17px em negrito, que nao conta
+   como "texto grande", entao a regra de acessibilidade exige 4,5:1. O #E52A00
+   entrega 4,50:1. Decisao do Dr. Joao em 03/08/2026: escurecer SO onde ha
+   texto branco em cima, preservando a marca no resto. */
+:root{--teal:#15A39A;--deep:#0C4A52;--ink:#14333A;--coral:#FF6B4A;--btn:#E52A00;--soft:#F1FBF9;--mut:#5C7178;--line:#E3EFEC}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
 html{scroll-behavior:smooth}
 body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,Arial,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji",sans-serif;color:var(--ink);background:#fff;line-height:1.55}
@@ -17,9 +26,9 @@ img{max-width:100%}
 .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
 
 /* Buttons */
-.btn{display:inline-block;background:var(--coral);color:#fff;font-weight:700;font-family:'Poppins',sans-serif;
-  padding:16px 30px;border-radius:14px;text-decoration:none;font-size:17px;transition:.18s;box-shadow:0 8px 24px rgba(255,107,74,.32)}
-.btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,107,74,.42)}
+.btn{display:inline-block;background:var(--btn);color:#fff;font-weight:700;font-family:'Poppins',sans-serif;
+  padding:16px 30px;border-radius:14px;text-decoration:none;font-size:17px;transition:.18s;box-shadow:0 8px 24px rgba(229,42,0,.32)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(229,42,0,.42)}
 .btn.ghost{background:#fff;color:var(--deep);box-shadow:none;border:2px solid var(--line);padding:10px 20px;font-size:15px}
 .btn.ghost:hover{border-color:var(--teal)}
 
@@ -82,7 +91,11 @@ a.mock-link:hover .mopt{border-color:var(--teal);color:var(--teal)}
 
 /* Sections */
 section{padding:72px 0}
-.kicker{color:var(--teal);font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;text-align:center}
+/* O verde da marca (#15A39A) da 3,12:1 sobre o branco, abaixo dos 4,5:1
+   exigidos para texto. O #0F766E e o mesmo verde mais fechado e da 5,47:1.
+   Vale so para os kickers, o rotulo em maiusculas acima do titulo da secao.
+   O resto do site continua com o --teal original. */
+.kicker{color:#0F766E;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;text-align:center}
 h2.title{font-size:36px;font-weight:800;color:var(--deep);text-align:center;letter-spacing:-1px;margin:8px 0 8px}
 .lead{text-align:center;color:var(--mut);max-width:620px;margin:0 auto 40px;font-size:17px}
 
@@ -249,9 +262,9 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
   .menu a{padding:14px 2px;border-bottom:1px solid var(--line);border-radius:0;font-size:15.5px}
   .menu a:hover,.menu a.on{border-bottom-color:var(--line);color:var(--teal)}
   .nav-right .btn.ghost{display:none}
-  .menu a.mobcta{display:block;margin-top:12px;background:var(--coral);color:#fff;text-align:center;
+  .menu a.mobcta{display:block;margin-top:12px;background:var(--btn);color:#fff;text-align:center;
     border:none;border-radius:12px;padding:14px;font-weight:700;font-family:'Poppins',sans-serif;
-    box-shadow:0 8px 20px rgba(255,107,74,.28)}
+    box-shadow:0 8px 20px rgba(229,42,0,.28)}
   .menu a.mobcta:hover{color:#fff}
 }
 /* ===== Celular pequeno (até 400px) ===== */
@@ -345,3 +358,10 @@ a.pcard:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(21,163,154,
 .article figure{margin:28px 0}
 .article figure img{width:100%;height:auto;border-radius:16px;border:1px solid var(--line);display:block}
 .article figcaption{text-align:center;font-size:13.5px;color:var(--mut);margin-top:9px}
+
+/* ===== CARROSSEL DE DEPOIMENTOS PELO TECLADO =====
+   O trilho recebeu tabindex="0" no HTML, entao quem navega apertando Tab
+   agora para nele e rola com as setinhas. Sem esta regra o foco seria
+   invisivel e a pessoa nao saberia onde esta. */
+#depoTrack:focus{outline:none}
+#depoTrack:focus-visible{outline:3px solid var(--teal);outline-offset:4px;border-radius:14px}

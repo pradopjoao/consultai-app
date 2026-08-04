@@ -10,8 +10,8 @@
 {"@context":"https://schema.org","@type":"MedicalWebPage","name":"Agendar consulta médica online","url":"https://vemconsultai.com.br/agendamento","inLanguage":"pt-BR","about":{"@type":"MedicalProcedure","name":"Consulta médica por telemedicina"},"publisher":{"@type":"Organization","name":"Consultaí","alternateName":"Octa Health"},"potentialAction":{"@type":"ReserveAction","target":{"@type":"EntryPoint","urlTemplate":"https://vemconsultai.com.br/agendamento","actionPlatform":["http://schema.org/DesktopWebPlatform","http://schema.org/MobileWebPlatform"]},"result":{"@type":"Reservation","name":"Consulta médica online"}}}
 </script>
 <link rel="canonical" href="https://vemconsultai.com.br/agendamento">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Consultaí">
 <meta property="og:locale" content="pt_BR">
@@ -23,6 +23,13 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://vemconsultai.com.br/og-image-2.png">
+<!-- Dicas de conexao antecipada. Nao mudam NADA no comportamento dos scripts,
+     so avisam o navegador para ja ir abrindo a conexao com esses servidores.
+     O Lighthouse estima 230ms de ganho, justamente na pagina que converte. -->
+<link rel="preconnect" href="https://connect.facebook.net" crossorigin>
+<link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+<link rel="dns-prefetch" href="https://connect.facebook.net">
+<link rel="dns-prefetch" href="https://www.googletagmanager.com">
 <!-- Meta Pixel -->
 <script>
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -44,7 +51,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
 </script>
 <!-- End Google tag -->
 <style>
-  :root{--teal:#15A39A;--teal-deep:#0C4A52;--ink:#14333A;--coral:#FF6B4A;--soft:#F1FBF9;--mut:#5C7178;--line:#E3EFEC}
+  :root{--teal:#15A39A;--teal-deep:#0C4A52;--ink:#14333A;--coral:#FF6B4A;--btn:#E52A00;--soft:#F1FBF9;--mut:#5C7178;--line:#E3EFEC}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
   body{font-family:-apple-system,'Segoe UI',Roboto,Arial,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji",sans-serif;background:#dfeae8;display:flex;justify-content:center;min-height:100vh}
   .app{width:100%;max-width:460px;background:var(--soft);min-height:100vh;display:flex;flex-direction:column;box-shadow:0 0 40px rgba(12,74,82,.12);position:relative}
@@ -62,6 +69,32 @@ fbq('init','1369928625011386');fbq('track','PageView');
   @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-self:stretch;margin-top:2px}
   .opt{background:#fff;border:1.5px solid var(--line);color:var(--teal-deep);padding:12px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+
+  /* ===== ESQUELETO DE CARREGAMENTO =====
+     Enquanto a API de horarios nao responde, o paciente via uma tela vazia e
+     nao sabia se tinha quebrado. Isso acontecia no ponto de maior intencao de
+     compra. Agora aparecem blocos com a MESMA forma dos botoes de horario,
+     com um brilho passando devagar. A pessoa entende na hora que esta vindo
+     e ja ve onde vai clicar.
+     A API nao muda: mesma chamada, mesmo endereco, mesma resposta. */
+  .esq{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-self:stretch;margin-top:2px}
+  .esq i{display:block;height:46px;border-radius:12px;border:1.5px solid var(--line);
+    /* base BRANCA, igual aos botoes de horario de verdade, para o bloco se
+       destacar do fundo (--soft, #F1FBF9). O brilho e uma faixa verde-clara
+       passando por cima. */
+    background:linear-gradient(100deg,#FFFFFF 32%,#D6EDE7 50%,#FFFFFF 68%);
+    background-size:300% 100%;animation:esqBrilho 1.6s ease-in-out infinite}
+  .esq i:nth-child(2){animation-delay:.12s}
+  .esq i:nth-child(3){animation-delay:.24s}
+  .esq i:nth-child(4){animation-delay:.36s}
+  .esq i:nth-child(5){animation-delay:.48s}
+  .esq i:nth-child(6){animation-delay:.60s}
+  @keyframes esqBrilho{
+    0%  {background-position:190% 0}
+    100%{background-position:-90% 0}
+  }
+  /* respeita quem pediu ao sistema para reduzir animacoes */
+  @media(prefers-reduced-motion:reduce){ .esq i{animation:none;background:#fff} }
   .opt:hover{border-color:var(--teal);background:#f0faf8}
   .form{align-self:stretch;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
   .form label{font-size:12px;font-weight:700;color:var(--mut)}
@@ -70,7 +103,9 @@ fbq('init','1369928625011386');fbq('track','PageView');
   .form input:focus{outline:none;border-color:var(--teal)}
   .bar{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;background:linear-gradient(0deg,var(--soft) 70%,transparent)}
   .btn{width:100%;background:var(--teal-deep);color:#fff;border:none;padding:16px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer}
-  .btn:disabled{opacity:.5}.btn.coral{background:var(--coral)}
+  .btn:disabled{opacity:.5}
+  /* texto branco em cima: usa o laranja escuro (4,50:1) */
+  .btn.coral{background:var(--btn)}
   .pixbox{background:#fff;border:1px dashed var(--teal);border-radius:14px;padding:16px;text-align:center;align-self:stretch}
   /* Confianca: aparece no instante em que o paciente le "Pix", que e exatamente
      quando surge o receio de golpe. */
@@ -97,6 +132,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
     .msg{max-width:82%;font-size:15px}
     .bar{padding:16px 20px}
     .opts{grid-template-columns:1fr 1fr 1fr}
+    .esq{grid-template-columns:1fr 1fr 1fr}
   }
   @media(min-width:768px) and (max-height:720px){
     .app{height:calc(100vh - 56px)}
@@ -137,6 +173,17 @@ function bot(h){const d=document.createElement('div');d.className='msg bot';d.in
 function me(t){const d=document.createElement('div');d.className='msg me';d.textContent=t;chat.appendChild(d);scroll();}
 function err(t){const d=document.createElement('div');d.className='err';d.textContent=t;chat.appendChild(d);scroll();}
 function clearBar(){actionbar.innerHTML='';}
+/* Cria os blocos de carregamento e devolve o elemento, para quem chamou
+   remover assim que os horarios reais chegarem. O role="status" faz o leitor
+   de tela anunciar "Carregando horarios" sem interromper a pessoa. */
+function esqueleto(n){
+  const d=document.createElement('div');
+  d.className='esq'; d.setAttribute('role','status');
+  d.setAttribute('aria-label','Carregando horários disponíveis');
+  for(let i=0;i<(n||6);i++) d.appendChild(document.createElement('i'));
+  chat.appendChild(d); scroll();
+  return d;
+}
 function typing(then){const t=document.createElement('div');t.className='typing';t.textContent='Assistente está digitando…';chat.appendChild(t);scroll();setTimeout(()=>{t.remove();then();},600);}
 /* Data de HOJE pelo relogio do paciente. NAO usar toISOString(), que devolve UTC:
    no Brasil (UTC-3), depois das 21h ele ja retorna a data de amanha e o paciente
@@ -185,13 +232,15 @@ function start(){
   bot('Oi! 👋 Sou o assistente da <b>Consultaí</b>. Vou te ajudar a marcar sua <b>consulta médica online</b> em menos de 1 minuto.');
   typing(async ()=>{
     bot('A consulta custa <b>R$ 40</b> (Pix), é por vídeo e dura cerca de 10 a 15 min. Vou ver os horários livres…');
+    const esq = esqueleto(6);
     try{
       await carregarSlots();
+      esq.remove();
       const datas=Object.keys(slotsByDate).sort();
       if(!datas.length){ bot('No momento não há horários abertos. Tente novamente mais tarde 🙏'); return; }
       bot('Para que dia você prefere?');
       askDate(datas);
-    }catch(e){ err('Não consegui carregar os horários agora ('+e.message+'). Tente recarregar a página.'); }
+    }catch(e){ esq.remove(); err('Não consegui carregar os horários agora ('+e.message+'). Tente recarregar a página.'); }
   });
 }
 function askDate(datas){

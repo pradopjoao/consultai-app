@@ -8,8 +8,8 @@
 <meta name="description" content="Consulta médica online por vídeo, em minutos, por R$ 40 no Pix. Médico com CRM ativo, receita e atestado digital quando indicados. Sem fila e sem sair de casa.">
 <link rel="canonical" href="https://vemconsultai.com.br/">
 <meta name="robots" content="index, follow">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <!-- Open Graph: preview bonito no WhatsApp/Instagram/Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Consultaí">
@@ -58,7 +58,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="/style.css?v=7">
 <style>
 /* ============================================================
    CARROSSEL DE DEPOIMENTOS - CSS EMBUTIDO DE PROPOSITO.
@@ -151,9 +151,9 @@ fbq('init','1369928625011386');fbq('track','PageView');
    nao disputa com ninguem. */
 @media(min-width:821px){
   .nav-right .btn.ghost{transition:background .25s ease,color .25s ease,border-color .25s ease,box-shadow .25s ease}
-  body.rolou .nav-right .btn.ghost{background:var(--coral);color:#fff;border-color:transparent;
-    box-shadow:0 8px 22px rgba(255,107,74,.34)}
-  body.rolou .nav-right .btn.ghost:hover{box-shadow:0 12px 30px rgba(255,107,74,.42)}
+  body.rolou .nav-right .btn.ghost{background:var(--btn);color:#fff;border-color:transparent;
+    box-shadow:0 8px 22px rgba(229,42,0,.34)}
+  body.rolou .nav-right .btn.ghost:hover{box-shadow:0 12px 30px rgba(229,42,0,.42)}
 }
 </style>
 </head>
@@ -168,19 +168,23 @@ fbq('init','1369928625011386');fbq('track','PageView');
     <nav class="menu">
       <a href="/" class="on">Início</a>
       <a href="#como-funciona">Como funciona</a>
-      <a href="consulta-medica-online">Consulta online</a>
-      <a href="atestado-medico-online">Atestado online</a>
+      <a href="/consulta-medica-online">Consulta online</a>
+      <a href="/atestado-medico-online">Atestado online</a>
       <a href="#faq">Dúvidas</a>
       <a href="/blog">Blog</a>
-      <a href="sobre">Sobre</a>
-      <a class="mobcta" href="agendamento">Agendar consulta</a>
+      <a href="/sobre">Sobre</a>
+      <a class="mobcta" href="/agendamento">Agendar consulta</a>
     </nav>
     <div class="nav-right">
-      <a class="btn ghost" href="agendamento">Agendar consulta</a>
+      <a class="btn ghost" href="/agendamento">Agendar consulta</a>
       <button class="hamburger" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
     </div>
   </div>
 </header>
+<!-- <main> marca onde comeca o conteudo principal. E invisivel: nao muda
+     um pixel. Serve para quem usa leitor de tela pular o cabecalho de uma
+     vez, em vez de ouvir o menu inteiro em cada pagina. -->
+<main id="conteudo">
 
 <section class="hero">
   <div class="blob b1"></div><div class="blob b2"></div>
@@ -190,14 +194,14 @@ fbq('init','1369928625011386');fbq('track','PageView');
       <h1>Fale com um médico <span class="hl">em minutos</span>, sem sair de casa</h1>
       <p class="sub">Consulta por vídeo, rápida e sem fila. Um médico de verdade avalia o seu caso e ao final da consulta você recebe receita e atestado digital com validade em todo o Brasil, direto no seu telefone.</p>
       <div class="cta-row">
-        <a class="btn" href="agendamento">Iniciar consulta agora</a>
+        <a class="btn" href="/agendamento">Iniciar consulta agora</a>
         <div class="price-tag"><span class="v">R$ 40,00</span><span class="s">a consulta</span></div>
       </div>
       <div class="trust">
         <span>✓ Atendimento por vídeo</span><span>✓ Médico com CRM ativo</span><span>✓ Sem mensalidade</span>
       </div>
     </div>
-    <a class="mock mock-link" href="agendamento" aria-label="Abrir o agendamento">
+    <a class="mock mock-link" href="/agendamento" aria-label="Abrir o agendamento">
       <div class="bar">
         <svg viewBox="0 0 120 120"><rect x="14" y="16" width="92" height="74" rx="22" fill="#fff"/><path d="M34 86 L34 104 L52 86 Z" fill="#fff"/><polyline points="26,55 45,55 54,38 64,72 73,55 96,55" fill="none" stroke="#0C4A52" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="99" cy="27" r="16" fill="#FF6B4A"/><path d="M99 19 v16 M91 27 h16" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>
         <b>Consultaí</b>
@@ -255,7 +259,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
           <li>Sem mensalidade, sem plano, sem letra miúda</li>
         </ul>
         <br>
-        <a class="btn" href="agendamento">Agendar minha consulta</a>
+        <a class="btn" href="/agendamento">Agendar minha consulta</a>
       </div>
     </div>
   </div>
@@ -282,7 +286,11 @@ fbq('init','1369928625011386');fbq('track','PageView');
     <p class="lead">Nem todo mundo escreve depois da consulta. Estes aqui escreveram.</p>
     <div class="depowrap">
       <button class="depo-nav prev" type="button" aria-label="Ver depoimentos anteriores">&lsaquo;</button>
-      <div class="depoimentos" id="depoTrack" role="list">
+      <!-- tabindex="0" faz o trilho virar parada do Tab. Sem isso, quem navega
+           pelo teclado passa direto pelos depoimentos, que sao justamente a
+           prova social do site. Com o foco no trilho, as setinhas rolam. -->
+      <div class="depoimentos" id="depoTrack" role="list" tabindex="0"
+           aria-label="Depoimentos de pacientes. Use as setas para a esquerda e para a direita para navegar.">
       <div class="depo" role="listitem">
         <div class="stars" aria-label="5 de 5 estrelas" title="5 de 5 estrelas">★★★★★</div>
         <p>&ldquo;Foi minha primeira consulta digital e tive uma boa experiência. Atendimento ágil e documentos entregues sem demora, melhor parte.&rdquo;</p>
@@ -363,10 +371,11 @@ fbq('init','1369928625011386');fbq('track','PageView');
   <div class="band">
     <h2>Pronto para ser atendido?</h2>
     <p>Consulta médica online por R$ 40, sem sair de casa.</p>
-    <a class="btn" href="agendamento" style="background:#fff;color:var(--deep)">Iniciar consulta agora</a>
+    <a class="btn" href="/agendamento" style="background:#fff;color:var(--deep)">Iniciar consulta agora</a>
   </div>
 </div>
 
+</main>
 <footer>
   <div class="wrap">
     <div class="cols">
@@ -383,26 +392,26 @@ fbq('init','1369928625011386');fbq('track','PageView');
       </div>
       <div>
         <h4>Serviços</h4>
-        <a class="lk" href="consulta-medica-online">Consulta médica online</a>
-        <a class="lk" href="atestado-medico-online">Atestado médico online</a>
-        <a class="lk" href="consulta-medica-online#receita">Receita digital</a>
-        <a class="lk" href="consulta-medica-online#exames">Pedido de exames</a>
-        <a class="lk" href="agendamento">Agendar consulta</a>
+        <a class="lk" href="/consulta-medica-online">Consulta médica online</a>
+        <a class="lk" href="/atestado-medico-online">Atestado médico online</a>
+        <a class="lk" href="/consulta-medica-online#receita">Receita digital</a>
+        <a class="lk" href="/consulta-medica-online#exames">Pedido de exames</a>
+        <a class="lk" href="/agendamento">Agendar consulta</a>
       </div>
       <div>
         <h4>A Consultaí</h4>
-        <a class="lk" href="sobre">Sobre nós</a>
+        <a class="lk" href="/sobre">Sobre nós</a>
         <a class="lk" href="/blog">Blog</a>
         <a class="lk" href="#como-funciona">Como funciona</a>
         <a class="lk" href="#faq">Perguntas frequentes</a>
-        <a class="lk" href="atestado-medico-online#validade">Validade do atestado</a>
-        <a class="lk" href="trabalhe-conosco">Trabalhe conosco</a>
+        <a class="lk" href="/atestado-medico-online#validade">Validade do atestado</a>
+        <a class="lk" href="/trabalhe-conosco">Trabalhe conosco</a>
       </div>
       <div>
         <h4>Legal</h4>
-        <a class="lk" href="termos">Termos de uso</a>
-        <a class="lk" href="privacidade">Política de privacidade</a>
-        <a class="lk" href="privacidade#lgpd">Proteção de dados (LGPD)</a>
+        <a class="lk" href="/termos">Termos de uso</a>
+        <a class="lk" href="/privacidade">Política de privacidade</a>
+        <a class="lk" href="/privacidade#lgpd">Proteção de dados (LGPD)</a>
       </div>
     </div>
     <div class="legal">
@@ -581,6 +590,20 @@ fbq('init','1369928625011386');fbq('track','PageView');
   }
   prev.addEventListener('click',function(){ t.scrollBy({left:-passo(),behavior:'smooth'}); });
   next.addEventListener('click',function(){ t.scrollBy({left: passo(),behavior:'smooth'}); });
+  /* ===== TECLADO =====
+     O trilho recebeu tabindex="0", entao ele agora e parada do Tab. A rolagem
+     nativa por setinha anda so uns 2px num container com scroll-snap, o que na
+     pratica nao serve. Aqui as setas passam a fazer exatamente o que os botoes
+     de antes e depois ja fazem: andar um depoimento inteiro. Home e End vao
+     para as pontas. Sem isso, quem navega pelo teclado ou por leitor de tela
+     nao alcanca os depoimentos, que sao a prova social do site. */
+  t.addEventListener('keydown',function(e){
+    var k=e.key;
+    if(k==='ArrowRight'){ e.preventDefault(); t.scrollBy({left: passo(),behavior:'smooth'}); }
+    else if(k==='ArrowLeft'){ e.preventDefault(); t.scrollBy({left:-passo(),behavior:'smooth'}); }
+    else if(k==='Home'){ e.preventDefault(); t.scrollTo({left:0,behavior:'smooth'}); }
+    else if(k==='End'){ e.preventDefault(); t.scrollTo({left:t.scrollWidth,behavior:'smooth'}); }
+  });
   var d1; t.addEventListener('scroll',function(){ clearTimeout(d1); d1=setTimeout(pintar,90); });
   /* No celular, rolar a pagina esconde a barra de endereco e isso dispara
      'resize' mudando SO a ALTURA. O codigo antigo remontava as bolinhas a
