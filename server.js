@@ -65,7 +65,16 @@ app.use(express.static(path.join(__dirname, 'public'), {
   extensions: ['html'],
   redirect: false,
   setHeaders: (res, filePath) => {
-    if (/\.html$/i.test(filePath)) {
+    /* ATENCAO: sitemap.xml e robots.txt entram JUNTO com o HTML, e nao no
+       balde de 24 horas. Eles nao terminam em .html, entao antes caiam na
+       regra do "else" e ficavam guardados por um dia inteiro.
+       Foi isso que fez o Dr. Joao abrir /sitemap.xml em 04/08/2026 e ver a
+       versao da vespera, com 19 enderecos em vez de 20, e concluir que o
+       arquivo nao tinha subido. Pior: o proprio Googlebot podia estar
+       segurando a copia velha pelo mesmo motivo.
+       Sao arquivos minusculos e de controle, que mudam a cada publicacao.
+       Guardar em cache nao economiza nada e atrasa a indexacao. */
+    if (/\.html$/i.test(filePath) || /[\\/](sitemap\.xml|robots\.txt)$/i.test(filePath)) {
       res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
     } else {
       res.setHeader('Cache-Control', 'public, max-age=86400');
