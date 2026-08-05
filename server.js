@@ -13,6 +13,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
+const fs = require('fs');   // só para gravar as marcações da recuperação de Pix
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -120,6 +121,9 @@ const {
   META_DATASET_ID = '1369928625011386', // = ID do seu pixel (já preenchido)
   META_CAPI_TOKEN = '',                 // GERAR no Gerenciador de Eventos → Conversions API
   META_TEST_EVENT_CODE = '',            // opcional: só p/ testar em "Testar eventos"
+  // Recuperação de Pix não pago. Nasce DESLIGADA de propósito: só começa a
+  // enviar quando o Dr. João criar RECUPERACAO=on no painel do Render.
+  RECUPERACAO = '',
 } = process.env;
 /* --------- E-mails via Brevo (API HTTPS — o Render bloqueia SMTP) -------- */
 async function enviarEmail(para, assunto, html, replyTo) {
@@ -785,6 +789,146 @@ app.get('/api/health', (req, res) => res.json({ ok: true, servico: 'consultai-ba
    consulta está a ~10 min de começar, envia um e-mail ao médico com um botão
    que abre o WhatsApp do paciente com a mensagem pronta (1 toque = enviado). */
 const lembretesEnviados = new Set();
+/* ======================================================================
+   RECUPERAÇÃO DE PIX NÃO PAGO
+   ----------------------------------------------------------------------
+   O paciente preencheu os dados, o Pix foi gerado e o pagamento não veio.
+   Dois avisos, aprovados pelo Dr. João em 05/08/2026:
+
+     E-mail 1, aos 7 minutos  -> o horário AINDA está reservado (a trava dura
+                                 12 min), então a frase "guardado por mais 5
+                                 minutos" é verdadeira. Vai com o Pix dentro.
+     E-mail 2, no dia seguinte -> sem urgência, convidando a escolher outro
+                                 horário. Esse tem link de descadastro.
+
+   >>> ATENÇÃO AO QUE OS 12 MINUTOS SÃO <<<
+   Não é a validade do Pix. Em mpCriarPix a gente NÃO define date_of_expiration,
+   então o código segue a validade padrão da conta no Mercado Pago, que é bem
+   maior. Os 12 min são a TRAVA_MS, o tempo em que a gente segura o horário para
+   não vender o mesmo slot duas vezes. Por isso o texto do e-mail fala em
+   "horário reservado", nunca em "código vai expirar". Se um dia alguém mudar a
+   TRAVA_MS, os 7 minutos aqui embaixo têm que mudar junto.
+
+   POR QUE LER DO MERCADO PAGO E NÃO DA MEMÓRIA
+   O mapa `pendentes` vive na memória do processo. Se o Render reinicia entre o
+   checkout e o minuto 7, o registro some e o e-mail nunca sairia. Como todos os
+   dados viajam dentro do metadata do próprio pagamento (ver mpCriarPix), dá
+   para reconstruir tudo perguntando ao Mercado Pago quais pagamentos estão
+   pendentes. É o que esta rotina faz.
+
+   NATUREZA JURÍDICA: isto é e-mail TRANSACIONAL, não publicidade. Avisa sobre
+   uma operação que a própria pessoa começou. Por isso o primeiro não tem oferta
+   nem descadastro, e o segundo, que já se aproxima de marketing, tem.
+   ====================================================================== */
+const RECUPERACAO_LIGADA = String(RECUPERACAO).toLowerCase() === 'on';
+const RECUP_MIN_1 = 7;            // minutos após criar o Pix
+const RECUP_MIN_2 = 24 * 60;      // no dia seguinte
+const recupEnviados = new Map();  // id -> { e1:bool, e2:bool }
+const RECUP_ARQUIVO = path.join(__dirname, '.recuperacao.json');
+/* Marcações gravadas em disco, para um reinício não reenviar o mesmo e-mail.
+   Melhor esforço: se o disco for somente leitura, o servidor segue normalmente
+   e o pior caso é um e-mail repetido depois de um reinício. */
+(function carregarRecup() {
+  try {
+    const bruto = JSON.parse(fs.readFileSync(RECUP_ARQUIVO, 'utf8'));
+    for (const [k, v] of Object.entries(bruto || {})) recupEnviados.set(k, v);
+    console.log('[recuperacao] ' + recupEnviados.size + ' marcações lidas do disco');
+  } catch (e) { /* primeira execução, ou disco somente leitura */ }
+})();
+function salvarRecup() {
+  try { fs.writeFileSync(RECUP_ARQUIVO, JSON.stringify(Object.fromEntries(recupEnviados))); }
+  catch (e) { /* melhor esforço */ }
+}
+async function mpBuscarPendentes() {
+  const fim = new Date().toISOString();
+  const ini = new Date(Date.now() - 30 * 3600 * 1000).toISOString();
+  const url = 'https://api.mercadopago.com/v1/payments/search?status=pending&range=date_created' +
+    '&begin_date=' + encodeURIComponent(ini) + '&end_date=' + encodeURIComponent(fim) + '&limit=50';
+  const r = await fetch(url, { headers: { Authorization: 'Bearer ' + MP_ACCESS_TOKEN } });
+  const d = await r.json();
+  if (!r.ok) throw new Error('MP search pendentes ' + r.status + ': ' + JSON.stringify(d).slice(0, 150));
+  return d.results || [];
+}
+function botaoEmail(texto, href) {
+  return '<a href="' + href + '" style="display:block;background:#E52A00;color:#ffffff;text-decoration:none;' +
+    'text-align:center;font-weight:bold;font-size:16px;padding:14px;border-radius:12px;margin:14px 0 6px">' +
+    texto + '</a>';
+}
+function corpoRecup1(m, copiaECola) {
+  const primeiro = escHtml(String(m.nome || '').trim().split(/\s+/)[0] || 'tudo bem');
+  const pix = copiaECola
+    ? '<div style="border:1.5px dashed #CDEBE5;background:#FAFDFC;border-radius:12px;padding:13px 15px;margin:14px 0">' +
+      '<div style="font-size:11.5px;color:#5C7178;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">' +
+      'Pix copia e cola · R$ ' + escHtml(String(PRECO)) + ',00</div>' +
+      '<div style="font-family:monospace;font-size:11.5px;color:#14333A;word-break:break-all;line-height:1.5">' +
+      escHtml(copiaECola) + '</div></div>'
+    : '';
+  return '<p style="margin:0 0 12px">Olá, <b>' + primeiro + '</b>! Você escolheu um horário e o Pix foi gerado, ' +
+    'mas o pagamento ainda não chegou até aqui.</p>' +
+    '<div style="background:#F1FBF9;border:1.5px solid #15A39A;border-radius:14px;padding:16px 20px;margin:14px 0;text-align:center">' +
+    '<div style="font-size:12px;color:#5C7178;letter-spacing:1px;text-transform:uppercase">Horário reservado para você</div>' +
+    '<div style="font-size:26px;font-weight:bold;color:#0C4A52;margin:5px 0">' + dataBR(m.data) + ' · ' + escHtml(m.horario) + '</div>' +
+    '<div style="font-size:13px;color:#14333A">Dr. João Pedro Vieira do Prado — CRM-SP 281.239</div></div>' +
+    '<p style="margin:0 0 12px">Esse horário fica guardado <b>por mais 5 minutos</b>. Depois disso ele volta ' +
+    'para a lista e outra pessoa pode escolher.</p>' + pix +
+    botaoEmail('Pagar e confirmar minha consulta', 'https://vemconsultai.com.br/agendamento') +
+    '<p style="margin:12px 0 0;font-size:13px;color:#5C7178">Se você mudou de ideia, não precisa fazer nada. ' +
+    'O horário volta sozinho para a lista e ninguém é cobrado.</p>' +
+    '<p style="margin:10px 0 0;font-size:12px;color:#5C7178">Você recebeu este aviso porque iniciou um agendamento ' +
+    'no nosso site. Não é publicidade.</p>';
+}
+function corpoRecup2(m) {
+  const primeiro = escHtml(String(m.nome || '').trim().split(/\s+/)[0] || 'tudo bem');
+  return '<p style="margin:0 0 12px">Olá, <b>' + primeiro + '</b>! Ontem você começou a agendar uma consulta e o ' +
+    'pagamento não foi concluído. O horário que você tinha escolhido já voltou para a lista, mas tem outros abertos.</p>' +
+    '<p style="margin:0 0 12px">A consulta é por vídeo, com médico de CRM ativo, custa <b>R$ ' + escHtml(String(PRECO)) +
+    ' no Pix</b> e leva de 10 a 15 minutos. Receita, atestado e pedido de exames saem quando o médico indicar.</p>' +
+    botaoEmail('Escolher um novo horário', 'https://vemconsultai.com.br/agendamento') +
+    '<p style="margin:12px 0 0;font-size:13px;color:#5C7178">Se preferir falar com uma pessoa antes, é só chamar no ' +
+    'WhatsApp <b>(11) 97654-4002</b>.</p>' +
+    '<p style="margin:8px 0 0;font-size:13px;color:#5C7178">Não atendemos urgência nem emergência. Nesses casos, ' +
+    'procure um pronto-socorro ou ligue 192 (SAMU).</p>' +
+    '<p style="margin:10px 0 0;font-size:12px;color:#5C7178">Você recebeu este aviso porque iniciou um agendamento ' +
+    'no nosso site. Se não quiser mais receber, responda este e-mail com "sair".</p>';
+}
+async function rodarRecuperacao() {
+  try {
+    if (!RECUPERACAO_LIGADA) return;
+    if (!BREVO_API_KEY || !NOTIF_EMAIL_FROM || !MP_ACCESS_TOKEN) return;
+    const pend = await mpBuscarPendentes();
+    let enviados = 0;
+    for (const pg of pend) {
+      if (enviados >= 10) break;                       // trava de rajada
+      const id = String(pg.id);
+      const m = pg.metadata || {};
+      if (!m.email || !m.data || !m.horario) continue;  // sem e-mail não há o que fazer
+      if (agendando.has(id)) continue;                  // já está virando consulta
+      const p = pendentes.get(id);
+      if (p && p.booked) continue;                      // já agendou
+      const idade = (Date.now() - new Date(pg.date_created).getTime()) / 60000;
+      const marca = recupEnviados.get(id) || { e1: false, e2: false };
+      const assinatura = 'Consultaí';
+      if (!marca.e1 && idade >= RECUP_MIN_1 && idade < 30) {
+        const copia = (p && p.copiaECola) || (pg.point_of_interaction
+          && pg.point_of_interaction.transaction_data
+          && pg.point_of_interaction.transaction_data.qr_code) || '';
+        const ok = await enviarEmail(m.email,
+          'Seu horário de ' + dataBR(m.data) + ' às ' + m.horario + ' ainda está reservado',
+          emailShell('Seu horário ainda está reservado', corpoRecup1(m, copia)));
+        marca.e1 = true; recupEnviados.set(id, marca); salvarRecup(); enviados++;
+        console.log('[recuperacao] e-mail 1 ' + (ok ? 'enviado' : 'FALHOU') + ' — ' + id + ' — ' + m.email);
+      } else if (!marca.e2 && idade >= RECUP_MIN_2 && idade < RECUP_MIN_2 + 180) {
+        const ok = await enviarEmail(m.email,
+          'Você começou um agendamento na ' + assinatura,
+          emailShell('Ficou faltando só o pagamento', corpoRecup2(m), '#0F766E'));
+        marca.e2 = true; recupEnviados.set(id, marca); salvarRecup(); enviados++;
+        console.log('[recuperacao] e-mail 2 ' + (ok ? 'enviado' : 'FALHOU') + ' — ' + id + ' — ' + m.email);
+      }
+    }
+    // limpeza: marcações com mais de 3 dias não servem para mais nada
+    if (recupEnviados.size > 400) { recupEnviados.clear(); salvarRecup(); }
+  } catch (e) { console.error('[recuperacao] erro: ' + e.message); }
+}
 async function mpBuscarAprovados() {
   const fim = new Date().toISOString();
   const ini = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
@@ -833,6 +977,10 @@ async function rodarLembretes() {
   } catch (e) { console.error('[lembrete] erro: ' + e.message); }
 }
 setInterval(rodarLembretes, 3 * 60 * 1000);
+/* Recuperação de Pix: varre a cada minuto. Nasce desligada; ligue com
+   RECUPERACAO=on nas variáveis de ambiente do Render. */
+setInterval(rodarRecuperacao, 60 * 1000);
+console.log('[recuperacao] ' + (RECUPERACAO_LIGADA ? 'LIGADA' : 'desligada (defina RECUPERACAO=on para ativar)'));
 /* OBS: aqui existia um "despertador" que dava um auto-ping a cada 10 min.
    Ele servia para o plano gratuito do Render, que colocava o serviço para
    dormir após ~15 min sem visitas. No plano Starter (pago) o serviço não
