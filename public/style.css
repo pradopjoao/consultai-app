@@ -264,16 +264,20 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
   footer .cols{grid-template-columns:1fr 1fr}
   .menu{gap:14px;font-size:13.5px}
 }
-/* ===== Celular (até 820px) ===== */
-@media(max-width:820px){
-  .hero .grid{grid-template-columns:1fr;gap:34px}
-  .hero h1{font-size:38px}.hero.mini h1{font-size:30px}
-  .steps{grid-template-columns:1fr}
-  .gridcards{grid-template-columns:1fr}
-  h2.title{font-size:28px}
-  .mock{max-width:340px;margin:0 auto}
-  .band h2{font-size:26px}
-  section{padding:54px 0}
+/* ===== Menu de celular: ate 1000px (NAO e 820px, e de proposito) =====
+   Medido em 05/08/2026: o menu de computador so cabe em UMA linha a partir de
+   967px de largura. Entre 821px e 966px o site mostrava o desenho de computador
+   num espaco em que ele nao cabe: os itens quebravam em duas linhas (52px de
+   altura dentro de uma barra de 69px) e o botao "Agendar consulta" ficava com
+   71px, mais alto que a propria barra, encostando na borda.
+   Essa faixa e exatamente a do celular DEITADO: iPhone 17 Pro Max 956px,
+   15 Pro Max 932px, iPhone 13 844px. Foi o Dr. Joao quem achou, virando o
+   telefone. O limite aqui e 1000px para ter folga sobre os 967px.
+   Testada a alternativa de encolher o menu para caber: precisaria de fonte
+   12,5px e espacamento 10px, e sobrariam 7px de folga num iPhone 13 deitado.
+   Pequeno demais para o dedo e frágil demais. Por isso o hamburguer.
+   >>> Se um dia entrar um item novo no menu, REFAZER essa medicao. <<< */
+@media(max-width:1000px){
   /* Menu vira dropdown acionado pelo hambúrguer */
   .hamburger{display:flex}
   .menu{
@@ -291,6 +295,25 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
     border:none;border-radius:12px;padding:14px;font-weight:700;font-family:'Poppins',sans-serif;
     box-shadow:0 8px 20px rgba(229,42,0,.28)}
   .menu a.mobcta:hover{color:#fff}
+}
+/* Celular DEITADO: tela baixa. Sem isto, o menu aberto nao cabe (mostrava 6 dos
+   8 itens em 956x440) e o botao "Agendar consulta" ficava abaixo da dobra,
+   obrigando a rolar dentro do proprio menu. */
+@media(max-width:1000px) and (max-height:560px){
+  .menu a{padding:9px 2px;font-size:15px}
+  .nav.open .menu{padding:6px 22px 18px}
+  .menu a.mobcta{margin-top:8px;padding:11px}
+}
+/* ===== Celular (até 820px) ===== */
+@media(max-width:820px){
+  .hero .grid{grid-template-columns:1fr;gap:34px}
+  .hero h1{font-size:38px}.hero.mini h1{font-size:30px}
+  .steps{grid-template-columns:1fr}
+  .gridcards{grid-template-columns:1fr}
+  h2.title{font-size:28px}
+  .mock{max-width:340px;margin:0 auto}
+  .band h2{font-size:26px}
+  section{padding:54px 0}
 }
 /* ===== Celular pequeno (até 400px) ===== */
 @media(max-width:400px){
@@ -399,3 +422,30 @@ a.pcard:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(21,163,154,
    invisivel e a pessoa nao saberia onde esta. */
 #depoTrack:focus{outline:none}
 #depoTrack:focus-visible{outline:3px solid var(--teal);outline-offset:4px;border-radius:14px}
+
+/* ===== TRANSICAO ENTRE PAGINAS =====
+   Por que isto existe: o menu do celular tem um desvanecer de .22s. Em link de
+   ancora (#faq, #como-funciona) ele roda inteiro, porque a pagina nao troca. Em
+   link que troca de pagina, o navegador derruba o documento antigo na hora e o
+   desvanecer nunca chega a rodar: a pagina nova aparece em UM quadro. Foi isso
+   que o Dr. Joao notou em 05/08/2026, e a gravacao do compositor confirmou.
+   Solucao sem JavaScript: o proprio navegador dissolve a pagina antiga na nova.
+   Medido no emulador de iPhone: de 1 quadro seco para ~280ms de animacao.
+   Em navegador que nao suporta, o comportamento e exatamente o de antes, sem
+   piora. Precisa da regra nas DUAS paginas, a que sai e a que entra, e por isso
+   ela mora aqui no style.css, que todas carregam. */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:vtSai .16s ease both}
+::view-transition-new(root){animation:vtEntra .28s cubic-bezier(.22,.61,.36,1) both}
+@keyframes vtSai{to{opacity:0}}
+@keyframes vtEntra{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){
+  ::view-transition-old(root),::view-transition-new(root){animation:none}
+}
+
+/* Com o menu aberto, o botao flutuante do WhatsApp some. Sem isto, no celular
+   DEITADO (medido em 956x440) ele fica por cima do botao "Agendar consulta" do
+   menu, cobrindo 62 por 40 pixels justamente do botao principal. Em navegador
+   sem :has() nada muda, o comportamento fica o de antes. */
+header:has(.nav.open) ~ .wa{opacity:0;pointer-events:none}
+.wa{transition:opacity .18s ease}
