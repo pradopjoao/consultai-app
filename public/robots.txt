@@ -1,4 +1,14 @@
+# robots.txt da Consultaí
+# Diz aos buscadores o que podem rastrear e, principalmente, onde fica o
+# nosso mapa do site. Isso passou a importar mais depois que o Google
+# desativou o antigo "ping" de sitemap, em 2023, e recomendou declarar o
+# sitemap aqui e no Search Console.
+
 User-agent: *
 Allow: /
+
+# As rotas de API não têm conteúdo para busca e lidam com agendamento e
+# pagamento. Não há motivo para robô entrar nelas.
+Disallow: /api/
 
 Sitemap: https://vemconsultai.com.br/sitemap.xml

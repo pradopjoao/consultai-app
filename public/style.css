@@ -53,8 +53,26 @@ header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);backdro
 .nav.open .hamburger span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
 
 /* Hero */
-.hero{background:linear-gradient(160deg,#15A39A,#0C4A52);color:#fff;padding:72px 0 84px;position:relative;overflow:hidden}
-.hero .blob{position:absolute;border-radius:50%;opacity:.12;background:#fff}
+/* ATENCAO ao mexer no degrade abaixo. Ele nao e so decoracao, e o fundo que
+   sustenta QUATRO textos claros: o h1 branco, o destaque em pessego (.hl), o
+   subtitulo (#D9F2EF) e os itens com visto (.trust). Se clarear, os quatro
+   perdem contraste de uma vez.
+   Medicao de 04/08/2026 no banner de verdade, pior caso do degrade (o tom mais
+   claro entre os 40 mais frequentes atras de cada texto), PC 1280 e iPhone 13:
+     com o verde antigo (#15A39A -> #0C4A52) e bolha branca em .12
+       destaque    2,91 PC / 2,37 celular  (precisa 3,0)   REPROVAVA nos dois
+       subtitulo   3,85 PC / 3,03 celular  (precisa 4,5)   REPROVAVA nos dois
+       itens visto 4,51 PC / 4,37 celular  (precisa 4,5)   REPROVAVA no celular
+     com o verde de agora (#0D7F79 -> #08383F) e bolha branca em .07
+       destaque    4,40 PC / 3,71 celular   OK
+       subtitulo   5,77 PC / 4,72 celular   OK
+       itens visto 6,07 PC / 6,36 celular   OK
+       h1 branco   5,83 PC / 4,92 celular   OK
+   Clarear o texto NAO resolve: testado, o pessego so passaria virando quase
+   branco, o que apaga o destaque. Escolha do Dr. Joao em 04/08/2026 (opcao B).
+   Se um dia alguem quiser o verde antigo de volta, tem que refazer esta conta. */
+.hero{background:linear-gradient(160deg,#0D7F79,#08383F);color:#fff;padding:72px 0 84px;position:relative;overflow:hidden}
+.hero .blob{position:absolute;border-radius:50%;opacity:.07;background:#fff}
 .hero .b1{width:520px;height:520px;top:-180px;right:-140px}
 .hero .b2{width:340px;height:340px;bottom:-160px;left:-120px;background:#FF6B4A;opacity:.18}
 .hero .grid{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
@@ -203,7 +221,10 @@ details p{color:var(--mut);padding:0 0 16px;font-size:15px}
 footer{background:var(--ink);color:#9FB4B8;padding:52px 0 30px;font-size:14px;margin-top:72px}
 footer .cols{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:34px;margin-bottom:28px}
 footer .w{font-family:'Poppins';font-weight:800;color:#fff;font-size:20px}
-footer h4{color:#fff;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-family:'Poppins'}
+/* Eram <h4> logo depois de um <h2> do conteudo, pulando o <h3>. Quem navega
+   por titulos com leitor de tela sentia um degrau faltando. Viraram <h2>,
+   que nao pula nivel em pagina nenhuma. A aparencia continua identica. */
+footer h2{color:#fff;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-family:'Poppins';font-weight:600}
 footer a{color:#9FB4B8;text-decoration:none;transition:.15s}
 footer a:hover{color:#5BD6CB}
 footer .lk{display:block;padding:4px 0}
@@ -220,7 +241,9 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
 .formcard{max-width:640px;margin:6px auto 0;background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px;box-shadow:0 16px 40px rgba(12,74,82,.08)}
 .formcard .frow{margin-bottom:16px}
 .formcard label{display:block;font-size:13px;font-weight:700;color:var(--deep);margin-bottom:6px;font-family:'Poppins',sans-serif}
-.formcard input,.formcard select,.formcard textarea{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:15px;font-family:inherit;color:var(--ink);background:#fff;transition:.15s}
+/* ATENCAO AO 16px. Qualquer campo abaixo disso faz o iPhone dar zoom sozinho
+   quando a pessoa toca: a tela salta e ela digita torto. Estava em 15px. */
+.formcard input,.formcard select,.formcard textarea{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;transition:.15s}
 .formcard input:focus,.formcard select:focus,.formcard textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(21,163,154,.12)}
 .formcard textarea{min-height:150px;resize:vertical;line-height:1.5}
 .formcard .btn{width:100%;border:none;cursor:pointer;margin-top:6px}
