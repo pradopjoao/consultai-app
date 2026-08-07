@@ -36,7 +36,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css?v=11">
+<link rel="stylesheet" href="/style.css?v=12">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -442,6 +442,36 @@ fbq('init','1369928625011386');fbq('track','PageView');
     if(aberto && (e.key === 'Escape' || e.key === 'Esc')) fechar(false);
   });
   window.addEventListener('popstate', function(){ if(aberto) fechar(true); });
+})();
+</script>
+<script>
+/* ===== BOTAO INTELIGENTE DA BARRA DO TOPO (em TODAS as paginas) =====
+   Regra: enquanto houver outra porta de entrada visivel no alto da pagina, o
+   botao da barra fica branco, para nao ter dois laranjas competindo na mesma
+   tela. Quando essa porta sai de vista, o botao acende.
+   O alvo e, nesta ordem: o bloco de botoes do banner (so a home tem), senao o
+   botao dentro do banner, senao o proprio banner. Assim a home continua se
+   comportando exatamente como antes e as outras paginas passam a acompanhar.
+   Ate 05/08/2026 isso existia SO na home, e foi o Dr. Joao quem notou a
+   diferenca navegando no computador.
+   A regra de cor mora no style.css, dentro de @media(min-width:1001px), entao
+   no celular e no celular deitado nao produz efeito nenhum: la o botao vive
+   dentro do menu hamburguer. Sem IntersectionObserver, o botao fica branco
+   como sempre foi e nada quebra. */
+(function(){
+  if(!('IntersectionObserver' in window)) return;
+  var hero = document.querySelector('.hero');
+  if(!hero) return;
+  var alvo = hero.querySelector('.cta-row') || hero.querySelector('.btn') || hero;
+  var obs = new IntersectionObserver(function(entradas){
+    entradas.forEach(function(e){
+      /* add/remove explicitos: a forma toggle(nome, condicao), com dois
+         argumentos, lanca erro em WebKit antigo (o motor do Safari). */
+      if (e.isIntersecting) document.body.classList.remove('rolou');
+      else document.body.classList.add('rolou');
+    });
+  }, {threshold: 0});
+  obs.observe(alvo);
 })();
 </script>
 </body>

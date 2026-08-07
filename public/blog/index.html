@@ -34,7 +34,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css?v=11">
+<link rel="stylesheet" href="/style.css?v=12">
 <style>
 /* ===========================================================
    BLOG - CARTOES DE TEXTO + BOTAO "CARREGAR MAIS"
@@ -60,6 +60,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
   "inLanguage": "pt-BR",
   "publisher": { "@type": "Organization", "name": "Consultaí", "logo": { "@type": "ImageObject", "url": "https://vemconsultai.com.br/apple-touch-icon.png" } },
   "blogPost": [
+    { "@type": "BlogPosting", "headline": "Como renovar a receita de uso contínuo online", "url": "https://vemconsultai.com.br/blog/renovar-receita-uso-continuo-online", "datePublished": "2026-08-07", "image": "https://vemconsultai.com.br/blog/img/renovar-receita-uso-continuo.png", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
     { "@type": "BlogPosting", "headline": "Quanto custa uma consulta médica particular no Brasil?", "url": "https://vemconsultai.com.br/blog/quanto-custa-consulta-medica-particular", "datePublished": "2026-08-05", "image": "https://vemconsultai.com.br/blog/img/quanto-custa-consulta-particular.png", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
     { "@type": "BlogPosting", "headline": "Quantos dias de atestado para infecção urinária?", "url": "https://vemconsultai.com.br/blog/quantos-dias-atestado-infeccao-urinaria", "datePublished": "2026-08-04", "image": "https://vemconsultai.com.br/blog/img/infeccao-urinaria-atestado.png", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
     { "@type": "BlogPosting", "headline": "Quantos dias de atestado para diarreia ou virose intestinal?", "url": "https://vemconsultai.com.br/blog/quantos-dias-atestado-diarreia", "datePublished": "2026-08-03", "image": "https://vemconsultai.com.br/blog/img/diarreia-atestado.png", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
@@ -110,10 +111,10 @@ fbq('init','1369928625011386');fbq('track','PageView');
 </section>
 <section>
   <div class="wrap">
-    <a class="feat" href="/blog/quanto-custa-consulta-medica-particular">
-      <div class="feat-tag">Em destaque · Preço e acesso</div>
-      <h2>Quanto custa uma consulta médica particular no Brasil?</h2>
-      <p>Ninguém consegue te dar um número, e não é enrolação: não existe tabela oficial de preço no país. Veja o que faz o valor mudar, o que fica de fora da conta e o que o Código de Ética obriga o médico a combinar com você antes.</p>
+    <a class="feat" href="/blog/renovar-receita-uso-continuo-online">
+      <div class="feat-tag">Em destaque · Receita e exames</div>
+      <h2>Como renovar a receita de uso contínuo online</h2>
+      <p>Dá para renovar por vídeo, sem perder a manhã na fila. Mas renovar não é reimprimir um papel, e quem entende essa diferença resolve em dez minutos. Veja o que ter em mãos antes da consulta.</p>
       <span class="feat-link">Ler artigo</span>
     </a>
     <div class="catbar" role="tablist" aria-label="Categorias do blog">
@@ -125,6 +126,12 @@ fbq('init','1369928625011386');fbq('track','PageView');
       <button class="cbtn" data-cat="tele" role="tab" aria-selected="false">Telemedicina</button>
     </div>
     <div class="grid-posts" id="gridPosts">
+      <a class="pcard" href="/blog/renovar-receita-uso-continuo-online" data-cat="receita">
+        <div class="pcat">Receita e exames</div>
+        <h3>Como renovar a receita de uso contínuo online</h3>
+        <p>Renovar não é reimprimir. Veja o que ter em mãos para resolver em dez minutos e como a receita digital chega no seu telefone.</p>
+        <span class="pmeta">Dr. João Pedro · 5 min de leitura</span>
+      </a>
       <a class="pcard" href="/blog/quanto-custa-consulta-medica-particular" data-cat="preco">
         <div class="pcat">Preço e acesso</div>
         <h3>Quanto custa uma consulta médica particular no Brasil?</h3>
@@ -392,6 +399,36 @@ fbq('init','1369928625011386');fbq('track','PageView');
   });
   if(mais) mais.addEventListener('click',function(){ mostrando+=LOTE; pintar(); });
   pintar();
+})();
+</script>
+<script>
+/* ===== BOTAO INTELIGENTE DA BARRA DO TOPO (em TODAS as paginas) =====
+   Regra: enquanto houver outra porta de entrada visivel no alto da pagina, o
+   botao da barra fica branco, para nao ter dois laranjas competindo na mesma
+   tela. Quando essa porta sai de vista, o botao acende.
+   O alvo e, nesta ordem: o bloco de botoes do banner (so a home tem), senao o
+   botao dentro do banner, senao o proprio banner. Assim a home continua se
+   comportando exatamente como antes e as outras paginas passam a acompanhar.
+   Ate 05/08/2026 isso existia SO na home, e foi o Dr. Joao quem notou a
+   diferenca navegando no computador.
+   A regra de cor mora no style.css, dentro de @media(min-width:1001px), entao
+   no celular e no celular deitado nao produz efeito nenhum: la o botao vive
+   dentro do menu hamburguer. Sem IntersectionObserver, o botao fica branco
+   como sempre foi e nada quebra. */
+(function(){
+  if(!('IntersectionObserver' in window)) return;
+  var hero = document.querySelector('.hero');
+  if(!hero) return;
+  var alvo = hero.querySelector('.cta-row') || hero.querySelector('.btn') || hero;
+  var obs = new IntersectionObserver(function(entradas){
+    entradas.forEach(function(e){
+      /* add/remove explicitos: a forma toggle(nome, condicao), com dois
+         argumentos, lanca erro em WebKit antigo (o motor do Safari). */
+      if (e.isIntersecting) document.body.classList.remove('rolou');
+      else document.body.classList.add('rolou');
+    });
+  }, {threshold: 0});
+  obs.observe(alvo);
 })();
 </script>
 </body>
