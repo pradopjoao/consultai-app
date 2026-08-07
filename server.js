@@ -172,14 +172,36 @@ function emailShell(headline, corpo, corHeader) {
     </div>
   </div>`;
 }
+/* ===== Blocos dos e-mails: modelo "barra lateral", aprovado em 05/08/2026 =====
+   O cabeçalho continua sendo a faixa verde escura de sempre (emailShell).
+   O que mudou foi o miolo: os destaques ganharam uma barra da cor da marca na
+   lateral, e as listas ganharam um quadradinho no lugar do emoji.
+   POR QUE QUADRADO E NÃO ÍCONE: e-mail não é site. O Gmail apaga SVG e a maioria
+   dos programas bloqueia imagem até a pessoa clicar em "exibir imagens". Um
+   quadrado feito com cor de fundo aparece em qualquer programa, sempre.
+   NÃO voltar a usar emoji aqui: decisão do Dr. João em 05/08/2026. A única
+   exceção combinada é a mensagem de texto do WhatsApp, onde emoji é natural. */
+function blocoLateral(rotulo, destaque, apoio) {
+  return '<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:14px 0">' +
+    '<tr><td width="4" style="background:#0F766E;border-radius:3px 0 0 3px">&nbsp;</td>' +
+    '<td style="background:#F7FCFB;padding:14px 18px;border-radius:0 10px 10px 0">' +
+    '<div style="font-size:11px;letter-spacing:1.1px;text-transform:uppercase;color:#5C7178">' + rotulo + '</div>' +
+    '<div style="font-size:24px;font-weight:bold;color:#0C4A52;margin:4px 0 4px;letter-spacing:-.5px">' + destaque + '</div>' +
+    (apoio ? '<div style="font-size:13px;color:#5C7178;line-height:1.5">' + apoio + '</div>' : '') +
+    '</td></tr></table>';
+}
+function itemLista(texto) {
+  return '<table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 9px"><tr>' +
+    '<td valign="top" style="padding:7px 10px 0 0"><div style="width:7px;height:7px;background:#0F766E;border-radius:2px;font-size:0;line-height:0">&nbsp;</div></td>' +
+    '<td style="font-size:15px;line-height:1.6;color:#14333A">' + texto + '</td></tr></table>';
+}
+function linhaDado(rotulo, valor) {
+  return '<tr><td style="padding:5px 0;color:#5C7178;width:38%">' + rotulo + '</td><td>' + valor + '</td></tr>';
+}
 function cardConsulta(p, protocolo) {
-  return `
-    <div style="background:#F1FBF9;border:1.5px solid #15A39A;border-radius:14px;padding:18px 22px;margin:16px 0;text-align:center">
-      <div style="font-size:13px;color:#5C7178;letter-spacing:1px;text-transform:uppercase">Sua consulta</div>
-      <div style="font-size:28px;font-weight:bold;color:#0C4A52;margin:6px 0">${dataBR(p.slot.data)} · ${p.slot.horario}</div>
-      <div style="font-size:14px;color:#14333A">👨‍⚕️ Dr. João Pedro Vieira do Prado — CRM-SP 281.239</div>
-      <div style="font-size:12px;color:#5C7178;margin-top:6px">Protocolo ${protocolo}</div>
-    </div>`;
+  return blocoLateral('Sua consulta',
+    dataBR(p.slot.data) + ' · ' + p.slot.horario,
+    'Dr. João Pedro Vieira do Prado — Médico — CRM-SP 281.239<br>Protocolo ' + protocolo);
 }
 async function avisarNovaConsulta(p, protocolo, paymentId) {
   const dt = dataBR(p.slot.data);
@@ -187,14 +209,14 @@ async function avisarNovaConsulta(p, protocolo, paymentId) {
     <p style="margin:0"><b>${escHtml(p.paciente.nome || '—')}</b> pagou e agendou:</p>
     ${cardConsulta(p, protocolo)}
     <table style="border-collapse:collapse;width:100%;font-size:15px">
-      <tr><td style="padding:5px 0;color:#5C7178">📱 WhatsApp</td><td>${escHtml(p.paciente.telefone || '—')}</td></tr>
-      <tr><td style="padding:5px 0;color:#5C7178">✉️ E-mail</td><td>${escHtml(p.paciente.email || '—')}</td></tr>
-      <tr><td style="padding:5px 0;color:#5C7178">🎂 Nascimento</td><td>${escHtml(p.paciente.dataNascimento || '—')}</td></tr>
-      <tr><td style="padding:5px 0;color:#5C7178">💳 Pagamento MP</td><td>${escHtml(String(paymentId))}</td></tr>
+      <tr><td style="padding:5px 0;color:#5C7178">WhatsApp</td><td>${escHtml(p.paciente.telefone || '—')}</td></tr>
+      <tr><td style="padding:5px 0;color:#5C7178">E-mail</td><td>${escHtml(p.paciente.email || '—')}</td></tr>
+      <tr><td style="padding:5px 0;color:#5C7178">Nascimento</td><td>${escHtml(p.paciente.dataNascimento || '—')}</td></tr>
+      <tr><td style="padding:5px 0;color:#5C7178">Pagamento MP</td><td>${escHtml(String(paymentId))}</td></tr>
     </table>
     <p style="margin:16px 0 0;color:#5C7178;font-size:13px">Já está na agenda do Shosp. Abra a consulta e <b>confirme o paciente</b> para gerar o link da telemedicina.</p>`;
   try {
-    if (await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, '🩺 Nova consulta: ' + dt + ' às ' + p.slot.horario + ' — ' + (p.paciente.nome || 'paciente'), emailShell('🩺 Nova consulta confirmada!', corpo))) {
+    if (await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, 'Nova consulta: ' + dt + ' às ' + p.slot.horario + ' — ' + (p.paciente.nome || 'paciente'), emailShell('Nova consulta confirmada', corpo))) {
       console.log('[email] aviso interno enviado (' + dt + ' ' + p.slot.horario + ')');
     }
   } catch (e) { console.error('[email] falha no aviso interno: ' + e.message); }
@@ -203,13 +225,14 @@ async function confirmarPaciente(p, protocolo) {
   if (!p.paciente.email) return;
   const dt = dataBR(p.slot.data);
   const corpo = `
-    <p style="margin:0">Olá, <b>${escHtml((p.paciente.nome || '').split(' ')[0])}</b>! 👋 Seu pagamento foi aprovado e sua consulta está marcada.</p>
+    <p style="margin:0">Olá, <b>${escHtml((p.paciente.nome || '').split(' ')[0])}</b>! Seu pagamento foi aprovado e sua consulta está marcada.</p>
     ${cardConsulta(p, protocolo)}
-    <p style="margin:0 0 10px">📱 O <b>link da videochamada</b> chega no seu WhatsApp pouco antes do horário. Fique de olho!</p>
-    <p style="margin:0 0 10px;color:#5C7178;font-size:14px">Dicas para a consulta: esteja num lugar tranquilo, com boa internet, e tenha em mãos seus exames ou receitas anteriores, se tiver.</p>
-    <p style="margin:0;color:#5C7178;font-size:13px">Precisa reagendar? É só chamar no WhatsApp <a href="https://wa.me/5511976544002" style="color:#15A39A;text-decoration:none"><b>(11) 97654-4002</b></a>.</p>`;
+    ${itemLista('O <b>link da videochamada</b> chega no seu WhatsApp pouco antes do horário.')}
+    ${itemLista('Esteja num lugar tranquilo e com boa internet.')}
+    ${itemLista('Tenha em mãos seus exames ou receitas anteriores, se tiver.')}
+    <p style="margin:12px 0 0;color:#5C7178;font-size:13px">Precisa reagendar? É só chamar no WhatsApp <a href="https://wa.me/5511976544002" style="color:#0F766E;text-decoration:none"><b>(11) 97654-4002</b></a>.</p>`;
   try {
-    if (await enviarEmail(p.paciente.email, '✅ Consulta confirmada — ' + dt + ' às ' + p.slot.horario + ' | Consultaí', emailShell('Consulta confirmada! 🎉', corpo))) {
+    if (await enviarEmail(p.paciente.email, 'Consulta confirmada — ' + dt + ' às ' + p.slot.horario + ' | Consultaí', emailShell('Consulta confirmada', corpo))) {
       console.log('[email] confirmação enviada ao paciente ' + p.paciente.email);
     }
   } catch (e) { console.error('[email] falha na confirmação ao paciente: ' + e.message); }
@@ -632,7 +655,7 @@ async function efetivarAgendamento(paymentId) {
 async function alertarFalhaAgendamento(p, paymentId, motivo) {
   try {
     const corpo = `
-      <p style="margin:0 0 12px;color:#9a2a12;font-weight:bold">⚠️ Um paciente PAGOU mas a consulta não entrou na agenda. Resolva manualmente e entre em contato com ele.</p>
+      <p style="margin:0 0 12px;color:#9a2a12;font-weight:bold">Um paciente PAGOU mas a consulta não entrou na agenda. Resolva manualmente e entre em contato com ele.</p>
       <table style="border-collapse:collapse;width:100%;font-size:15px">
         <tr><td style="padding:5px 0;color:#5C7178">Paciente</td><td><b>${escHtml(p.paciente.nome || '—')}</b></td></tr>
         <tr><td style="padding:5px 0;color:#5C7178">Horário desejado</td><td>${dataBR(p.slot.data)} · ${p.slot.horario}</td></tr>
@@ -641,7 +664,7 @@ async function alertarFalhaAgendamento(p, paymentId, motivo) {
         <tr><td style="padding:5px 0;color:#5C7178">Pagamento MP</td><td>${paymentId}</td></tr>
         <tr><td style="padding:5px 0;color:#5C7178">Motivo</td><td>${String(motivo).slice(0, 160)}</td></tr>
       </table>`;
-    await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, '🚨 URGENTE: pagamento sem agenda — ' + (p.paciente.nome || 'paciente'), emailShell('🚨 Pagamento sem agenda', corpo, '#c0392b'));
+    await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, 'URGENTE: pagamento sem agenda — ' + (p.paciente.nome || 'paciente'), emailShell('Pagamento sem agenda', corpo, '#c0392b'));
   } catch (e) { console.error('[alerta] falhou: ' + e.message); }
 }
 /* ------------------------------ Rotas ---------------------------------- */
@@ -764,16 +787,16 @@ app.post('/api/contato', rateLimit(5, 10 * 60 * 1000), async (req, res) => {
     const corpo = `
       <p style="margin:0 0 10px">Nova mensagem enviada pelo site (página Trabalhe conosco):</p>
       <table style="border-collapse:collapse;width:100%;font-size:15px">
-        <tr><td style="padding:5px 0;color:#5C7178">👤 Nome</td><td>${escHtml(String(nome).slice(0, 120))}</td></tr>
-        <tr><td style="padding:5px 0;color:#5C7178">✉️ E-mail</td><td>${escHtml(String(email).slice(0, 120))}</td></tr>
-        <tr><td style="padding:5px 0;color:#5C7178">📌 Assunto</td><td>${escHtml(String(assunto).slice(0, 150))}</td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">Nome</td><td>${escHtml(String(nome).slice(0, 120))}</td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">E-mail</td><td>${escHtml(String(email).slice(0, 120))}</td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">Assunto</td><td>${escHtml(String(assunto).slice(0, 150))}</td></tr>
       </table>
       <div style="background:#F1FBF9;border-radius:10px;padding:14px 16px;margin-top:12px;white-space:pre-wrap">${escHtml(String(mensagem).slice(0, 4000))}</div>
       <p style="margin:14px 0 0;color:#5C7178;font-size:13px">Para responder, é só responder este e-mail — vai direto pro remetente.</p>`;
     await enviarEmail(
       NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM,
-      '💼 Trabalhe conosco: ' + String(assunto).slice(0, 80) + ' — ' + String(nome).slice(0, 60),
-      emailShell('💼 Nova mensagem — Trabalhe conosco', corpo),
+      'Trabalhe conosco: ' + String(assunto).slice(0, 80) + ' — ' + String(nome).slice(0, 60),
+      emailShell('Nova mensagem — Trabalhe conosco', corpo),
       String(email).slice(0, 120)
     );
     console.log('[contato] mensagem recebida de ' + String(email).slice(0, 120));
@@ -865,10 +888,9 @@ function corpoRecup1(m, copiaECola) {
     : '';
   return '<p style="margin:0 0 12px">Olá, <b>' + primeiro + '</b>! Você escolheu um horário e o Pix foi gerado, ' +
     'mas o pagamento ainda não chegou até aqui.</p>' +
-    '<div style="background:#F1FBF9;border:1.5px solid #15A39A;border-radius:14px;padding:16px 20px;margin:14px 0;text-align:center">' +
-    '<div style="font-size:12px;color:#5C7178;letter-spacing:1px;text-transform:uppercase">Horário reservado para você</div>' +
-    '<div style="font-size:26px;font-weight:bold;color:#0C4A52;margin:5px 0">' + dataBR(m.data) + ' · ' + escHtml(m.horario) + '</div>' +
-    '<div style="font-size:13px;color:#14333A">Dr. João Pedro Vieira do Prado — CRM-SP 281.239</div></div>' +
+    blocoLateral('Horário reservado para você',
+      dataBR(m.data) + ' · ' + escHtml(m.horario),
+      'Dr. João Pedro Vieira do Prado — Médico — CRM-SP 281.239') +
     '<p style="margin:0 0 12px">Esse horário fica guardado <b>por mais 5 minutos</b>. Depois disso ele volta ' +
     'para a lista e outra pessoa pode escolher.</p>' + pix +
     botaoEmail('Pagar e confirmar minha consulta', 'https://vemconsultai.com.br/agendamento') +
@@ -953,10 +975,10 @@ async function enviarLembreteWhats(m, paymentId) {
     + m.horario + '. ' + (sala ? ('Entre na sala por este link: ' + sala) : 'Segue o link da nossa sala de vídeo: ');
   const wa = 'https://wa.me/' + tel55 + '?text=' + encodeURIComponent(msg);
   const corpo = `
-    <p style="margin:0 0 8px"><b>${m.nome || '—'}</b> · hoje às <b>${m.horario}</b> · 📱 ${m.telefone || '—'}</p>
+    <p style="margin:0 0 8px"><b>${m.nome || '—'}</b> · hoje às <b>${m.horario}</b> · ${m.telefone || '—'}</p>
     <p style="margin:0 0 18px;color:#5C7178;font-size:13.5px">Toque no botão: o WhatsApp abre com a mensagem pronta pro paciente${sala ? ' (link da sala já incluído)' : ' — só colar o link da sala do Shosp'}.</p>
-    <a href="${wa}" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;font-weight:bold;padding:14px 26px;border-radius:10px;font-size:16px">📲 Enviar WhatsApp pro paciente</a>`;
-  await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, '⏰ Consulta em ~10 min: ' + m.horario + ' — ' + (m.nome || ''), emailShell('⏰ Consulta começando em ~10 minutos!', corpo, '#FF6B4A'));
+    <a href="${wa}" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;font-weight:bold;padding:14px 26px;border-radius:10px;font-size:16px">Enviar WhatsApp pro paciente</a>`;
+  await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, 'Consulta em ~10 min: ' + m.horario + ' — ' + (m.nome || ''), emailShell('Consulta começando em ~10 minutos', corpo, '#FF6B4A'));
   console.log('[lembrete] enviado — consulta ' + m.data + ' ' + m.horario + ' (pagamento ' + paymentId + ')');
 }
 async function rodarLembretes() {
