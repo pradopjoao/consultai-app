@@ -449,3 +449,20 @@ a.pcard:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(21,163,154,
    sem :has() nada muda, o comportamento fica o de antes. */
 header:has(.nav.open) ~ .wa{opacity:0;pointer-events:none}
 .wa{transition:opacity .18s ease}
+
+/* ===== BOTAO "AGENDAR CONSULTA" DA BARRA DO TOPO =====
+   No alto da pagina o botao laranja do banner ja chama a acao. Se o botao da
+   barra tambem fosse laranja ali, dois laranjas competiriam na mesma tela.
+   Entao ele so acende quando some a porta de entrada do alto. Quem liga e
+   desliga a classe "rolou" e um IntersectionObserver, presente em TODAS as
+   paginas desde 05/08/2026 (antes existia so na home, e a diferenca foi vista
+   pelo Dr. Joao no computador).
+   O 1001px casa com o limite do menu de celular, que e 1000px: abaixo disso o
+   botao vive dentro do hamburguer e esta regra nao tem efeito. Se um dia esse
+   limite mudar, os dois numeros mudam juntos. */
+@media(min-width:1001px){
+  .nav-right .btn.ghost{transition:background .25s ease,color .25s ease,border-color .25s ease,box-shadow .25s ease}
+  body.rolou .nav-right .btn.ghost{background:var(--btn);color:#fff;border-color:transparent;
+    box-shadow:0 8px 22px rgba(229,42,0,.34)}
+  body.rolou .nav-right .btn.ghost:hover{box-shadow:0 12px 30px rgba(229,42,0,.42)}
+}
