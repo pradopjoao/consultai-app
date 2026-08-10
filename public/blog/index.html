@@ -20,14 +20,34 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://vemconsultai.com.br/og-image-2.png">
-<!-- Meta Pixel -->
+<!-- Meta Pixel (carregamento adiado).
+     A fila do fbq e criada agora e guarda o PageView. O arquivo pesado,
+     fbevents.js (107 kB), so entra depois que a pagina termina de carregar,
+     ou no primeiro toque do leitor, o que vier antes. Nenhuma medicao se
+     perde: o evento sai da fila assim que a biblioteca chega.
+     Isto vale so nas paginas de conteudo. Na home e no /agendamento o pixel
+     continua carregando na hora, porque la um PageView atrasado e sinal de
+     conversao em risco. Decisao do Dr. Joao em 10/08/2026. -->
 <script>
-!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+!function(f,b,e,n){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
-document,'script','https://connect.facebook.net/en_US/fbevents.js');
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[]}(window,document,'script');
 fbq('init','1369928625011386');fbq('track','PageView');
+(function(){
+  var feito=false;
+  function carrega(){
+    if(feito)return; feito=true;
+    var t=document.createElement('script');
+    t.async=true; t.src='https://connect.facebook.net/en_US/fbevents.js';
+    document.head.appendChild(t);
+  }
+  function agenda(){ setTimeout(carrega, 1500); }
+  if(document.readyState==='complete') agenda();
+  else window.addEventListener('load', agenda);
+  ['pointerdown','keydown','touchstart','scroll'].forEach(function(ev){
+    window.addEventListener(ev, carrega, {once:true, passive:true});
+  });
+})();
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1369928625011386&ev=PageView&noscript=1"/></noscript>
 <!-- End Meta Pixel -->
@@ -60,6 +80,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
   "inLanguage": "pt-BR",
   "publisher": { "@type": "Organization", "name": "Consultaí", "logo": { "@type": "ImageObject", "url": "https://vemconsultai.com.br/apple-touch-icon.png" } },
   "blogPost": [
+    { "@type": "BlogPosting", "headline": "Azia, refluxo e gastrite: entenda a diferença", "url": "https://vemconsultai.com.br/blog/azia-refluxo-gastrite", "datePublished": "2026-08-10", "image": "https://vemconsultai.com.br/blog/img/azia-refluxo-gastrite.png", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
     { "@type": "BlogPosting", "headline": "Pedido de exame online: como funciona e onde vale", "url": "https://vemconsultai.com.br/blog/pedido-de-exame-online", "datePublished": "2026-08-09", "image": "https://vemconsultai.com.br/blog/img/pedido-de-exame-online.png", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
     { "@type": "BlogPosting", "headline": "Sinusite ou resfriado? O tempo separa os dois", "url": "https://vemconsultai.com.br/blog/sinusite-ou-resfriado", "datePublished": "2026-08-08", "image": "https://vemconsultai.com.br/blog/img/sinusite-ou-resfriado.png", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
     { "@type": "BlogPosting", "headline": "Como renovar a receita de uso contínuo online", "url": "https://vemconsultai.com.br/blog/renovar-receita-uso-continuo-online", "datePublished": "2026-08-07", "image": "https://vemconsultai.com.br/blog/img/renovar-receita-uso-continuo.png", "author": { "@type": "Person", "name": "Dr. João Pedro Vieira do Prado" } },
@@ -113,10 +134,10 @@ fbq('init','1369928625011386');fbq('track','PageView');
 </section>
 <section>
   <div class="wrap">
-    <a class="feat" href="/blog/pedido-de-exame-online">
-      <div class="feat-tag">Em destaque · Receita e exames</div>
-      <h2>Pedido de exame online: como funciona e onde vale</h2>
-      <p>O pedido virou arquivo digital e vale no Brasil inteiro. O laboratório não confere o papel, confere a assinatura eletrônica, e você mesmo pode checar isso de graça em menos de um minuto.</p>
+    <a class="feat" href="/blog/azia-refluxo-gastrite">
+      <div class="feat-tag">Em destaque · Sintomas</div>
+      <h2>Azia, refluxo e gastrite: entenda a diferença</h2>
+      <p>Os três nomes não querem dizer a mesma coisa. Azia é o sintoma, refluxo é o mecanismo e gastrite é diagnóstico de endoscopia. O que decide a conduta é a história, não a intensidade da queimação.</p>
       <span class="feat-link">Ler artigo</span>
     </a>
     <div class="catbar" role="tablist" aria-label="Categorias do blog">
@@ -128,6 +149,12 @@ fbq('init','1369928625011386');fbq('track','PageView');
       <button class="cbtn" data-cat="tele" role="tab" aria-selected="false">Telemedicina</button>
     </div>
     <div class="grid-posts" id="gridPosts">
+      <a class="pcard" href="/blog/azia-refluxo-gastrite" data-cat="sintomas">
+        <div class="pcat">Sintomas</div>
+        <h3>Azia, refluxo e gastrite: entenda a diferença</h3>
+        <p>Azia é sintoma, não diagnóstico. Veja as três perguntas que separam o refluxo comum do que precisa ser investigado.</p>
+        <span class="pmeta">Dr. João Pedro · 5 min de leitura</span>
+      </a>
       <a class="pcard" href="/blog/pedido-de-exame-online" data-cat="receita">
         <div class="pcat">Receita e exames</div>
         <h3>Pedido de exame online: como funciona e onde vale</h3>
