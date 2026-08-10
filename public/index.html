@@ -46,13 +46,35 @@ fbq('init','1369928625011386');fbq('track','PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1369928625011386&ev=PageView&noscript=1"/></noscript>
 <!-- End Meta Pixel -->
-<!-- Google tag (gtag.js) — Google Ads -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18333144388"></script>
+<!-- Google tag (gtag.js) - Google Ads, carregamento adiado.
+     O dataLayer e a funcao gtag existem desde ja, entao o 'config' fica
+     guardado na fila e e processado assim que a biblioteca chega. O
+     gtag/js (157 kB) so carrega depois do load ou no primeiro toque.
+     Motivo: nesta pagina a tag do Google nao mede conversao nenhuma, o
+     evento de conversao vive no /agendamento. Aqui ela so monta publico.
+     Nao foi REMOVIDA de proposito: se um dia rodarmos Google Ads, e ela
+     que guarda o gclid do clique e permite atribuir a conversao la na
+     frente. Adiar preserva isso, remover quebraria. -->
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'AW-18333144388');
+  (function(){
+    var feito=false;
+    function carrega(){
+      if(feito)return; feito=true;
+      var t=document.createElement('script');
+      t.async=true; t.src='https://www.googletagmanager.com/gtag/js?id=AW-18333144388';
+      document.head.appendChild(t);
+    }
+    function agenda(){ setTimeout(carrega, 1500); }
+    if(document.readyState==='complete') agenda();
+    else window.addEventListener('load', agenda);
+    ['pointerdown','keydown','touchstart','scroll'].forEach(function(ev){
+      window.addEventListener(ev, carrega, {once:true, passive:true});
+    });
+  })();
 </script>
 <!-- End Google tag -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
