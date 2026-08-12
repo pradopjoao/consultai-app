@@ -807,6 +807,61 @@ app.post('/api/contato', rateLimit(5, 10 * 60 * 1000), async (req, res) => {
   }
 });
 app.get('/api/health', (req, res) => res.json({ ok: true, servico: 'consultai-backend' }));
+/* ======================================================================
+   ROTA TEMPORÁRIA — TESTE DE ENTREGABILIDADE (mail-tester)
+   ----------------------------------------------------------------------
+   Criada em 12/08/2026 a pedido do Dr. João, para descobrir por que os
+   e-mails caem no spam. ELA É PARA SER REMOVIDA depois do diagnóstico.
+
+   Por que ela existe: o mail-tester dá nota a QUEM ENVIOU. Testar de um
+   Gmail pessoal mede o Gmail, não a Consultaí. Esta rota dispara pela
+   mesma função enviarEmail() e pela mesma moldura emailShell() que o
+   paciente recebe, então o relatório avalia exatamente o que sai daqui.
+
+   Ela nasce DESLIGADA. Só funciona se existir a variável de ambiente
+   TESTE_EMAIL_CHAVE no painel do Render, e se a chave vier igual na URL.
+   Sem a variável, responde 404 como qualquer endereço inexistente, então
+   não dá nem para descobrir que ela existe.
+
+   Uso:
+     /api/teste-email?chave=SUA_CHAVE&para=test-xxxxx@srv1.mail-tester.com
+   ====================================================================== */
+app.get('/api/teste-email', async (req, res) => {
+  const chave = String(process.env.TESTE_EMAIL_CHAVE || '');
+  if (!chave) return res.status(404).json({ ok: false, erro: 'rota não encontrada' });
+  // comparação em tempo constante, para não vazar a chave por diferença de tempo
+  const dada = String(req.query.chave || '');
+  const a = Buffer.from(chave, 'utf8'), b = Buffer.from(dada, 'utf8');
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(403).json({ ok: false, erro: 'chave inválida' });
+  }
+  const para = String(req.query.para || '').trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(para)) {
+    return res.status(400).json({ ok: false, erro: 'informe ?para=um@endereco.valido' });
+  }
+  // O corpo imita um e-mail real de confirmação: mesmo tamanho, mesma
+  // proporção de texto e imagem, mesmos links. Assim a nota vale para valer.
+  const corpo =
+    '<p style="margin:0 0 12px">Olá! Este é um <b>envio de teste</b> da Consultaí, ' +
+    'disparado pelo nosso servidor para conferir a entrega dos e-mails.</p>' +
+    blocoLateral('Consulta', 'Quinta, 21 de agosto, às 09:00',
+                 'Consulta médica online por vídeo, de 10 a 15 minutos.') +
+    '<p style="margin:12px 0 8px">Como funciona:</p>' +
+    itemLista('O link da videochamada chega no seu WhatsApp pouco antes do horário.') +
+    itemLista('O atendimento é feito por médico com CRM ativo.') +
+    itemLista('Receita, atestado e pedido de exames saem quando o médico indicar.') +
+    botaoEmail('Ver meu agendamento', 'https://vemconsultai.com.br/agendamento') +
+    '<p style="margin:12px 0 0;font-size:13px;color:#5C7178">Não atendemos urgência nem emergência. ' +
+    'Nesses casos, procure um pronto-socorro ou ligue 192 (SAMU).</p>';
+  try {
+    await enviarEmail(para, 'Teste de entrega — Consultaí', emailShell('Teste de entrega', corpo));
+    console.log('[teste-email] enviado para ' + para);
+    res.json({ ok: true, enviado_para: para, remetente: NOTIF_EMAIL_FROM });
+  } catch (e) {
+    console.log('[teste-email] falhou: ' + e.message);
+    res.status(500).json({ ok: false, erro: e.message });
+  }
+});
 /* ------------- Lembrete de consulta (~10 min antes) via e-mail -------------
    A cada 3 min, busca no Mercado Pago os pagamentos aprovados e, quando uma
    consulta está a ~10 min de começar, envia um e-mail ao médico com um botão
