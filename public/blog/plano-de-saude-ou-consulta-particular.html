@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Consulta online é segura? | Consultaí</title>
-<meta name="description" content="Sim. A telemedicina é regulamentada pelo CFM desde 2022, com sigilo, prontuário e sua autorização. Veja como reconhecer um serviço sério antes de pagar.">
-<link rel="canonical" href="https://vemconsultai.com.br/blog/consulta-online-e-segura">
+<title>Plano de saúde ou consulta particular? | Consultaí</title>
+<meta name="description" content="Seu plano tem 7 dias úteis para marcar uma consulta básica. Veja os prazos da ANS, o que fazer quando não cumprem e quando a consulta avulsa compensa.">
+<link rel="canonical" href="https://vemconsultai.com.br/blog/plano-de-saude-ou-consulta-particular">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Consultaí">
 <meta property="og:locale" content="pt_BR">
-<meta property="og:title" content="Consulta online é segura? Como funciona a telemedicina no Brasil">
-<meta property="og:description" content="A telemedicina é regulamentada desde 2022. Veja o que a norma exige de quem atende por vídeo e como reconhecer um serviço confiável.">
-<meta property="og:url" content="https://vemconsultai.com.br/blog/consulta-online-e-segura">
+<meta property="og:title" content="Plano de saúde ou consulta particular: quando cada um compensa">
+<meta property="og:description" content="A comparação não é preço contra preço. É o que cada um resolve, e em quanto tempo. E existe um prazo que o seu plano é obrigado a cumprir.">
+<meta property="og:url" content="https://vemconsultai.com.br/blog/plano-de-saude-ou-consulta-particular">
 <meta property="og:image" content="https://vemconsultai.com.br/og-image-2.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="article:published_time" content="2026-08-01">
+<meta property="article:published_time" content="2026-08-14">
 <meta property="article:author" content="Dr. João Pedro Vieira do Prado">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://vemconsultai.com.br/og-image-2.png">
@@ -57,15 +57,22 @@ fbq('init','1369928625011386');fbq('track','PageView');
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css?v=12">
+<style>
+/* A barra do topo tem 69px e fica grudada na tela. Sem isto, quem chega por um
+   link com # cai com o titulo escondido atras dela. Fica aqui dentro da pagina,
+   e nao no style.css, para nao precisar mudar o ?v= do arquivo de estilo. */
+[id]{scroll-margin-top:78px}
+</style>
+<!-- Dados estruturados: artigo (ajuda o Google a entender autor, data e tema) -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "Consulta online é segura? Como funciona a telemedicina no Brasil",
-  "description": "A telemedicina é regulamentada pela Resolução CFM nº 2.314/2022, com sigilo, registro em prontuário, identificação do médico e consentimento do paciente.",
-  "image": "https://vemconsultai.com.br/blog/img/telemedicina-segura-sinais.png",
-  "datePublished": "2026-08-01",
-  "dateModified": "2026-08-01",
+  "headline": "Plano de saúde ou consulta particular: quando cada um compensa",
+  "description": "Seu plano tem 7 dias úteis para marcar uma consulta básica. Veja os prazos da ANS, o que fazer quando não cumprem e quando a consulta avulsa compensa.",
+  "image": "https://vemconsultai.com.br/og-image-2.png",
+  "datePublished": "2026-08-14",
+  "dateModified": "2026-08-14",
   "inLanguage": "pt-BR",
   "author": {
     "@type": "Person",
@@ -76,11 +83,19 @@ fbq('init','1369928625011386');fbq('track','PageView');
   "publisher": {
     "@type": "Organization",
     "name": "Consultaí",
-    "logo": { "@type": "ImageObject", "url": "https://vemconsultai.com.br/apple-touch-icon.png" }
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://vemconsultai.com.br/apple-touch-icon.png"
+    }
   },
-  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://vemconsultai.com.br/blog/consulta-online-e-segura" }
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://vemconsultai.com.br/blog/plano-de-saude-ou-consulta-particular"
+  }
 }
 </script>
+<!-- Dados estruturados: perguntas frequentes (pode gerar destaque na busca).
+     Geradas a partir das perguntas que aparecem na tela, para nunca divergirem. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -88,28 +103,43 @@ fbq('init','1369928625011386');fbq('track','PageView');
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "Consulta online é segura?",
-      "acceptedAnswer": { "@type": "Answer", "text": "É. A telemedicina é regulamentada no Brasil pela Resolução CFM nº 2.314/2022, que exige sigilo dos dados e imagens do paciente, registro em prontuário, identificação do médico com nome e CRM, e a autorização do paciente antes do atendimento. A segurança depende de o serviço cumprir essas regras, e por isso vale conferir os sinais antes de contratar." }
+      "name": "Em quanto tempo o plano é obrigado a marcar uma consulta?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sete dias úteis para consulta básica e quatorze dias úteis para as demais especialidades, segundo a ANS. O prazo é da operadora, não do consultório que você escolheu."
+      }
     },
     {
       "@type": "Question",
-      "name": "A consulta por vídeo vale o mesmo que a presencial?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Como ato médico, sim. A teleconsulta é definida na norma como consulta médica não presencial, e havendo indicação clínica gera receita, atestado e pedido de exames com a mesma validade. O que ela não substitui é o exame físico, e nesses casos o médico deve encaminhar para atendimento presencial." }
+      "name": "O que fazer se o plano não cumprir o prazo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ligue para a operadora, peça o número do protocolo e anote a data. Se ela não resolver, registre a reclamação na ANS usando esse protocolo."
+      }
     },
     {
       "@type": "Question",
-      "name": "Meus dados de saúde ficam protegidos na consulta online?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Pela Lei Geral de Proteção de Dados, Lei nº 13.709/2018, informações sobre saúde são dados pessoais sensíveis, a categoria de maior proteção da lei. Além disso vale o sigilo médico, igual ao do consultório. A Resolução CFM nº 2.314/2022 ainda exige que o sistema atenda ao nível de segurança NGS2, no padrão da ICP-Brasil." }
+      "name": "Quanto tempo dura a carência de um plano novo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Por lei, até 24 horas para urgência e emergência, até 180 dias para os demais casos e até 300 dias para parto a termo. São prazos máximos, e o contrato pode trazer prazos menores."
+      }
     },
     {
       "@type": "Question",
-      "name": "Como eu sei que quem me atendeu é médico mesmo?",
-      "acceptedAnswer": { "@type": "Answer", "text": "A Resolução CFM nº 2.314/2022 exige que o nome e o CRM do médico constem no atendimento. Um serviço sério informa isso antes da consulta, e não depois. Com nome e número em mãos, é possível conferir o registro junto ao Conselho Regional de Medicina." }
+      "name": "Vale a pena cancelar o plano e só pagar consulta avulsa?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Na maior parte das vezes, não. Consulta avulsa não cobre internação, cirurgia nem tratamento longo. Os dois caminhos se completam, não se substituem."
+      }
     },
     {
       "@type": "Question",
-      "name": "Como reconheço um serviço de telemedicina que não é confiável?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Os sinais mais claros são prometer documento sem consulta, não informar o nome nem o CRM de quem atende, não ter CNPJ visível, pedir Pix para conta de pessoa física e garantir o atestado antes de qualquer avaliação. Nenhuma dessas práticas cabe dentro da regulamentação da telemedicina." }
+      "name": "Consulta online serve para quem já tem plano?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Serve, e é um uso comum: resolver o que é curto sem esperar a agenda, principalmente durante a carência ou fora do horário comercial."
+      }
     }
   ]
 }
@@ -142,10 +172,10 @@ fbq('init','1369928625011386');fbq('track','PageView');
 <section class="hero mini">
   <div class="blob b1"></div>
   <div class="wrap" style="position:relative">
-    <nav class="crumb" aria-label="Trilha de navegação"><a href="/">Início</a> <span>›</span> <a href="/blog">Blog</a> <span>›</span> Consulta online é segura?</nav>
-    <span class="pill">💻 Telemedicina</span>
-    <h1>Consulta online é segura?</h1>
-    <p class="sub">É regulamentada no Brasil desde 2022, com sigilo, registro em prontuário e a sua autorização. A parte que ninguém te ensina é como reconhecer quem faz direito.</p>
+    <nav class="crumb" aria-label="Trilha de navegação"><a href="/">Início</a> <span>›</span> <a href="/blog">Blog</a> <span>›</span> Plano de saúde ou consulta particular</nav>
+    <span class="pill">💰 Preço e acesso</span>
+    <h1>Plano de saúde ou consulta particular: quando cada um compensa</h1>
+    <p class="sub">A comparação não é preço contra preço. É o que cada um resolve, e em quanto tempo. E existe um direito seu, com prazo em dias, que quase ninguém usa.</p>
   </div>
 </section>
 <section>
@@ -155,110 +185,88 @@ fbq('init','1369928625011386');fbq('track','PageView');
   <span class="av">JP</span>
   <div>
     <b>Dr. João Pedro Vieira do Prado</b> · CRM-SP 281.239<br>
-    <span class="muted">Publicado em 1º de agosto de 2026 · Leitura de 8 minutos</span>
+    <span class="muted">Publicado em 14 de agosto de 2026 · Leitura de 5 minutos</span>
   </div>
 </div>
 
-<p>Sim, a consulta online é segura, e ela é regulamentada no Brasil desde abril de 2022 pela Resolução CFM nº 2.314. Consulta por vídeo é ato médico, com o mesmo peso de uma consulta presencial, e não uma versão de segunda categoria dela.</p>
+<p>A pergunta costuma vir como uma escolha, e não é. <b>Plano de saúde e consulta particular resolvem problemas diferentes</b>, e quem tem plano continua precisando de uma consulta avulsa de vez em quando, pelo mesmo motivo que quem tem carro às vezes pega um táxi.</p>
 
-<p>Só que essa resposta sozinha ajuda pouco, porque quase nunca é ela que a pessoa está perguntando. A pergunta de verdade costuma ser outra: <b>como eu sei que este serviço aqui é sério</b>. E essa dúvida é ótima, porque a telemedicina ser legal não impede que exista gente vendendo documento pela internet e chamando aquilo de consulta. Neste texto eu separo as duas coisas, mostro o que a norma exige de quem atende por vídeo e te entrego uma lista prática para avaliar qualquer serviço, inclusive o nosso.</p>
+<p>Na cobertura, o plano quase nunca perde. Onde ele costuma decepcionar é em outra coisa: <b>o tempo até você conseguir a consulta</b>. E aqui vem a parte que a maioria das pessoas não sabe: esse tempo tem prazo definido em norma, e existe o que fazer quando ele não é cumprido.</p>
 
 <div class="takeaways">
   <b>Resumo rápido</b>
   <ul>
-    <li>A telemedicina é regulamentada pela Resolução CFM nº 2.314/2022. Teleconsulta é consulta médica, feita a distância.</li>
-    <li>A norma exige sigilo dos seus dados e imagens, e sistema com nível de segurança NGS2, no padrão da ICP-Brasil.</li>
-    <li>Todo atendimento é registrado em prontuário, e você tem direito de saber o nome e o CRM de quem está te atendendo.</li>
-    <li>Você autoriza a consulta por vídeo antes dela começar, e tanto você quanto o médico podem interromper a qualquer momento.</li>
-    <li>O que separa consulta de golpe não é a tela, é existir avaliação médica de verdade. Quem promete documento sem consulta não está fazendo telemedicina.</li>
+    <li>O seu plano tem <b>7 dias úteis</b> para marcar uma consulta básica e <b>14 dias úteis</b> para uma especialidade.</li>
+    <li>Se não cumprir, peça o número do protocolo à operadora e registre reclamação na ANS.</li>
+    <li>Carência: até <b>24 horas</b> para urgência, até <b>180 dias</b> para os demais casos.</li>
+    <li>Em internação, cirurgia e tratamento longo, o plano é imbatível. Não troque isso por consulta avulsa.</li>
+    <li>Três em cada quatro brasileiros não têm plano nenhum.</li>
   </ul>
 </div>
 
-<h2>A telemedicina é permitida no Brasil?</h2>
-<p>É, e com regra escrita. A <a href="https://sistemas.cfm.org.br/normas/arquivos/resolucoes/BR/2022/2314_2022.pdf" target="_blank" rel="noopener">Resolução CFM nº 2.314/2022</a> define, logo no artigo 1º, a telemedicina como o exercício da medicina mediado por tecnologias digitais, de informação e de comunicação.</p>
-<p>No artigo 6º ela vai direto ao que interessa para você: a teleconsulta é a consulta médica não presencial, com médico e paciente em lugares diferentes. Repare na palavra que está lá, consulta. Não é um chat de dúvidas, não é orientação genérica, é atendimento médico.</p>
-<p>É por isso que, havendo indicação clínica, o médico pode emitir receita, atestado ou pedido de exames ao final de uma consulta online, do mesmo jeito que faria no consultório. O que muda é o meio, não o ato.</p>
-
-<h2>O que a norma exige de quem atende por vídeo</h2>
-<p>Aqui está a parte que vale a pena você conhecer, porque ela vira um filtro na sua mão.</p>
-<p><b>Sigilo e proteção dos dados.</b> O artigo 3º determina que os dados e as imagens dos pacientes sejam preservados, obedecendo à integridade, à veracidade, à confidencialidade, à privacidade e ao sigilo profissional.</p>
-<p><b>Registro em prontuário.</b> O mesmo artigo exige que o atendimento seja registrado em prontuário, físico ou em sistema de registro eletrônico. Consulta que não deixa registro não é consulta, é conversa.</p>
-<p><b>Segurança técnica de verdade.</b> A norma exige nível de garantia de segurança 2, o chamado NGS2, no padrão da Infraestrutura de Chaves Públicas Brasileira. Em português claro: o sistema que guarda o seu prontuário precisa atender a um padrão oficial de proteção, e não a um critério que a empresa inventou.</p>
-<p><b>Identificação de quem atende.</b> O artigo 13 lista o que precisa constar no atendimento, e o primeiro item é a identificação do médico, com nome e CRM, além dos dados do paciente. Atendimento por vídeo com médico anônimo não existe dentro da regra.</p>
-<p><b>A sua autorização.</b> O artigo 15 exige que o paciente autorize o atendimento por telemedicina, por meio de consentimento livre e esclarecido, sabendo inclusive como suas informações podem ser compartilhadas.</p>
-<p><b>Liberdade dos dois lados.</b> O artigo 4º garante ao médico a autonomia de recusar a telemedicina e indicar o atendimento presencial. E o artigo 6º diz que tanto o paciente quanto o médico podem interromper o atendimento. Isso protege você: um serviço sério prefere te encaminhar do que atender de qualquer jeito.</p>
-
-<h2>E os meus dados de saúde?</h2>
-<p>Esse receio faz todo sentido, e a lei brasileira trata o assunto com o peso que ele merece.</p>
-<p>Pela Lei Geral de Proteção de Dados, a Lei nº 13.709/2018, informações <a href="https://www.serpro.gov.br/lgpd/menu/protecao-de-dados/dados-sensiveis-lgpd" target="_blank" rel="noopener">sobre a saúde de uma pessoa são dados pessoais sensíveis</a>. Essa categoria recebe a proteção mais alta da lei, junto com dados como origem racial, convicção religiosa e biometria. Não é um dado cadastral qualquer.</p>
-<p>Somado a isso existe o sigilo médico, que é bem mais antigo que a internet e continua valendo igual na tela. O que você conta numa consulta por vídeo tem exatamente a mesma proteção do que você contaria num consultório.</p>
-<p>Na prática, um bom sinal é o serviço pedir apenas o que precisa para atender e para emitir os documentos, e explicar o que faz com isso. Desconfie do contrário: de quem pede muito dado sem explicar por quê, e também de quem não pede quase nada, porque aí provavelmente não vai haver consulta nenhuma.</p>
+<h2>O plano cobre. A pergunta é quando</h2>
+<p>A <a href="https://www.gov.br/ans/pt-br/assuntos/consumidor/prazos-maximos-de-atendimento" target="_blank" rel="noopener">Agência Nacional de Saúde Suplementar</a> define prazos máximos que a operadora é obrigada a cumprir, contados a partir do seu pedido. São eles:</p>
+<p><b>7 dias úteis</b> para consulta básica, que é clínica médica, pediatria, cirurgia geral e ginecologia e obstetrícia. <b>14 dias úteis</b> para consulta nas demais especialidades. <b>3 dias úteis</b> para exame de laboratório de análises clínicas. <b>10 dias úteis</b> para os demais exames e terapias ambulatoriais. E <b>atendimento imediato</b> em urgência e emergência.</p>
+<p>Repare que o prazo é da <b>operadora</b>, não daquele consultório específico que você queria. Se o médico da sua preferência só tem vaga em cinco semanas, o plano ainda é obrigado a oferecer outro profissional credenciado dentro do prazo.</p>
+<p>E o passo que quase ninguém dá: quando não conseguir marcar, <b>ligue para a operadora e peça o número do protocolo</b>, anotando a data. Se ela não resolver no prazo, esse protocolo é o que sustenta a reclamação na ANS.</p>
 
 <figure>
-  <img src="/blog/img/telemedicina-segura-sinais.png" width="1080" height="1590" loading="lazy" alt="Infográfico sobre segurança da consulta online. Sinais de que o serviço é sério: você conversa com um médico por vídeo de verdade, nome e CRM informados antes do atendimento, CNPJ e responsável técnico visíveis no site, você autoriza o atendimento antes de começar, o pagamento aparece no banco com o nome da empresa, documentos com assinatura digital que você pode conferir, e o serviço diz com clareza o que não resolve por vídeo. Sinais de alerta: promete documento sem consulta, não informa nome nem CRM de quem atende, nenhum CNPJ e nenhum endereço, Pix para conta de pessoa física, garante o atestado antes de qualquer avaliação, fala em documento na hora como se fosse produto, e só existe em rede social. A Resolução CFM 2.314/2022 exige sigilo e segurança NGS2 no padrão ICP-Brasil, registro em prontuário com identificação do médico, e consentimento livre e esclarecido do paciente.">
-  <figcaption>Como reconhecer um serviço de telemedicina sério, e o que a Resolução CFM nº 2.314/2022 exige de quem atende por vídeo.</figcaption>
+  <img src="/blog/img/plano-ou-particular.png" width="1080" height="1906" loading="lazy" alt="Infográfico da Consultaí comparando plano de saúde e consulta particular: os prazos máximos que a operadora é obrigada a cumprir segundo a ANS, sendo sete dias úteis para consulta básica, quatorze dias úteis para outras especialidades, três dias úteis para exame de laboratório, dez dias úteis para os demais exames e atendimento imediato em urgência; os prazos máximos de carência previstos na Lei 9.656 de 1998, que são vinte e quatro horas para urgência e emergência, cento e oitenta dias para os demais casos e trezentos dias para parto; a lista do que o plano resolve melhor, como internação, cirurgia, exames caros e tratamento continuado; e a lista de situações em que a consulta particular avulsa compensa, como dúvida pontual durante a carência, fim de semana e renovação de receita.">
+  <figcaption>Os prazos que o plano é obrigado a cumprir, e onde cada caminho ganha.</figcaption>
 </figure>
 
-<h2>O que a consulta online resolve bem, e o que ela não resolve</h2>
-<p>Prefiro ser honesto sobre os limites, porque isso vale mais do que qualquer promessa.</p>
-<p><b>A consulta online costuma resolver bem</b> quadros agudos comuns, como <a href="/blog/dor-de-garganta-viral-ou-bacteriana">dor de garganta</a>, sintomas de gripe, <a href="/blog/infeccao-urinaria-sintomas">sintomas urinários</a>, dores musculares e problemas de pele com aparência clara. Também funciona para orientar sobre exames que você já tem em mãos, para avaliar a continuidade de um tratamento e para uma primeira avaliação que ajuda você a decidir o que fazer.</p>
-<p><b>A consulta online não substitui o exame físico.</b> Existe uma lista de coisas que só se resolve com o médico tocando, ouvindo e olhando de perto: suspeita de abdome agudo, avaliação de fratura, ausculta de coração e pulmão, exame ginecológico, entre outras. Quando o caso pede isso, o certo é encaminhar, e é isso que um serviço sério faz.</p>
-<p><b>E a consulta online não é lugar de emergência.</b> Isso não é falta de estrutura, é a natureza da coisa: emergência precisa de socorro físico, no lugar onde a pessoa está.</p>
+<h2>A carência, que pega justamente quem acabou de contratar</h2>
+<p>Quem assinou o plano há pouco tempo esbarra em outro muro. A <a href="https://www.planalto.gov.br/ccivil_03/leis/l9656.htm" target="_blank" rel="noopener">Lei nº 9.656, de 1998</a>, fixa os prazos máximos de carência: até <b>24 horas</b> para urgência e emergência, até <b>180 dias</b> para os demais casos e até <b>300 dias</b> para parto a termo.</p>
+<p>Existe ainda a situação das doenças e lesões que a pessoa já tinha antes de contratar. Nesses casos a cobertura pode ficar parcialmente limitada por até <b>24 meses</b>, e depois disso a exclusão é vedada.</p>
+<p>Ou seja: nos primeiros seis meses de plano, para consulta de rotina, na prática você está por conta própria.</p>
 
-<div class="note"><b>Urgência e emergência não se resolvem por vídeo.</b> Dor no peito, falta de ar intensa, desmaio, perda de força ou fala, sangramento importante, convulsão ou dor abdominal forte e súbita pedem atendimento presencial imediato. Procure um pronto-socorro ou ligue <b>192 (SAMU)</b>.</div>
+<h2>Onde o plano é imbatível</h2>
+<p>Vale dizer isso com todas as letras, porque é verdade e porque ninguém deveria abrir mão de um plano por causa deste texto. Internação, cirurgia, pronto-socorro, exames de imagem caros, tratamento continuado, acompanhamento com especialista ao longo de meses e qualquer coisa que envolva estrutura hospitalar. Nada disso se substitui com consulta avulsa, e nem se tenta.</p>
+<p>Segundo os <a href="https://www.gov.br/ans/pt-br/acesso-a-informacao/perfil-do-setor/dados-gerais" target="_blank" rel="noopener">dados gerais do setor publicados pela própria ANS</a>, <b>53.145.666 pessoas</b> tinham plano de assistência médica no Brasil em junho de 2026, o que representa <b>25,0% da população</b>. Quer dizer que três em cada quatro brasileiros não contam com essa rede, e para eles a pergunta do título nem existe.</p>
 
-<h2>Como conferir se o documento que você recebeu é de verdade</h2>
-<p>Essa é a parte mais útil deste texto, e quase ninguém conta.</p>
-<p>Documentos médicos emitidos em meio eletrônico levam assinatura digital com certificado ICP-Brasil, o mesmo padrão usado em documentos oficiais no Brasil. Essa assinatura não é uma imagem colada no rodapé, é um selo eletrônico que identifica quem assinou e denuncia qualquer alteração feita depois.</p>
-<p>E você pode conferir sozinho, de graça. O Instituto Nacional de Tecnologia da Informação mantém o <a href="https://validar.iti.gov.br/" target="_blank" rel="noopener">VALIDAR, o serviço oficial de validação de assinaturas eletrônicas</a>. Você envia o arquivo, ou lê o QR Code do documento, e o sistema informa quem assinou e se o conteúdo foi alterado depois da assinatura. O próprio ITI declara que nenhum arquivo enviado fica armazenado nos servidores deles.</p>
-<p>Guarde essa dica mesmo que você nunca use conosco. Ela serve para qualquer atestado, receita ou laudo digital que chegar às suas mãos, de qualquer serviço.</p>
+<div class="note"><b>Nada disso vale para urgência.</b> Dor no peito, falta de ar, desmaio, fraqueza de um lado do corpo, sangramento importante ou confusão mental são de pronto-socorro imediato, com plano ou sem plano. Nesses casos, procure atendimento presencial ou ligue <b>192 (SAMU)</b>.</div>
 
-<h2>Sete perguntas para avaliar qualquer serviço de telemedicina</h2>
-<p>Use esta lista antes de pagar qualquer coisa. Ela funciona para nós e para qualquer concorrente.</p>
-<p><b>1. Vou falar com um médico por vídeo?</b> Se a resposta for não, ou se for um formulário que devolve um documento, ali não existe consulta.</p>
-<p><b>2. Qual é o nome e o CRM de quem vai me atender?</b> A norma exige que isso conste. Serviço que esconde essa informação está escondendo alguma coisa.</p>
-<p><b>3. Existe CNPJ e responsável técnico no site?</b> Empresa de saúde tem CNPJ, tem endereço e tem um médico responsável tecnicamente por ela. Isso fica visível, geralmente no rodapé.</p>
-<p><b>4. Para quem eu estou pagando?</b> Pix para conta de pessoa física é um alerta grande. Pagamento por um meio conhecido, que mostra o nome da empresa no extrato do seu banco, é o mínimo.</p>
-<p><b>5. Estão me prometendo o documento antes da consulta?</b> Se sim, saia. Receita, atestado e pedido de exame dependem de avaliação médica, e prometer antes é anunciar que não vai haver avaliação nenhuma.</p>
-<p><b>6. O serviço diz o que não faz?</b> Quem só fala de benefício e nunca de limite está vendendo, não atendendo.</p>
-<p><b>7. Consigo achar informação de contato de verdade?</b> Telefone, e-mail, alguém que responde. Serviço que só existe dentro de uma rede social some junto com o perfil.</p>
+<h2>Quando a consulta particular compensa</h2>
+<p><b>Durante a carência.</b> Aquele mal-estar de dois dias não espera 180 dias para ser avaliado.</p>
+<p><b>Quando o prazo do plano não resolve o seu problema de hoje.</b> Sete dias úteis é o limite legal, e é razoável para acompanhamento. Não é razoável para quem está com ardência ao urinar hoje à noite.</p>
+<p><b>Fora do horário comercial.</b> Fim de semana, feriado e fim de noite, quando a central da operadora está fechada e o pronto-socorro é desproporcional para o caso.</p>
+<p><b>Para resolver o que é curto.</b> Renovar uma receita de uso contínuo, entender um resultado de exame, tirar uma dúvida sobre um remédio.</p>
+<p><b>Quando você não tem plano.</b> Que é o caso da maioria.</p>
 
 <h2>Como funciona na Consultaí</h2>
-<p>Já que a lista acima é para ser usada contra qualquer serviço, deixo aqui as nossas respostas, uma a uma.</p>
-<p>Você fala com um médico por vídeo, em média de 10 a 15 minutos, por R$ 40 no Pix, sem mensalidade e sem plano. O nome e o CRM do médico que vai te atender aparecem no agendamento, antes de você pagar.</p>
-<p>Somos operados pela Octa Health, CNPJ 64.412.466/0001-87, com registro de pessoa jurídica no Conselho, CRM-PJ 1043447/SP, e responsável técnico identificado no rodapé de todas as páginas do site. O pagamento é processado pelo Mercado Pago, e no seu banco aparece o nome OCTA HEALTH.</p>
-<p>Quando há indicação clínica, a <a href="/consulta-medica-online">consulta online</a> termina com receita, atestado ou pedido de exames, todos com assinatura digital ICP-Brasil, que você pode conferir no validador do ITI que citei acima. E vale dizer com todas as letras: <b>não comercializamos documentos médicos</b>. Se não houver indicação, não há documento, e isso é dito antes de você pagar.</p>
-<p>Também não atendemos urgências e emergências, e avisamos isso em toda página do site, e não escondido no rodapé.</p>
+<p>Você escolhe o horário no site, paga R$ 40 no Pix e é atendido por vídeo por um médico com CRM ativo. A <a href="/consulta-medica-online">consulta médica online</a> dura de 10 a 15 minutos, é pagamento único e não existe mensalidade nem fidelidade.</p>
+<p>Se houver indicação, saem receita, atestado e pedido de exames, com assinatura eletrônica. E se o seu caso precisar de exame físico ou de estrutura hospitalar, o encaminhamento é a conduta certa e é o que será feito, inclusive para usar o seu plano. <b>Não comercializamos documentos médicos.</b></p>
 
 <div class="leia">
   <b>Leia também</b>
-  <a href="/blog/plano-de-saude-ou-consulta-particular">Plano de saúde ou consulta particular: quando cada um compensa</a>
-  <a href="/blog/receita-digital-como-funciona">Receita digital: como funciona e onde é aceita</a>
-  <a href="/blog/atestado-retroativo-e-possivel">Atestado retroativo: é possível?</a>
   <a href="/blog/quanto-custa-consulta-medica-particular">Quanto custa uma consulta médica particular no Brasil?</a>
-  <a href="/blog/pedido-de-exame-online">Pedido de exame online: como funciona e onde vale</a>
   <a href="/blog/o-que-consulta-online-nao-resolve">O que a consulta online não resolve</a>
 </div>
 
 <h2>Perguntas frequentes</h2>
-<h3>Consulta online é segura?</h3>
-<p>É. A telemedicina é regulamentada no Brasil pela Resolução CFM nº 2.314/2022, que exige sigilo dos dados e imagens do paciente, registro em prontuário, identificação do médico com nome e CRM, e a sua autorização antes do atendimento. A segurança depende de o serviço cumprir essas regras, e por isso vale conferir os sinais antes de contratar.</p>
-<h3>A consulta por vídeo vale o mesmo que a presencial?</h3>
-<p>Como ato médico, sim. A teleconsulta é definida na norma como consulta médica não presencial, e havendo indicação clínica gera receita, atestado e pedido de exames com a mesma validade. O que ela não substitui é o exame físico, e nesses casos o médico deve encaminhar para atendimento presencial.</p>
-<h3>Meus dados de saúde ficam protegidos?</h3>
-<p>Pela Lei Geral de Proteção de Dados, informações sobre saúde são dados pessoais sensíveis, a categoria de maior proteção da lei. Além disso vale o sigilo médico, igual ao do consultório. A Resolução CFM nº 2.314/2022 ainda exige que o sistema atenda ao nível de segurança NGS2, no padrão da ICP-Brasil.</p>
-<h3>Como eu sei que quem me atendeu é médico mesmo?</h3>
-<p>A norma exige que o nome e o CRM do médico constem no atendimento. Um serviço sério informa isso antes da consulta, e não depois. Com nome e número em mãos, você consegue conferir o registro junto ao Conselho Regional de Medicina.</p>
-<h3>Como reconheço um serviço que não é confiável?</h3>
-<p>Os sinais mais claros são prometer documento sem consulta, não informar quem atende, não ter CNPJ visível, pedir Pix para conta de pessoa física e garantir o atestado antes de qualquer avaliação. Nenhuma dessas coisas cabe dentro da regulamentação da telemedicina.</p>
 
-<div class="note"><b>Importante:</b> este conteúdo é informativo e explica, em linguagem simples, o que dizem as normas citadas. Ele não substitui a avaliação de um médico. Se você está com sintomas, procure atendimento. Em urgência ou emergência, vá a um pronto-socorro ou ligue 192 (SAMU).</div>
+<h3>Em quanto tempo o plano é obrigado a marcar uma consulta?</h3>
+<p>Sete dias úteis para consulta básica e quatorze dias úteis para as demais especialidades, segundo a ANS. O prazo é da operadora, não do consultório que você escolheu.</p>
+
+<h3>O que fazer se o plano não cumprir o prazo?</h3>
+<p>Ligue para a operadora, peça o número do protocolo e anote a data. Se ela não resolver, registre a reclamação na ANS usando esse protocolo.</p>
+
+<h3>Quanto tempo dura a carência de um plano novo?</h3>
+<p>Por lei, até 24 horas para urgência e emergência, até 180 dias para os demais casos e até 300 dias para parto a termo. São prazos máximos, e o contrato pode trazer prazos menores.</p>
+
+<h3>Vale a pena cancelar o plano e só pagar consulta avulsa?</h3>
+<p>Na maior parte das vezes, não. Consulta avulsa não cobre internação, cirurgia nem tratamento longo. Os dois caminhos se completam, não se substituem.</p>
+
+<h3>Consulta online serve para quem já tem plano?</h3>
+<p>Serve, e é um uso comum: resolver o que é curto sem esperar a agenda, principalmente durante a carência ou fora do horário comercial.</p>
+
+<div class="note"><b>Importante:</b> este conteúdo é informativo e não substitui a avaliação de um médico, nem orientação jurídica sobre o seu contrato. Regras de cobertura variam conforme o plano contratado. Em urgência ou emergência, vá a um pronto-socorro ou ligue 192 (SAMU).</div>
 
   </div></div>
 </section>
 <div class="bandwrap">
   <div class="band">
-    <h2>Quer conversar com um médico hoje?</h2>
+    <h2>Precisa resolver hoje e a agenda do plano é semana que vem?</h2>
     <p>Consulta médica online por R$ 40, com médico de CRM ativo, de qualquer lugar do Brasil. Receita, atestado e pedido de exames quando indicados pelo médico.</p>
     <a class="btn" href="/agendamento" style="background:#fff;color:var(--deep)">Agendar minha consulta</a>
   </div>
@@ -267,11 +275,11 @@ fbq('init','1369928625011386');fbq('track','PageView');
   <div class="wrap">
     <h2>Fontes e referências</h2>
     <ul>
-      <li><a href="https://sistemas.cfm.org.br/normas/arquivos/resolucoes/BR/2022/2314_2022.pdf" target="_blank" rel="noopener">Resolução CFM nº 2.314/2022 — define e regulamenta a telemedicina, o sigilo dos dados, o prontuário, a identificação do médico e o consentimento do paciente</a></li>
-      <li><a href="https://validar.iti.gov.br/" target="_blank" rel="noopener">VALIDAR, Instituto Nacional de Tecnologia da Informação — serviço oficial e gratuito de validação de assinaturas eletrônicas</a></li>
-      <li><a href="https://www.serpro.gov.br/lgpd/menu/protecao-de-dados/dados-sensiveis-lgpd" target="_blank" rel="noopener">Serpro — dados pessoais sensíveis na Lei Geral de Proteção de Dados, Lei nº 13.709/2018, incluindo dados sobre a saúde</a></li>
+      <li><a href="https://www.gov.br/ans/pt-br/assuntos/consumidor/prazos-maximos-de-atendimento" target="_blank" rel="noopener">Agência Nacional de Saúde Suplementar — Prazos máximos de atendimento: 7 dias úteis para consulta básica, 14 dias úteis para as demais especialidades, 3 dias úteis para laboratório de análises clínicas, 10 dias úteis para os demais serviços de diagnóstico e terapia, atendimento imediato em urgência e emergência, e o procedimento de pedir protocolo à operadora antes de reclamar na ANS</a></li>
+      <li><a href="https://www.planalto.gov.br/ccivil_03/leis/l9656.htm" target="_blank" rel="noopener">Lei nº 9.656, de 3 de junho de 1998 — planos e seguros privados de assistência à saúde: art. 12, inciso V (carência de até 24 horas para urgência e emergência, 300 dias para partos a termo e 180 dias para os demais casos) e art. 11 (doenças e lesões preexistentes, com exclusão vedada após 24 meses)</a></li>
+      <li><a href="https://www.gov.br/ans/pt-br/acesso-a-informacao/perfil-do-setor/dados-gerais" target="_blank" rel="noopener">Agência Nacional de Saúde Suplementar — Dados gerais do setor: 53.145.666 beneficiários de planos de assistência médica e taxa de cobertura de 25,0% da população, dados de junho de 2026</a></li>
     </ul>
-    <p class="rev">Conteúdo escrito e revisado pelo Dr. João Pedro Vieira do Prado — Médico — CRM-SP 281.239. Publicado em 1º de agosto de 2026. Material informativo, não substitui avaliação médica.</p>
+    <p class="rev">Conteúdo escrito e revisado pelo Dr. João Pedro Vieira do Prado — Médico — CRM-SP 281.239. Publicado em 14 de agosto de 2026. Material informativo, não substitui avaliação médica.</p>
   </div>
 </section>
 </main>
