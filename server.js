@@ -125,6 +125,50 @@ const {
   // enviar quando o Dr. João criar RECUPERACAO=on no painel do Render.
   RECUPERACAO = '',
 } = process.env;
+/* ======================================================================
+   VERSÃO EM TEXTO PURO DOS E-MAILS
+   ----------------------------------------------------------------------
+   Todo e-mail bem formado viaja em duas versões dentro do mesmo envelope:
+   a bonita, em HTML, e uma simples, em texto. Quem manda só HTML leva
+   penalidade no SpamAssassin, a regra MIME_HTML_ONLY, e o mail-tester
+   apontou isso no teste de 12/08/2026: "Você deve incluir uma versão de
+   texto em sua mensagem (txt/plain)". Também ajuda no outro apontamento,
+   o de que a mensagem tinha só 15% de texto.
+
+   ESCOLHA DE PROJETO: o texto é GERADO a partir do HTML, e não escrito à
+   mão. Duas versões escritas separadamente divergem na primeira pressa,
+   e aí o cliente de e-mail antigo mostra um conteúdo diferente do que o
+   moderno mostra. Gerando, as duas nunca saem do lugar.
+
+   Os links viram "texto do link (endereço)", porque em texto puro um
+   botão sem endereço ao lado é um beco sem saída.
+   ====================================================================== */
+function htmlParaTexto(html) {
+  return String(html)
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    // <a href="X">Y</a>  ->  Y (X)
+    .replace(/<a\b[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, (todo, href, dentro) => {
+      const txt = dentro.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      // botão (display:block) ocupa uma linha só, então fecha com quebra de linha;
+      // link no meio de uma frase continua na mesma linha.
+      const fim = /display\s*:\s*block/i.test(todo) ? '\n' : '';
+      if (!txt) return href + fim;
+      if (!href || href === txt || /^mailto:/i.test(href)) return txt + fim;
+      return txt + ' (' + href + ')' + fim;
+    })
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '- ')
+    .replace(/<\/(p|div|tr|li|h[1-6]|table)>/gi, '\n')
+    .replace(/<\/t[dh]>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/[ \t]+/g, ' ')
+    .replace(/ *\n */g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 /* --------- E-mails via Brevo (API HTTPS — o Render bloqueia SMTP) -------- */
 async function enviarEmail(para, assunto, html, replyTo) {
   if (!BREVO_API_KEY || !NOTIF_EMAIL_FROM) {
@@ -138,6 +182,7 @@ async function enviarEmail(para, assunto, html, replyTo) {
     to: destinatarios,
     subject: assunto,
     htmlContent: html,
+    textContent: htmlParaTexto(html),   // ver htmlParaTexto acima: tira a penalidade MIME_HTML_ONLY
   };
   if (replyTo) corpo.replyTo = { email: replyTo }; // "responder" vai direto pra quem escreveu
   const r = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -203,6 +248,110 @@ function cardConsulta(p, protocolo) {
     dataBR(p.slot.data) + ' · ' + p.slot.horario,
     'Dr. João Pedro Vieira do Prado — Médico — CRM-SP 281.239<br>Protocolo ' + protocolo);
 }
+/* ======================================================================
+   WHATSAPP DE UM TOQUE
+   ----------------------------------------------------------------------
+   Aprovado pelo Dr. João em 12/08/2026, depois de os e-mails caírem no
+   lixo eletrônico do Hotmail. A ideia é simples: o WhatsApp é lido, o
+   e-mail nem sempre. Então, em cada momento importante, o SISTEMA avisa
+   o médico por e-mail e já monta um botão verde. Um toque abre o
+   WhatsApp no número do paciente, com o texto inteiro escrito. O médico
+   só confere e envia.
+
+   NÃO é envio automático. Quem aperta enviar continua sendo uma pessoa.
+   Envio automático de verdade exigiria a API oficial do WhatsApp
+   Business, com aprovação da Meta e custo por mensagem.
+
+   O mecanismo já existia no lembrete de 10 minutos (enviarLembreteWhats).
+   Aqui ele foi generalizado para os três momentos que faltavam.
+
+   No WhatsApp, texto entre *asteriscos* aparece em negrito.
+   Os textos NÃO prometem documento, cura nem resultado, e todos trazem
+   o aviso de urgência com o 192, como manda a nossa regra.
+   ====================================================================== */
+function linkWhats(telefone, mensagem) {
+  const tel = String(telefone || '').replace(/\D/g, '');
+  if (tel.length < 10) return '';                       // sem telefone não há botão
+  const tel55 = tel.startsWith('55') ? tel : '55' + tel;
+  return 'https://wa.me/' + tel55 + '?text=' + encodeURIComponent(mensagem);
+}
+function botaoWhats(telefone, mensagem, rotulo) {
+  const url = linkWhats(telefone, mensagem);
+  if (!url) {
+    return '<p style="margin:16px 0 0;color:#c0392b;font-size:13px">' +
+      'Telefone ausente ou inválido, não deu para montar o botão do WhatsApp.</p>';
+  }
+  return '<a href="' + url + '" style="display:block;background:#25D366;color:#ffffff;' +
+    'text-decoration:none;text-align:center;font-weight:bold;font-size:16px;padding:14px;' +
+    'border-radius:12px;margin:18px 0 6px">' + (rotulo || 'Enviar WhatsApp pro paciente') + '</a>' +
+    '<p style="margin:0;color:#5C7178;font-size:12.5px;text-align:center">' +
+    'Abre o WhatsApp no número do paciente com o texto pronto. Confira e envie.</p>';
+}
+function primeiroNome(nome) { return String(nome || '').trim().split(/\s+/)[0] || 'tudo bem'; }
+
+function textoWhatsConfirmada(nome, dataISO, horario) {
+  return 'Olá, ' + primeiroNome(nome) + '! Aqui é da Consultaí.\n\n' +
+    'Sua consulta está *confirmada*:\n' +
+    '*' + dataBR(dataISO) + ', às ' + horario + '*\n\n' +
+    'Quem vai te atender é o Dr. João Pedro Vieira do Prado, Médico, CRM-SP 281.239.\n\n' +
+    'Uns 10 minutos antes do horário eu te mando o link da videochamada aqui mesmo. ' +
+    'A conversa dura de 10 a 15 minutos.\n\n' +
+    'Para a consulta render, deixe em mãos:\n' +
+    '- os remédios que você usa hoje, ou a caixa deles\n' +
+    '- exames recentes, se tiver\n' +
+    '- um canto com boa luz e internet estável\n\n' +
+    'Receita, atestado e pedido de exames saem quando o médico indicar.\n\n' +
+    'Se precisar remarcar, é só responder aqui.\n\n' +
+    'Não atendemos urgência nem emergência. Nesses casos, procure um pronto-socorro ou ligue 192 (SAMU).';
+}
+function textoWhatsPixPendente(nome, horario) {
+  return 'Olá, ' + primeiroNome(nome) + '! Aqui é da Consultaí.\n\n' +
+    'Vi que você escolheu o horário das *' + horario + '* e o Pix foi gerado, ' +
+    'mas o pagamento ainda não chegou até aqui.\n\n' +
+    '*Seu horário fica guardado por mais 5 minutos.* Depois disso ele volta para a lista ' +
+    'e outra pessoa pode escolher.\n\n' +
+    'Se quiser seguir, é só concluir o pagamento na tela onde você parou. ' +
+    'Se preferir, me avise aqui que eu te mando o código de novo.\n\n' +
+    'Para você saber o que vem depois:\n' +
+    '1. o Pix cai e a consulta entra na agenda na hora\n' +
+    '2. o link da videochamada chega aqui no WhatsApp\n' +
+    '3. a conversa com o médico dura de 10 a 15 minutos\n\n' +
+    'Se mudou de ideia, não precisa fazer nada. O horário volta sozinho e ninguém é cobrado.';
+}
+function textoWhatsDiaSeguinte(nome) {
+  return 'Olá, ' + primeiroNome(nome) + '! Aqui é da Consultaí.\n\n' +
+    'Ontem você começou a agendar uma consulta e o pagamento não foi concluído. ' +
+    'O horário que você tinha escolhido já voltou para a lista, mas tem outros abertos.\n\n' +
+    'Em vez de insistir, prefiro responder as três dúvidas que mais aparecem:\n\n' +
+    '*É médico mesmo?*\nDr. João Pedro Vieira do Prado, Médico, CRM-SP 281.239. ' +
+    'O registro é público e dá para conferir no site do Conselho Federal de Medicina.\n\n' +
+    '*Vou sair com atestado?*\nDepende da avaliação. Não vendemos documento e não prometemos o que não podemos.\n\n' +
+    '*Será que serve para o meu caso?*\nEscrevi um texto sobre exatamente isso:\n' +
+    'vemconsultai.com.br/blog/o-que-consulta-online-nao-resolve\n\n' +
+    'Se quiser agendar: vemconsultai.com.br/agendamento\n' +
+    'E se ficou outra dúvida, pode perguntar aqui, sem compromisso.\n\n' +
+    'Não atendemos urgência nem emergência. Nesses casos, pronto-socorro ou 192 (SAMU).';
+}
+/* Aviso ao médico com o botão pronto, usado nos dois momentos do Pix não pago. */
+async function avisarWhatsRecuperacao(m, qual) {
+  const tel = m.telefone || '';
+  const texto = qual === 1 ? textoWhatsPixPendente(m.nome, m.horario) : textoWhatsDiaSeguinte(m.nome);
+  const titulo = qual === 1 ? 'Pix pendente: horário ainda reservado' : 'Pix não pago ontem';
+  const corpo =
+    '<p style="margin:0 0 6px"><b>' + escHtml(m.nome || '—') + '</b> · ' +
+    escHtml(dataBR(m.data)) + ' às <b>' + escHtml(m.horario) + '</b> · ' + escHtml(tel || '—') + '</p>' +
+    '<p style="margin:0;color:#5C7178;font-size:13.5px">' +
+    (qual === 1
+      ? 'Gerou o Pix há uns 7 minutos e não pagou. O horário ainda está travado.'
+      : 'Gerou o Pix ontem e não pagou. O horário já voltou para a lista.') + '</p>' +
+    botaoWhats(tel, texto, 'Enviar WhatsApp pro paciente');
+  try {
+    await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM,
+      titulo + ' — ' + (m.nome || 'paciente'),
+      emailShell(titulo, corpo, qual === 1 ? '#FF6B4A' : '#0F766E'));
+    console.log('[whats] aviso ' + qual + ' enviado ao médico — ' + (m.nome || ''));
+  } catch (e) { console.error('[whats] falha no aviso ' + qual + ': ' + e.message); }
+}
 async function avisarNovaConsulta(p, protocolo, paymentId) {
   const dt = dataBR(p.slot.data);
   const corpo = `
@@ -214,7 +363,8 @@ async function avisarNovaConsulta(p, protocolo, paymentId) {
       <tr><td style="padding:5px 0;color:#5C7178">Nascimento</td><td>${escHtml(p.paciente.dataNascimento || '—')}</td></tr>
       <tr><td style="padding:5px 0;color:#5C7178">Pagamento MP</td><td>${escHtml(String(paymentId))}</td></tr>
     </table>
-    <p style="margin:16px 0 0;color:#5C7178;font-size:13px">Já está na agenda do Shosp. Abra a consulta e <b>confirme o paciente</b> para gerar o link da telemedicina.</p>`;
+    <p style="margin:16px 0 0;color:#5C7178;font-size:13px">Já está na agenda do Shosp. Abra a consulta e <b>confirme o paciente</b> para gerar o link da telemedicina.</p>
+    ${botaoWhats(p.paciente.telefone, textoWhatsConfirmada(p.paciente.nome, p.slot.data, p.slot.horario), 'Enviar confirmação no WhatsApp')}`;
   try {
     if (await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, 'Nova consulta: ' + dt + ' às ' + p.slot.horario + ' — ' + (p.paciente.nome || 'paciente'), emailShell('Nova consulta confirmada', corpo))) {
       console.log('[email] aviso interno enviado (' + dt + ' ' + p.slot.horario + ')');
@@ -939,12 +1089,14 @@ async function rodarRecuperacao() {
           emailShell('Seu horário ainda está reservado', corpoRecup1(m, copia)));
         marca.e1 = true; recupEnviados.set(id, marca); salvarRecup(); enviados++;
         console.log('[recuperacao] e-mail 1 ' + (ok ? 'enviado' : 'FALHOU') + ' — ' + id + ' — ' + m.email);
+        await avisarWhatsRecuperacao(m, 1);   // e-mail pro médico com o botão do WhatsApp
       } else if (!marca.e2 && idade >= RECUP_MIN_2 && idade < RECUP_MIN_2 + 180) {
         const ok = await enviarEmail(m.email,
           'Você começou um agendamento na ' + assinatura,
           emailShell('Ficou faltando só o pagamento', corpoRecup2(m), '#0F766E'));
         marca.e2 = true; recupEnviados.set(id, marca); salvarRecup(); enviados++;
         console.log('[recuperacao] e-mail 2 ' + (ok ? 'enviado' : 'FALHOU') + ' — ' + id + ' — ' + m.email);
+        await avisarWhatsRecuperacao(m, 2);   // e-mail pro médico com o botão do WhatsApp
       }
     }
     // limpeza: marcações com mais de 3 dias não servem para mais nada
