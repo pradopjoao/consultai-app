@@ -58,6 +58,33 @@ app.get('/blog', (req, res, next) => {
     if (err) next(err);
   });
 });
+/* ======================================================================
+   SEGUNDO DOMINIO: clinicogeralonline.com.br            (21/08/2026)
+   ----------------------------------------------------------------------
+   Pre-venda com endereco proprio, servida por ESTE mesmo servidor.
+   Nao existe redirecionamento entre dominios, que o Google Ads proibe:
+   a barra de enderecos do visitante nunca muda. O servidor apenas olha
+   o nome que veio no pedido e, se for o dominio novo, entrega outra
+   pagina inicial.
+
+   POR QUE AQUI E NAO DEPOIS: o express.static logo abaixo responde e
+   encerra a requisicao. Qualquer rota colada depois dele nunca seria
+   executada para a pagina inicial. Mesmo motivo do bloco de CORS la em
+   cima, que ja precisou ser movido uma vez por isso.
+
+   O QUE CONTINUA VINDO DE public/: politica de privacidade, termos,
+   /agendamento, /api e tudo o mais. So a raiz "/" e trocada.
+   ====================================================================== */
+const ehClinico = (req) =>
+  (req.headers.host || '').toLowerCase().includes('clinicogeralonline');
+
+app.get('/', (req, res, next) => {
+  if (!ehClinico(req)) return next();
+  res.set('Cache-Control', 'public, max-age=0, must-revalidate');
+  res.sendFile(path.join(__dirname, 'public', 'clinico', 'index.html'), (err) => {
+    if (err) next(err);
+  });
+});
 // Serve os arquivos; "extensions:['html']" faz /trabalhe-conosco achar trabalhe-conosco.html
 // setHeaders define o cache com segurança: páginas HTML sempre revalidam (nunca
 // servem versão velha); imagens/CSS/JS podem ser guardados por 1 dia. Isso deixa
