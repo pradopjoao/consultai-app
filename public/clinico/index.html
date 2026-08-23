@@ -8,6 +8,89 @@
 <meta property="og:title" content="Clínico Geral Online | Consulta por vídeo por R$ 40,00">
 <meta property="og:description" content="Consulta com clínico geral por vídeo. Sem aplicativo, sem carência e sem fidelidade.">
 <meta property="og:image" content="https://clinicogeralonline.com.br/clinico/img/og-image.webp">
+
+<!-- ENDERECO CANONICO                                     (23/08/2026)
+     Este arquivo mora em public/clinico/, entao o mesmo conteudo tambem
+     abre em vemconsultai.com.br/clinico/ e em
+     clinicogeralonline.com.br/clinico/. Sao tres enderecos servindo a
+     mesma pagina, e o robots.txt libera todos.
+     A politica de destino do Google Ads proibe "conteudo replicado de
+     outra origem, sem agregar valor". O canonico resolve dizendo, para o
+     buscador, qual e o endereco de verdade: a raiz do dominio novo. -->
+<link rel="canonical" href="https://clinicogeralonline.com.br/">
+<meta property="og:url" content="https://clinicogeralonline.com.br/">
+<meta name="robots" content="index, follow">
+<!-- ==================================================================
+     RASTREAMENTO DO GOOGLE ADS                          (23/08/2026)
+     ------------------------------------------------------------------
+     PROBLEMA QUE ISTO RESOLVE
+     Quem clica no anuncio chega aqui em
+     clinicogeralonline.com.br/?gclid=XXXX . Esse "gclid" e a etiqueta que
+     liga a venda ao anuncio. Se ele se perder, o Google cobra o clique e
+     nao consegue dizer qual anuncio gerou a consulta: a campanha roda no
+     escuro.
+     Como a venda acontece no /agendamento, e nao aqui, o gclid precisa
+     SOBREVIVER ao clique do botao.
+
+     COMO FUNCIONA, EM DUAS PARTES
+
+     PARTE 1, abaixo: um script minusculo, sem nenhum arquivo externo, que
+     roda IMEDIATAMENTE e cola o gclid nos 4 botoes que levam ao
+     /agendamento. La a tag do Google ja existe e carrega normalmente,
+     entao ela le a etiqueta e grava o cookie. A atribuicao fecha.
+     Roda antes de tudo de proposito: se o visitante clicar no botao em
+     meio segundo, a etiqueta ja esta colada.
+     Cobre gclid, gbraid e wbraid, que sao as tres etiquetas que o Google
+     usa hoje conforme o tipo de campanha e o consentimento do aparelho.
+
+     PARTE 2: a tag do Google em si, adiada. Aqui ela NAO mede conversao,
+     a conversao vive no /agendamento. Ela serve para montar publico de
+     remarketing. Por isso pode esperar o primeiro toque ou 1,5 segundo
+     depois do carregamento, sem competir com a renderizacao.
+     ================================================================== -->
+<script>
+(function(){
+  try{
+    var p = new URLSearchParams(location.search);
+    var etiquetas = ['gclid','gbraid','wbraid','gad_source','utm_source','utm_medium','utm_campaign','utm_term'];
+    var levar = [];
+    etiquetas.forEach(function(k){ var v = p.get(k); if(v) levar.push(k+'='+encodeURIComponent(v)); });
+    if(!levar.length) return;
+    var q = levar.join('&');
+    function colar(){
+      document.querySelectorAll('a[href^="/agendamento"]').forEach(function(a){
+        var h = a.getAttribute('href');
+        if(h.indexOf('gclid=')>-1 || h.indexOf('gbraid=')>-1 || h.indexOf('utm_source=')>-1) return;
+        a.setAttribute('href', h + (h.indexOf('?')>-1 ? '&' : '?') + q);
+      });
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', colar);
+    else colar();
+  }catch(e){}
+})();
+</script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-18333144388');
+  (function(){
+    var feito=false;
+    function carrega(){
+      if(feito)return; feito=true;
+      var t=document.createElement('script');
+      t.async=true; t.src='https://www.googletagmanager.com/gtag/js?id=AW-18333144388';
+      document.head.appendChild(t);
+    }
+    function agenda(){ setTimeout(carrega, 1500); }
+    if(document.readyState==='complete') agenda();
+    else window.addEventListener('load', agenda);
+    ['pointerdown','keydown','touchstart','scroll'].forEach(function(ev){
+      window.addEventListener(ev, carrega, {once:true, passive:true});
+    });
+  })();
+</script>
+
 <style>
   :root{
     /* tokens lidos do vemconsultai.com.br em 21/08/2026 */
