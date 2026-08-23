@@ -104,6 +104,23 @@ app.use(express.static(path.join(__dirname, 'public'), {
        Guardar em cache nao economiza nada e atrasa a indexacao. */
     if (/\.html$/i.test(filePath) || /[\\/](sitemap\.xml|robots\.txt)$/i.test(filePath)) {
       res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+    } else if (/\.(css|js|woff2?|ttf)$/i.test(filePath)) {
+      /* CSS, JavaScript e fontes ficam 30 dias no navegador do visitante,
+         em vez de 1 dia.                                    (23/08/2026)
+         ---------------------------------------------------------------
+         ISTO SO E SEGURO POR CAUSA DO "?v=" NO FIM DO ENDERECO.
+         O HTML chama /style.css?v=14. Para o navegador, ?v=14 e ?v=15 sao
+         arquivos DIFERENTES, entao mudar o numero entrega a versao nova na
+         hora, sem esperar o cache vencer.
+         >>> SEMPRE que o style.css for alterado, SUBA O NUMERO DA VERSAO
+         >>> em todas as paginas. Se esquecer, quem ja visitou o site
+         >>> continua vendo o CSS antigo por ate 30 dias.
+         Escolhi 30 dias em vez de 1 ano, que e o padrao recomendado, de
+         proposito: se um dia a versao for esquecida, o estrago se corrige
+         sozinho em um mes em vez de durar o ano inteiro.
+         As fontes (.woff2) entram na mesma regra: os nomes dos arquivos nao
+         mudam, mas o conteudo tambem nao muda nunca. */
+      res.setHeader('Cache-Control', 'public, max-age=2592000');
     } else {
       res.setHeader('Cache-Control', 'public, max-age=86400');
     }
