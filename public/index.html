@@ -37,12 +37,29 @@
 </script>
 <!-- Meta Pixel -->
 <script>
+/* Pixel do Meta, CARREGAMENTO ADIADO (22/08/2026).
+   Motivo: o fbevents.js tem ~108 KB, mais que o dobro de todo o resto da
+   pagina somado, e estava baixando antes do primeiro pixel aparecer na
+   tela. A fila do fbq passa a existir imediatamente, entao o init e o
+   PageView abaixo ficam guardados e sao processados assim que a
+   biblioteca chega. O arquivo so baixa depois do load ou no primeiro
+   toque do visitante, o que vier antes. Nada e perdido: a venda ja e
+   registrada pelo servidor via CAPI, com o mesmo event_id. */
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];f.__fbLoad=function(){
+if(f.__fbFeito)return;f.__fbFeito=!0;t=b.createElement(e);t.async=!0;t.src=v;
+s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}}(window,
 document,'script','https://connect.facebook.net/en_US/fbevents.js');
 fbq('init','1369928625011386');fbq('track','PageView');
+(function(){
+  function agenda(){ setTimeout(window.__fbLoad, 1500); }
+  if(document.readyState==='complete') agenda();
+  else window.addEventListener('load', agenda);
+  ['pointerdown','keydown','touchstart','scroll'].forEach(function(ev){
+    window.addEventListener(ev, window.__fbLoad, {once:true, passive:true});
+  });
+})();
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1369928625011386&ev=PageView&noscript=1"/></noscript>
 <!-- End Meta Pixel -->
@@ -77,10 +94,12 @@ fbq('init','1369928625011386');fbq('track','PageView');
   })();
 </script>
 <!-- End Google tag -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css?v=12">
+<!-- Fontes proprias, servidas por nos. Sem servidor de terceiro no
+     caminho critico. As duas mais usadas vem com preload: a Inter 400,
+     que e o texto do corpo, e a Poppins 800, que e o titulo grande. -->
+<link rel="preload" as="font" type="font/woff2" href="/fontes/inter-400.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/fontes/poppins-800.woff2" crossorigin>
+<link rel="stylesheet" href="/style.css?v=14">
 <style>
 /* ============================================================
    CARROSSEL DE DEPOIMENTOS - CSS EMBUTIDO DE PROPOSITO.
@@ -145,11 +164,13 @@ fbq('init','1369928625011386');fbq('track','PageView');
    nao para chamar atencao. Seletor com 2 classes para vencer a regra
    .depo-nota do style.css externo, seja qual for a versao no servidor. */
 .depo-dots + .depo-nota{max-width:780px;margin:26px auto 0;text-align:center;
-  font-size:11.5px;line-height:1.65;color:#9BAEB3;font-weight:400;letter-spacing:.1px}
+  font-size:12.5px;line-height:1.65;color:#5F757A;font-weight:400;letter-spacing:.1px}
+  /* WCAG AA: #5F757A = 4,87:1 sobre branco. Era #9BAEB3, 2,31:1. E 11,5px
+     era pequeno demais para texto corrido, subiu para 12,5px. */
 
 @media(max-width:820px){
   #depoTrack .depo{flex:0 0 86%}
-  .depo-dots + .depo-nota{font-size:11px;margin-top:24px;max-width:340px}
+  .depo-dots + .depo-nota{font-size:12px;margin-top:24px;max-width:340px}
   /* No celular as setas somem: o swipe com o dedo e melhor e,
      sem elas, acaba qualquer repintura durante a rolagem da pagina. */
   .depowrap .depo-nav{display:none}
@@ -217,13 +238,16 @@ fbq('init','1369928625011386');fbq('track','PageView');
         <span>✓ Atendimento por vídeo</span><span>✓ Médico com CRM ativo</span><span>✓ Sem mensalidade</span>
       </div>
     </div>
-    <a class="mock mock-link" href="/agendamento" aria-label="Abrir o agendamento">
-      <div class="bar">
+    <!-- WCAG 2.5.3 (Label in Name): o conteudo deste bloco e uma MAQUETE
+     decorativa do chatbot, nao um rotulo. Marcado como aria-hidden para
+     nao virar nome acessivel do link; o nome vem do aria-label abaixo. -->
+    <a class="mock mock-link" href="/agendamento" aria-label="Agendar consulta">
+      <div class="bar" aria-hidden="true">
         <svg viewBox="0 0 120 120"><rect x="14" y="16" width="92" height="74" rx="22" fill="#fff"/><path d="M34 86 L34 104 L52 86 Z" fill="#fff"/><polyline points="26,55 45,55 54,38 64,72 73,55 96,55" fill="none" stroke="#0C4A52" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="99" cy="27" r="16" fill="#FF6B4A"/><path d="M99 19 v16 M91 27 h16" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>
         <b>Consultaí</b>
       </div>
-      <div class="mbubble">Oi! 👋&nbsp; Para que dia você quer sua consulta?</div>
-      <div class="mopts" id="mockDays"><div class="mopt">Hoje</div><div class="mopt">Amanhã</div></div>
+      <div class="mbubble" aria-hidden="true">Oi! 👋&nbsp; Para que dia você quer sua consulta?</div>
+      <div class="mopts" id="mockDays" aria-hidden="true"><div class="mopt">Hoje</div><div class="mopt">Amanhã</div></div>
     </a>
   </div>
 </section>

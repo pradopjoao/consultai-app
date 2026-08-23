@@ -32,12 +32,29 @@
 <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 <!-- Meta Pixel -->
 <script>
+/* Pixel do Meta, CARREGAMENTO ADIADO (22/08/2026).
+   Motivo: o fbevents.js tem ~108 KB, mais que o dobro de todo o resto da
+   pagina somado, e estava baixando antes do primeiro pixel aparecer na
+   tela. A fila do fbq passa a existir imediatamente, entao o init e o
+   PageView abaixo ficam guardados e sao processados assim que a
+   biblioteca chega. O arquivo so baixa depois do load ou no primeiro
+   toque do visitante, o que vier antes. Nada e perdido: a venda ja e
+   registrada pelo servidor via CAPI, com o mesmo event_id. */
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];f.__fbLoad=function(){
+if(f.__fbFeito)return;f.__fbFeito=!0;t=b.createElement(e);t.async=!0;t.src=v;
+s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}}(window,
 document,'script','https://connect.facebook.net/en_US/fbevents.js');
 fbq('init','1369928625011386');fbq('track','PageView');
+(function(){
+  function agenda(){ setTimeout(window.__fbLoad, 1500); }
+  if(document.readyState==='complete') agenda();
+  else window.addEventListener('load', agenda);
+  ['pointerdown','keydown','touchstart','scroll'].forEach(function(ev){
+    window.addEventListener(ev, window.__fbLoad, {once:true, passive:true});
+  });
+})();
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1369928625011386&ev=PageView&noscript=1"/></noscript>
 <!-- End Meta Pixel -->
@@ -150,7 +167,10 @@ fbq('init','1369928625011386');fbq('track','PageView');
   <div class="prog"><i id="bar"></i></div>
   <div class="stepname" id="stepname">Passo 1 de 3 · Horário</div>
   <h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Agendar consulta médica online por R$ 40</h1>
-  <div class="chat" id="chat"></div>
+  <!-- landmark <main> para leitor de tela pular direto ao conteudo
+       (WCAG, landmark-one-main). Mesma classe e mesmo id de antes,
+       entao o layout e o JavaScript nao mudam em nada. -->
+  <main class="chat" id="chat"></main>
   <div class="bar" id="actionbar"></div>
 </div>
 <script>
@@ -158,6 +178,12 @@ fbq('init','1369928625011386');fbq('track','PageView');
    DEMO=true  -> roda com dados de exemplo (para pré-visualizar sem backend).
    DEMO=false -> usa o backend real (mesmo domínio em /api/...). */
 const DEMO = false;
+/* PLANO B TEMPORARIO (19/08/2026): com PAGAMENTO_MANUAL=on no servidor, o
+   pagamento vai pelo WhatsApp. Abrir /agendamento?pix=1 forca o fluxo
+   automatico do Mercado Pago, para testar se a API dele voltou.
+   Quando tudo normalizar, esta linha e os outros trechos marcados com
+   "PLANO B TEMPORARIO" podem ser removidos. */
+const FORCAR_PIX = /[?&]pix=1(&|$)/.test(location.search);
 const API = '';  // vazio = mesmo domínio. Ex.: 'https://api.consultai.app.br'
 const state = { date:null, time:null, codigoHorario:null, paciente:{} };
 const slotsByDate = {};
@@ -358,16 +384,38 @@ function formCadastro(pre){
 async function payment(){
   setStep(100,'Passo 3 de 3 · Pagamento');
   typing(async ()=>{
-    bot('Falta só o pagamento da consulta, <b>R$ 40 no Pix</b>, aprovação na hora:');
     try{
       let pay;
       if(DEMO){ pay={paymentId:'DEMO123',copiaECola:'00020126...CONSULTAI-PIX-DEMO...5802BR',qrBase64:null}; }
       else{
         const r=await api('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify({...state.paciente,data:state.date,horario:state.time,codigoHorario:state.codigoHorario,
+            forcarPix:FORCAR_PIX, /* PLANO B TEMPORARIO */
             _fbp:getCookie('_fbp'),_fbc:getCookie('_fbc'),fbclid:getFbclid(),pageUrl:location.href})});
         pay=r;
       }
+      /* PLANO B TEMPORARIO: se o servidor respondeu manual:true, o Pix
+         automatico esta desligado e o pagamento vai pelo WhatsApp. */
+      if(pay.manual){
+        bot('Seu horário está separado! O pagamento desta consulta está sendo feito pelo WhatsApp:');
+        const cx=document.createElement('div');cx.className='pixbox';
+        cx.innerHTML='<div class="v">R$ 40,00</div>'+
+          '<div style="font-size:13px;color:var(--mut)">Pix enviado pelo WhatsApp</div>'+
+          '<p style="margin:12px 0 0;font-size:14px;line-height:1.55;text-align:left">Nosso gerador automático de Pix está com instabilidade hoje. Para você não ficar sem atendimento, o link de pagamento é enviado agora pelo WhatsApp e leva menos de um minuto.</p>'+
+          '<a class="copy" style="display:inline-block;text-decoration:none;margin-top:14px" target="_blank" rel="noopener" href="'+pay.whatsapp+'">Receber o link no WhatsApp</a>';
+        chat.appendChild(cx);scroll();
+        const seg2=document.createElement('div');seg2.className='segur';
+        seg2.innerHTML='🔒 Pagamento processado pelo <b>Mercado Pago</b>. No seu banco aparece o nome <b>OCTA HEALTH</b>, a empresa responsável pela Consultaí.<span class="cnpj">CNPJ 64.412.466/0001-87 · CRM-PJ 1043447/SP</span>';
+        chat.appendChild(seg2);scroll();
+        if(window.fbq) fbq('track','InitiateCheckout',{value:40,currency:'BRL'}, pay.referencia?{eventID:'ic_'+pay.referencia}:undefined);
+        clearBar();
+        const b2=document.createElement('button');b2.className='btn coral';b2.textContent='Abrir o WhatsApp';
+        b2.onclick=()=>{ window.open(pay.whatsapp,'_blank','noopener'); };
+        actionbar.appendChild(b2);
+        return; /* sem polling: a confirmação é feita a mão */
+      }
+      /* fim do trecho do PLANO B TEMPORARIO */
+      bot('Falta só o pagamento da consulta, <b>R$ 40 no Pix</b>, aprovação na hora:');
       const box=document.createElement('div');box.className='pixbox';
       box.innerHTML='<div class="v">R$ 40,00</div><div style="font-size:13px;color:var(--mut)">Pix • aprovação imediata</div>'+
         (pay.qrBase64?('<img alt="QR Code do Pix de R$ 40 para pagar a consulta na Consultaí" src="data:image/png;base64,'+pay.qrBase64+'">'):'')+

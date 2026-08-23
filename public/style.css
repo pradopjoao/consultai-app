@@ -16,6 +16,36 @@
    como "texto grande", entao a regra de acessibilidade exige 4,5:1. O #E52A00
    entrega 4,50:1. Decisao do Dr. Joao em 03/08/2026: escurecer SO onde ha
    texto branco em cima, preservando a marca no resto. */
+/* ======================================================================
+   FONTES HOSPEDADAS AQUI NO NOSSO SERVIDOR  (23/08/2026)
+   ----------------------------------------------------------------------
+   Antes o site pedia as fontes ao servidor do Google. Isso custava, antes
+   de qualquer pixel aparecer, uma consulta de DNS + um aperto de mao de
+   seguranca + o download, tudo num servidor de fora, e ainda bloqueava a
+   renderizacao da pagina.
+   Agora os arquivos ficam em /fontes/ e vem junto com o resto do site.
+
+   font-display:swap = o texto aparece IMEDIATAMENTE na fonte do sistema e
+   troca para a fonte certa quando ela chega. O leitor nunca fica olhando
+   para uma tela em branco esperando fonte.
+
+   Sao exatamente os 6 pesos que o site usa. Se um dia alguem usar um peso
+   que nao esta aqui, o navegador finge o peso (fica borrado) em vez de
+   baixar. Nesse caso, baixe o arquivo do peso novo e acrescente aqui.
+   ====================================================================== */
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;
+  src:url('/fontes/inter-400.woff2') format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;
+  src:url('/fontes/inter-500.woff2') format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;
+  src:url('/fontes/inter-600.woff2') format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:600;font-display:swap;
+  src:url('/fontes/poppins-600.woff2') format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:700;font-display:swap;
+  src:url('/fontes/poppins-700.woff2') format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:800;font-display:swap;
+  src:url('/fontes/poppins-800.woff2') format('woff2')}
+
 :root{--teal:#15A39A;--deep:#0C4A52;--ink:#14333A;--coral:#FF6B4A;--btn:#E52A00;--soft:#F1FBF9;--mut:#5C7178;--line:#E3EFEC}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
 html{scroll-behavior:smooth}
@@ -38,10 +68,12 @@ header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);backdro
 .logo{display:flex;align-items:center;gap:12px;text-decoration:none}
 .logo svg{width:40px;height:40px}
 .logo .w{font-family:'Poppins';font-weight:800;font-size:24px;color:var(--deep);letter-spacing:-.5px}
-.logo .w .d{color:var(--coral)}
+.logo .w .d{color:#F4562F}/* WCAG AA: 3,38:1 sobre branco. Era var(--coral) #FF6B4A, 2,82:1 */
 .menu{display:flex;align-items:center;gap:20px;font-size:14.5px;font-weight:600;color:var(--mut)}
 .menu a{text-decoration:none;transition:.15s;padding:4px 0;border-bottom:2px solid transparent}
-.menu a:hover,.menu a.on{color:var(--teal);border-bottom-color:var(--teal)}
+.menu a:hover{color:var(--teal);border-bottom-color:var(--teal)}
+/* Link ativo do menu precisa de 4,5:1 por ser texto pequeno. #0F7D76 = 4,98:1 */
+.menu a.on{color:#0F7D76;border-bottom-color:#0F7D76}
 .menu a.mobcta{display:none}
 .nav-right{display:flex;align-items:center;gap:10px}
 /* Hamburger (menu mobile) */
@@ -229,13 +261,13 @@ footer a{color:#9FB4B8;text-decoration:none;transition:.15s}
 footer a:hover{color:#5BD6CB}
 footer .lk{display:block;padding:4px 0}
 footer .contact p{padding:3px 0}
-footer .contact .init{font-size:12.5px;color:#7C969B;margin-top:2px;letter-spacing:.3px}
+footer .contact .init{font-size:12.5px;color:#87A2A7;margin-top:2px;letter-spacing:.3px}/* WCAG AA: 4,96:1. Era #7C969B, 4,28:1 */
 footer .contact .octa{color:#CDE0E3;font-weight:600;margin-top:12px}
 footer a.cta-ic{display:inline-flex;align-items:center;gap:8px;color:#9FB4B8;text-decoration:none;padding:4px 0;transition:.15s;white-space:nowrap}
 footer a.cta-ic svg{width:16px;height:16px;fill:currentColor;flex:none;opacity:.9;transition:.15s}
 footer a.cta-ic:hover{color:#5BD6CB}
 footer a.cta-ic:hover svg{opacity:1}
-footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;line-height:1.8;color:#7C969B}
+footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;line-height:1.8;color:#87A2A7}/* WCAG AA: 4,96:1. Era #7C969B, 4,28:1 */
 
 /* Formulário de contato (Trabalhe conosco) */
 .formcard{max-width:640px;margin:6px auto 0;background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px;box-shadow:0 16px 40px rgba(12,74,82,.08)}
