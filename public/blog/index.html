@@ -51,10 +51,12 @@ fbq('init','1369928625011386');fbq('track','PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1369928625011386&ev=PageView&noscript=1"/></noscript>
 <!-- End Meta Pixel -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css?v=12">
+<!-- Fontes proprias, servidas por nos. Sem servidor de terceiro no
+     caminho critico. As duas mais usadas vem com preload: a Inter 400,
+     que e o texto do corpo, e a Poppins 800, que e o titulo grande. -->
+<link rel="preload" as="font" type="font/woff2" href="/fontes/inter-400.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/fontes/poppins-800.woff2" crossorigin>
+<link rel="stylesheet" href="/style.css?v=14">
 <style>
 /* ===========================================================
    BLOG - CARTOES DE TEXTO + BOTAO "CARREGAR MAIS"
