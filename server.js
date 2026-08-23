@@ -35,6 +35,27 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+/* ----------------------------------------------------------------------
+   ARQUIVOS DE VERIFICACAO DO GOOGLE SEARCH CONSOLE        (23/08/2026)
+   ----------------------------------------------------------------------
+   TEM QUE FICAR AQUI, ANTES DA REGRA DE URLS LIMPAS LOGO ABAIXO.
+
+   O Google verifica a posse de um site pedindo um arquivo com nome tipo
+   googleXXXXXXXX.html e exigindo resposta 200 NAQUELE endereco exato.
+   A regra seguinte redireciona TUDO que termina em .html para o endereco
+   sem extensao. Testado: sem esta excecao, o pedido do Google recebia
+   "301 Moved Permanently" em vez do arquivo, e a verificacao falharia.
+
+   A excecao e estreita de proposito: so nomes no formato google + letras
+   e numeros + .html. Nenhuma outra pagina do site e afetada.
+   -------------------------------------------------------------------- */
+app.get(/^\/google[0-9a-z]+\.html$/i, (req, res, next) => {
+  res.set('Cache-Control', 'public, max-age=0, must-revalidate');
+  res.sendFile(path.join(__dirname, 'public', path.basename(req.path)), (err) => {
+    if (err) next(err);
+  });
+});
+
 // URLs limpas: redireciona /pagina.html -> /pagina (301, bom para SEO).
 // Qualquer ".../index.html" cai na raiz da pasta: /index.html -> /  e
 // /blog/index.html -> /blog. Sem isso sobrava um endereço duplicado (/blog/index)
