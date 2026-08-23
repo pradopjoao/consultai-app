@@ -1,0 +1,23 @@
+# robots.txt do clinicogeralonline.com.br
+#
+# Este arquivo e SEPARADO do robots.txt da Consultai, e existe por um
+# motivo simples: robots.txt e sitemap sao POR DOMINIO. Antes, quem
+# abrisse clinicogeralonline.com.br/robots.txt recebia o da Consultai,
+# que aponta o mapa do site para vemconsultai.com.br. Ou seja, o dominio
+# novo estava mandando o Google procurar o mapa dele no dominio errado.
+
+User-agent: *
+Allow: /
+
+# As rotas de API nao tem conteudo para busca e lidam com agendamento e
+# pagamento. Nao ha motivo para robo entrar nelas.
+Disallow: /api/
+
+# ATENCAO, e de proposito: /clinico/ NAO esta bloqueado aqui.
+# A pagina inicial deste dominio tambem abre em /clinico/, porque e ali
+# que o arquivo mora. Bloquear no robots faria o Google parar de LER a
+# pagina, e com isso ele nunca veria a etiqueta de endereco canonico que
+# diz qual e o endereco certo. O caminho correto e deixar ler e deixar o
+# canonico resolver, e e o que esta feito.
+
+Sitemap: https://clinicogeralonline.com.br/sitemap.xml

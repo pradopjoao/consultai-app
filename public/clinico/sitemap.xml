@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Mapa do site do clinicogeralonline.com.br
+
+  Tem UM endereco so, e isso esta certo. E uma pagina de pre-venda com um
+  objetivo unico, e nao um site de conteudo.
+
+  Por que /agendamento, /privacidade e /termos NAO entram aqui:
+  esses tres arquivos sao da Consultai e ja trazem, dentro deles, a
+  etiqueta de endereco canonico apontando para vemconsultai.com.br. Eles
+  continuam abrindo neste dominio para o visitante, mas quem deve
+  aparecer na busca por eles e o dominio principal. Coloca-los neste mapa
+  seria pedir ao Google para indexar conteudo duplicado, que e justamente
+  o que a politica do Google Ads pune.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://clinicogeralonline.com.br/</loc>
+    <lastmod>2026-08-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
