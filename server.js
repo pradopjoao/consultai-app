@@ -85,6 +85,32 @@ app.get('/', (req, res, next) => {
     if (err) next(err);
   });
 });
+
+/* ----------------------------------------------------------------------
+   robots.txt e sitemap.xml POR DOMINIO                    (23/08/2026)
+   ----------------------------------------------------------------------
+   Os dois arquivos sao, por definicao, de UM dominio so. Como este mesmo
+   servidor atende os dois enderecos, quem abrisse
+   clinicogeralonline.com.br/robots.txt recebia o da Consultai, que aponta
+   o mapa do site para vemconsultai.com.br. O dominio novo estava mandando
+   o Google procurar o mapa dele na casa do vizinho.
+
+   Aqui, quando o pedido chega pelo dominio novo, entregamos os arquivos
+   de public/clinico/. Pelo dominio da Consultai nada muda: o
+   express.static logo abaixo continua entregando os originais.
+
+   Mesmo motivo do bloco acima para colar isto ANTES do express.static:
+   depois dele a rota nunca seria executada.
+   -------------------------------------------------------------------- */
+['/robots.txt', '/sitemap.xml'].forEach((rota) => {
+  app.get(rota, (req, res, next) => {
+    if (!ehClinico(req)) return next();
+    res.set('Cache-Control', 'public, max-age=0, must-revalidate');
+    res.sendFile(path.join(__dirname, 'public', 'clinico', rota.slice(1)), (err) => {
+      if (err) next(err);
+    });
+  });
+});
 // Serve os arquivos; "extensions:['html']" faz /trabalhe-conosco achar trabalhe-conosco.html
 // setHeaders define o cache com segurança: páginas HTML sempre revalidam (nunca
 // servem versão velha); imagens/CSS/JS podem ser guardados por 1 dia. Isso deixa
