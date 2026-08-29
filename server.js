@@ -1258,12 +1258,21 @@ async function mpBuscarAprovados(desdeISO) {
   }
   return achados;
 }
-/* Data no formato que o Google Ads exige: "AAAA-MM-DD HH:MM:SS", no fuso
-   declarado na primeira linha do arquivo. O Brasil acabou com o horário de
-   verão em 2019, então é UTC-3 fixo, o mesmo truque já usado em /api/horarios. */
+/* Data no formato "AAAA-MM-DD HH:MM:SS-03:00".              (29/08/2026)
+   ----------------------------------------------------------------------
+   O FUSO VAI DENTRO DE CADA LINHA, e não numa linha "Parameters:TimeZone="
+   no topo do arquivo. Testado na prática: a Central de Dados do Google não
+   entende aquela linha especial do formato antigo. Ela leu a primeira linha
+   do arquivo como se fosse o cabeçalho, e o assistente passou a oferecer um
+   único campo chamado "Parameters_TimeZone_America_Sao_Paulo", em vez das
+   cinco colunas de verdade. Com o fuso embutido em cada data, o cabeçalho
+   volta a ser a primeira linha e o mapeamento funciona.
+
+   O Brasil acabou com o horário de verão em 2019, então é UTC-3 fixo, o
+   mesmo truque já usado em /api/horarios. */
 function horarioGoogleAds(iso) {
   const d = new Date(new Date(iso).getTime() - 3 * 3600 * 1000);
-  return d.toISOString().slice(0, 19).replace('T', ' ');
+  return d.toISOString().slice(0, 19).replace('T', ' ') + '-03:00';
 }
 /* Confere quem está pedindo o CSV. Aceita as duas formas:
      1. ?token=SENHA na URL, que é prático para abrir no navegador e conferir;
@@ -1291,9 +1300,11 @@ app.get('/api/google-ads/conversoes.csv', async (req, res) => {
     res.set('WWW-Authenticate', 'Basic realm="Google Ads"');
     return res.status(401).type('text/plain').send('acesso negado');
   }
+  // Cabeçalho na PRIMEIRA linha, sem a linha "Parameters:" do formato antigo.
+  // Transaction ID é o número do pagamento no Mercado Pago: é o que evita
+  // contar duas vezes o mesmo paciente se um arquivo for enviado repetido.
   const linhas = [
-    'Parameters:TimeZone=America/Sao_Paulo',
-    'Google Click ID,Conversion Name,Conversion Time,Conversion Value,Conversion Currency',
+    'Google Click ID,Conversion Name,Conversion Time,Conversion Value,Conversion Currency,Transaction ID',
   ];
   try {
     // 89 dias, e não 90: o Google recusa qualquer conversão mais velha que a
@@ -1308,7 +1319,7 @@ app.get('/api/google-ads/conversoes.csv', async (req, res) => {
       if (clique.includes(',') || clique.includes('"')) continue;  // nunca quebra o CSV
       const quando = horarioGoogleAds(pay.date_approved || pay.date_created);
       const valor = Number(pay.transaction_amount || PRECO).toFixed(2);
-      linhas.push([clique, GADS_CONV_PAGA, quando, valor, 'BRL'].join(','));
+      linhas.push([clique, GADS_CONV_PAGA, quando, valor, 'BRL', String(pay.id || '')].join(','));
       comClique++;
     }
     console.log('[google-ads] CSV servido — ' + pagamentos.length + ' pagamentos aprovados, ' + comClique + ' vindos de anúncio');
