@@ -1344,6 +1344,31 @@ app.get(/^\/api\/google-ads\/conversoes[-a-z0-9]*\.csv$/i, async (req, res) => {
     // é um resultado legítimo, e o motivo real fica no log.
     console.error('[google-ads] falha ao montar o CSV: ' + e.message);
   }
+  /* LINHA DE AMOSTRA, quando ainda não existe conversão nenhuma.
+     ----------------------------------------------------------------------
+     A Central de Dados se recusa a ler um arquivo que só tem cabeçalho:
+     "Falha ao determinar o tipo de dados ou o esquema da fonte de dados.
+     Verifique se você tem cabeçalhos corretos e pelo menos uma linha de
+     dados válidos". Como a campanha ainda não teve nenhum clique, não há
+     gclid nenhum para colocar no arquivo, e o assistente não fecha.
+
+     Esta linha existe só para o Google conseguir enxergar o formato.
+
+     ELA NÃO CRIA CONVERSÃO NENHUMA, e isso é de propósito, em três camadas:
+       1. o identificador de clique é inválido e nunca vai casar com um
+          clique real, então o Google rejeita a linha na importação;
+       2. o valor é 0,00;
+       3. o texto diz o que ela é, para quem abrir o arquivo entender.
+
+     E ELA SOME SOZINHA. Só é escrita enquanto "linhas" tem apenas o
+     cabeçalho. Assim que o primeiro paciente pagante vindo de anúncio
+     aparecer, o arquivo passa a ter dado de verdade e a amostra desaparece,
+     junto com o erro de linha rejeitada no relatório de importação. */
+  if (linhas.length === 1) {
+    const ontem = horarioGoogleAds(new Date(Date.now() - 24 * 3600 * 1000));
+    linhas.push(['AMOSTRA-SEM-CLIQUE-REAL-NAO-IMPORTAR', GADS_CONV_PAGA, ontem, '0.00', 'BRL', 'AMOSTRA'].join(','));
+    console.log('[google-ads] CSV sem conversões reais — linha de amostra enviada só para o Google ler o formato');
+  }
   res.header('Cache-Control', 'no-store');
   res.type('text/csv').send(linhas.join('\n') + '\n');
 });
