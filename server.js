@@ -1295,7 +1295,22 @@ function csvAutorizado(req) {
   if (corte < 0) return false;
   return cru.slice(0, corte) === GADS_CSV_USER && mesmaSenha(cru.slice(corte + 1), GADS_CSV_TOKEN);
 }
-app.get('/api/google-ads/conversoes.csv', async (req, res) => {
+/* O endereço aceita qualquer sufixo antes do ".csv":       (29/08/2026)
+   /api/google-ads/conversoes.csv, conversoes-2.csv, conversoes-3.csv...
+   Todos devolvem exatamente o mesmo conteúdo.
+
+   POR QUE ISSO EXISTE, e não é frescura. A Central de Dados do Google guarda
+   o formato do arquivo na primeira vez que lê o endereço, e não relê depois.
+   Testado em 29/08/2026: mesmo mandando "Reconectar", ela continuou
+   oferecendo as colunas antigas. E não dá para enganar com "?v=2", porque a
+   tela exige que o endereço TERMINE em .csv, com esta mensagem: "Não foi
+   possível ler o formato do arquivo. Selecione um arquivo CSV ou TSV com a
+   extensão '.csv' ou '.tsv'".
+
+   Então, se um dia o formato do arquivo mudar, basta trocar o endereço na
+   conexão para o número seguinte. O Google trata como arquivo novo e lê o
+   cabeçalho de novo, sem precisar publicar nada. */
+app.get(/^\/api\/google-ads\/conversoes[-a-z0-9]*\.csv$/i, async (req, res) => {
   if (!csvAutorizado(req)) {
     res.set('WWW-Authenticate', 'Basic realm="Google Ads"');
     return res.status(401).type('text/plain').send('acesso negado');
