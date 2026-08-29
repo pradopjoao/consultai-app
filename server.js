@@ -35,6 +35,145 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+/* ======================================================================
+   TAG DO GOOGLE ADS INJETADA NO <head>                    (29/08/2026)
+   ----------------------------------------------------------------------
+   O site é HTML estático. Colar o mesmo bloco à mão em dezenas de
+   arquivos significa esquecer nos próximos, e foi assim que a tag ficou
+   um mês inteiro sem nunca ser instalada. Aqui ela entra sozinha, logo
+   depois do <head>, em toda página HTML dos DOIS domínios.
+
+   POR QUE ESTE BLOCO É O PRIMEIRO DEPOIS DO CORS: mais abaixo existem
+   rotas que respondem com sendFile (a raiz do clinicogeralonline, o
+   /blog) e o express.static, que respondem e ENCERRAM a requisição.
+   Qualquer coisa colada depois deles nunca rodaria para essas páginas.
+   Mesmo motivo que já obrigou a mover o bloco de CORS uma vez.
+
+   O QUE ESTE BLOCO NÃO TOCA, de propósito:
+     - qualquer endereço terminado em .html, para não atropelar nem o
+       redirecionamento de URLs limpas nem os arquivos de verificação
+       do Search Console, que são .html e precisam sair crus;
+     - /api/ e qualquer coisa que não seja GET ou HEAD;
+     - endereços com ponto no último trecho (.css, .png, .xml, .txt).
+   ====================================================================== */
+/* ----------------------------------------------------------------------
+   As quatro variáveis de ambiente da medição. Ficam AQUI, e não no bloco
+   grande de process.env mais abaixo, porque este bloco é executado antes
+   dele: uma const declarada depois ainda não existe quando esta linha
+   roda, e o servidor nem sobe (testado em 29/08/2026).
+
+   TODAS NASCEM VAZIAS DE PROPÓSITO. Enquanto GADS_TAG_ID estiver em
+   branco, nada deste bloco roda e o site sai exatamente como antes.
+   -------------------------------------------------------------------- */
+const GADS_TAG_ID      = process.env.GADS_TAG_ID      || '';  // AW-18333144388
+const GADS_LABEL_AGEND = process.env.GADS_LABEL_AGEND || '';  // AW-18333144388/Q9_hCLHFh9McEMSq9qVE
+const GADS_CONV_PAGA   = process.env.GADS_CONV_PAGA   || 'Consulta paga';  // nome EXATO da ação de importação
+const GADS_CSV_TOKEN   = process.env.GADS_CSV_TOKEN   || '';  // senha do CSV. Sem ela, o endereço responde 403.
+
+const GADS_CACHE = new Map();   // caminho do arquivo -> { mtime, html }
+
+/* O trecho que vai para dentro do <head>. Monta uma vez, na subida. */
+const GADS_TRECHO = !GADS_TAG_ID ? '' : `
+<!-- Google Ads: tag base, captura do gclid e conversão de agendamento (29/08/2026) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${GADS_TAG_ID}"></script>
+<script>
+(function () {
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  window.gtag = window.gtag || gtag;
+  gtag('js', new Date());
+  gtag('config', '${GADS_TAG_ID}');
+
+  /* 1) GUARDA O IDENTIFICADOR DO CLIQUE NO ANÚNCIO.
+        O Google carimba ?gclid=... na URL de quem chega pelo anúncio. Ele
+        vive só naquela primeira página, e o agendamento acontece em outra.
+        Guardamos por 90 dias, que é a janela de conversão configurada na
+        conta. Cookie próprio, do mesmo domínio, sem terceiros. */
+  try {
+    var q = new URLSearchParams(location.search);
+    ['gclid', 'wbraid', 'gbraid'].forEach(function (n) {
+      var v = q.get(n);
+      if (!v) return;
+      document.cookie = 'cs_' + n + '=' + encodeURIComponent(v) +
+        ';max-age=' + (90 * 24 * 3600) + ';path=/;SameSite=Lax;Secure';
+    });
+  } catch (e) {}
+
+  /* 2) DISPARA A CONVERSÃO DE AGENDAMENTO.
+        Não olha o HTML da página, de propósito: escuta a resposta de
+        /api/checkout/<id>, que é o endereço que o próprio site já
+        consulta para saber se o Pix caiu. Assim o disparo continua
+        funcionando mesmo que a tela de confirmação seja redesenhada.
+        O transaction_id evita contar duas vezes se a pessoa recarregar. */
+  var LABEL = '${GADS_LABEL_AGEND}';
+  function contar(id) {
+    if (!LABEL || !id) return;
+    try { if (sessionStorage.getItem('cs_conv_' + id) === '1') return; } catch (e) {}
+    try { sessionStorage.setItem('cs_conv_' + id, '1'); } catch (e) {}
+    gtag('event', 'conversion', { 'send_to': LABEL, 'transaction_id': String(id) });
+  }
+  window.consultaiConversaoAgendada = contar;  // gancho manual, caso um dia precise
+
+  var fetchOriginal = window.fetch;
+  if (typeof fetchOriginal === 'function') {
+    window.fetch = function () {
+      var args = arguments;
+      return fetchOriginal.apply(this, args).then(function (resp) {
+        try {
+          var url = (typeof args[0] === 'string') ? args[0] : ((args[0] && args[0].url) || '');
+          var m = String(url).match(/\\/api\\/checkout\\/([^?#\\/]+)/);
+          if (m && resp && resp.ok) {
+            resp.clone().json().then(function (d) {
+              if (d && d.status === 'approved') contar(m[1]);
+            }).catch(function () {});
+          }
+        } catch (e) {}
+        return resp;
+      });
+    };
+  }
+})();
+</script>`;
+
+app.use((req, res, next) => {
+  if (!GADS_TRECHO) return next();
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const caminho = req.path;
+  if (caminho.startsWith('/api/')) return next();
+  if (/\.[a-z0-9]+$/i.test(caminho)) return next();  // .html, .css, .png, .xml... passam direto
+
+  // Descobre qual arquivo o express.static entregaria para este endereço.
+  const raiz = path.join(__dirname, 'public');
+  const clinico = (req.headers.host || '').toLowerCase().includes('clinicogeralonline');
+  const candidatos = caminho === '/'
+    ? [path.join(raiz, clinico ? 'clinico' : '', 'index.html')]
+    : [path.join(raiz, caminho + '.html'), path.join(raiz, caminho, 'index.html')];
+
+  for (const arquivo of candidatos) {
+    // Cinto de segurança contra path traversal: nada fora de public/.
+    if (!arquivo.startsWith(raiz)) continue;
+    let st;
+    try { st = fs.statSync(arquivo); } catch (e) { continue; }
+    if (!st.isFile()) continue;
+
+    // Cache em memória por data de modificação: o disco só é lido quando o
+    // arquivo muda, e uma publicação nova invalida sozinha.
+    const guardado = GADS_CACHE.get(arquivo);
+    let html;
+    if (guardado && guardado.mtime === st.mtimeMs) {
+      html = guardado.html;
+    } else {
+      try { html = fs.readFileSync(arquivo, 'utf8'); } catch (e) { return next(); }
+      html = html.includes('googletagmanager.com/gtag/js')
+        ? html                                   // já tem a tag: não duplica
+        : html.replace(/<head([^>]*)>/i, '<head$1>' + GADS_TRECHO);
+      GADS_CACHE.set(arquivo, { mtime: st.mtimeMs, html });
+    }
+    res.set('Cache-Control', 'public, max-age=0, must-revalidate');
+    return res.type('html').send(html);
+  }
+  next();
+});
 /* ----------------------------------------------------------------------
    ARQUIVOS DE VERIFICACAO DO GOOGLE SEARCH CONSOLE        (23/08/2026)
    ----------------------------------------------------------------------
@@ -187,6 +326,13 @@ function rateLimit(max, windowMs) {
     next();
   };
 }
+/* Lê um cookie do pedido, sem dependência nova.            (29/08/2026)
+   Usado só para o gclid do Google Ads. Devolve string vazia se não existir. */
+function lerCookie(req, nome) {
+  const bruto = String(req.headers.cookie || '');
+  const m = bruto.match(new RegExp('(?:^|;\\s*)' + nome + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : '';
+}
 const {
   SHOSP_BASE = 'https://sistema.shosp.com.br/api',
   SHOSP_API_KEY,
@@ -215,6 +361,9 @@ const {
   // Recuperação de Pix não pago. Nasce DESLIGADA de propósito: só começa a
   // enviar quando o Dr. João criar RECUPERACAO=on no painel do Render.
   RECUPERACAO = '',
+  // As variáveis do Google Ads (GADS_*) NÃO estão aqui de propósito: elas
+  // são lidas lá em cima, junto do bloco que injeta a tag, porque aquele
+  // bloco roda antes desta linha. Ver "TAG DO GOOGLE ADS" no começo do arquivo.
 } = process.env;
 /* ======================================================================
    VERSÃO EM TEXTO PURO DOS E-MAILS
@@ -947,11 +1096,21 @@ app.post('/api/checkout', rateLimit(8, 10 * 60 * 1000), async (req, res) => {
     let fbc = req.body._fbc || '';
     if (!fbc && req.body.fbclid) fbc = 'fb.1.' + Date.now() + '.' + req.body.fbclid;
     const tracking = { ip, ua, fbp, fbc, eventSourceUrl: req.body.pageUrl || 'https://vemconsultai.com.br/agendamento' };
+    /* Identificador do clique no Google Ads.                (29/08/2026)
+       Lido do cookie que a tag injetada gravou quando o paciente chegou
+       pelo anúncio. Vem pelo cabeçalho Cookie sozinho, então NÃO foi
+       preciso mexer em nenhum arquivo do site para isto funcionar.
+       Vai junto no metadata do pagamento porque o Mercado Pago é a nossa
+       única memória que sobrevive a um reinício do servidor, e é de lá
+       que o CSV de conversões pagas é montado depois. */
+    const gclid  = String(req.body.gclid  || lerCookie(req, 'cs_gclid')  || '').slice(0, 200);
+    const wbraid = String(req.body.wbraid || lerCookie(req, 'cs_wbraid') || '').slice(0, 200);
+    const gbraid = String(req.body.gbraid || lerCookie(req, 'cs_gbraid') || '').slice(0, 200);
     const idem = 'consultai-' + Date.now() + '-' + Math.floor(Math.random() * 1e6);
     const pay = await mpCriarPix({
       valor: PRECO, email, nome, idem,
       // fbp/fbc/ip/ua viajam no metadata p/ sobreviver a um reinício do servidor
-      metadata: { nome, cpf, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario, fbp, fbc, ip, ua: ua.slice(0, 250) },
+      metadata: { nome, cpf, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario, fbp, fbc, ip, ua: ua.slice(0, 250), gclid, wbraid, gbraid },
     });
     pendentes.set(String(pay.id), {
       paciente: { nome, cpf, telefone, email, dataNascimento, sexo },
@@ -1048,6 +1207,91 @@ app.post('/api/contato', rateLimit(5, 10 * 60 * 1000), async (req, res) => {
   }
 });
 app.get('/api/health', (req, res) => res.json({ ok: true, servico: 'consultai-backend' }));
+/* ======================================================================
+   CONVERSÕES PAGAS PARA O GOOGLE ADS                      (29/08/2026)
+   ----------------------------------------------------------------------
+   POR QUE ISTO EXISTE. A consulta é paga por Pix. O Pix compensa do lado
+   do servidor, minutos depois, com o navegador do paciente possivelmente
+   já fechado. Uma tag que roda no navegador não enxerga esse momento.
+   Se a gente contasse a conversão na tela do "Pix gerado", estaria
+   medindo intenção e ensinando o Google a comprar cliques de quem gera
+   Pix e não paga.
+
+   COMO FUNCIONA. Este endereço devolve, em CSV, os pagamentos APROVADOS
+   dos últimos 90 dias que vieram de um clique no anúncio. O Google Ads
+   busca este endereço sozinho, uma vez por dia (Metas > Uploads >
+   Agendar uploads > HTTPS). Não há upload manual, não há chave de API,
+   não há token de desenvolvedor.
+
+   DE ONDE VÊM OS DADOS. Direto do Mercado Pago, não de um arquivo local.
+   Isso é de propósito: o disco do Render é efêmero e some a cada
+   publicação. O Mercado Pago é a única fonte que sabe de verdade quem
+   pagou, e o gclid viaja no metadata do pagamento desde o /api/checkout.
+
+   SEGURANÇA. A tela de upload agendado do Google só aceita um endereço
+   HTTPS, sem cabeçalho de autenticação. Por isso a senha vai na própria
+   URL, em GADS_CSV_TOKEN. Sem a variável, este endereço responde 403 e
+   não vaza nada. Nenhum dado de saúde sai daqui: só o identificador do
+   clique, a data, o valor e a moeda. Nome, CPF, e-mail e motivo da
+   consulta NÃO entram no arquivo.
+   ====================================================================== */
+async function mpBuscarAprovados(desdeISO) {
+  const fim = new Date().toISOString();
+  const achados = [];
+  for (let offset = 0; offset < 1000; offset += 50) {
+    const url = 'https://api.mercadopago.com/v1/payments/search?status=approved' +
+      '&range=date_approved&begin_date=' + encodeURIComponent(desdeISO) +
+      '&end_date=' + encodeURIComponent(fim) + '&limit=50&offset=' + offset;
+    const r = await fetch(url, { headers: { Authorization: 'Bearer ' + MP_ACCESS_TOKEN } });
+    const d = await r.json();
+    if (!r.ok) throw new Error('MP search aprovados ' + r.status + ': ' + JSON.stringify(d).slice(0, 150));
+    const lote = d.results || [];
+    achados.push(...lote);
+    if (lote.length < 50) break;
+  }
+  return achados;
+}
+/* Data no formato que o Google Ads exige: "AAAA-MM-DD HH:MM:SS", no fuso
+   declarado na primeira linha do arquivo. O Brasil acabou com o horário de
+   verão em 2019, então é UTC-3 fixo, o mesmo truque já usado em /api/horarios. */
+function horarioGoogleAds(iso) {
+  const d = new Date(new Date(iso).getTime() - 3 * 3600 * 1000);
+  return d.toISOString().slice(0, 19).replace('T', ' ');
+}
+app.get('/api/google-ads/conversoes.csv', async (req, res) => {
+  if (!GADS_CSV_TOKEN || String(req.query.token || '') !== GADS_CSV_TOKEN) {
+    return res.status(403).type('text/plain').send('acesso negado');
+  }
+  const linhas = [
+    'Parameters:TimeZone=America/Sao_Paulo',
+    'Google Click ID,Conversion Name,Conversion Time,Conversion Value,Conversion Currency',
+  ];
+  try {
+    // 89 dias, e não 90: o Google recusa qualquer conversão mais velha que a
+    // janela de conversão da ação, e um dia de folga evita rejeição na virada.
+    const desde = new Date(Date.now() - 89 * 24 * 3600 * 1000).toISOString();
+    const pagamentos = await mpBuscarAprovados(desde);
+    let comClique = 0;
+    for (const pay of pagamentos) {
+      const m = pay.metadata || {};   // o Mercado Pago devolve as chaves em minúsculas
+      const clique = String(m.gclid || '').trim();
+      if (!clique) continue;          // pagamento que não veio do Google Ads
+      if (clique.includes(',') || clique.includes('"')) continue;  // nunca quebra o CSV
+      const quando = horarioGoogleAds(pay.date_approved || pay.date_created);
+      const valor = Number(pay.transaction_amount || PRECO).toFixed(2);
+      linhas.push([clique, GADS_CONV_PAGA, quando, valor, 'BRL'].join(','));
+      comClique++;
+    }
+    console.log('[google-ads] CSV servido — ' + pagamentos.length + ' pagamentos aprovados, ' + comClique + ' vindos de anúncio');
+  } catch (e) {
+    // Devolve o cabeçalho vazio em vez de erro: um upload agendado que recebe
+    // 500 é marcado como falha no Google e enche a conta de aviso. Zero linha
+    // é um resultado legítimo, e o motivo real fica no log.
+    console.error('[google-ads] falha ao montar o CSV: ' + e.message);
+  }
+  res.header('Cache-Control', 'no-store');
+  res.type('text/csv').send(linhas.join('\n') + '\n');
+});
 /* ------------- Lembrete de consulta (~10 min antes) via e-mail -------------
    A cada 3 min, busca no Mercado Pago os pagamentos aprovados e, quando uma
    consulta está a ~10 min de começar, envia um e-mail ao médico com um botão
