@@ -69,6 +69,13 @@ const GADS_TAG_ID      = process.env.GADS_TAG_ID      || '';  // AW-18333144388
 const GADS_LABEL_AGEND = process.env.GADS_LABEL_AGEND || '';  // AW-18333144388/Q9_hCLHFh9McEMSq9qVE
 const GADS_CONV_PAGA   = process.env.GADS_CONV_PAGA   || 'Consulta paga';  // nome EXATO da ação de importação
 const GADS_CSV_TOKEN   = process.env.GADS_CSV_TOKEN   || '';  // senha do CSV. Sem ela, o endereço responde 403.
+/* Usuário do CSV.                                          (29/08/2026)
+   O Google aposentou a tela antiga de "upload agendado" e passou tudo para
+   a Central de Dados. O conector HTTPS de lá pede URL, usuário e senha, ou
+   seja, autenticação básica de HTTP, e não aceita senha na própria URL.
+   Por isso o endereço do CSV passou a aceitar as duas formas. A senha
+   continua sendo a mesma GADS_CSV_TOKEN, então nada precisou ser trocado. */
+const GADS_CSV_USER    = process.env.GADS_CSV_USER    || 'googleads';
 
 const GADS_CACHE = new Map();   // caminho do arquivo -> { mtime, html }
 
@@ -1258,9 +1265,31 @@ function horarioGoogleAds(iso) {
   const d = new Date(new Date(iso).getTime() - 3 * 3600 * 1000);
   return d.toISOString().slice(0, 19).replace('T', ' ');
 }
+/* Confere quem está pedindo o CSV. Aceita as duas formas:
+     1. ?token=SENHA na URL, que é prático para abrir no navegador e conferir;
+     2. autenticação básica de HTTP, que é o que o conector HTTPS da Central
+        de Dados do Google usa, com usuário GADS_CSV_USER e senha GADS_CSV_TOKEN.
+   Comparação em tempo constante para não vazar a senha pelo tempo de resposta. */
+function mesmaSenha(a, b) {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  if (x.length !== y.length) return false;
+  return crypto.timingSafeEqual(x, y);
+}
+function csvAutorizado(req) {
+  if (!GADS_CSV_TOKEN) return false;   // sem senha configurada, ninguém entra
+  if (req.query.token && mesmaSenha(req.query.token, GADS_CSV_TOKEN)) return true;
+  const cab = String(req.headers.authorization || '');
+  if (!/^Basic /i.test(cab)) return false;
+  const cru = Buffer.from(cab.slice(6).trim(), 'base64').toString('utf8');
+  const corte = cru.indexOf(':');
+  if (corte < 0) return false;
+  return cru.slice(0, corte) === GADS_CSV_USER && mesmaSenha(cru.slice(corte + 1), GADS_CSV_TOKEN);
+}
 app.get('/api/google-ads/conversoes.csv', async (req, res) => {
-  if (!GADS_CSV_TOKEN || String(req.query.token || '') !== GADS_CSV_TOKEN) {
-    return res.status(403).type('text/plain').send('acesso negado');
+  if (!csvAutorizado(req)) {
+    res.set('WWW-Authenticate', 'Basic realm="Google Ads"');
+    return res.status(401).type('text/plain').send('acesso negado');
   }
   const linhas = [
     'Parameters:TimeZone=America/Sao_Paulo',
