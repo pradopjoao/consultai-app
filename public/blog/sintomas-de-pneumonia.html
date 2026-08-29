@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dor de garganta: viral ou bacteriana? | Consultaí</title>
-<meta name="description" content="A maioria das dores de garganta é causada por vírus e não precisa de antibiótico. Veja os sinais que apontam para vírus, os que levantam suspeita de bactéria.">
-<link rel="canonical" href="https://vemconsultai.com.br/blog/dor-de-garganta-viral-ou-bacteriana">
+<title>Sintomas de pneumonia e quando é emergência | Consultaí</title>
+<meta name="description" content="Tosse com escarro, febre, calafrios e dor no peito ao respirar. Veja os sintomas de pneumonia, o que muda no idoso e os sinais que pedem socorro.">
+<link rel="canonical" href="https://vemconsultai.com.br/blog/sintomas-de-pneumonia">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Consultaí">
 <meta property="og:locale" content="pt_BR">
-<meta property="og:title" content="Dor de garganta: quando é viral e quando é bacteriana">
-<meta property="og:description" content="A maioria das dores de garganta é causada por vírus e não precisa de antibiótico. Veja os sinais que diferenciam os dois quadros.">
-<meta property="og:url" content="https://vemconsultai.com.br/blog/dor-de-garganta-viral-ou-bacteriana">
+<meta property="og:title" content="Sintomas de pneumonia e quando é emergência">
+<meta property="og:description" content="Nenhum sintoma sozinho fecha o diagnóstico. Veja o conjunto que levanta a suspeita de pneumonia e os sinais que não podem esperar.">
+<meta property="og:url" content="https://vemconsultai.com.br/blog/sintomas-de-pneumonia">
 <meta property="og:image" content="https://vemconsultai.com.br/og-image-2.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="article:published_time" content="2026-07-30">
+<meta property="article:published_time" content="2026-08-29">
 <meta property="article:author" content="Dr. João Pedro Vieira do Prado">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://vemconsultai.com.br/og-image-2.png">
@@ -59,15 +59,22 @@ fbq('init','1369928625011386');fbq('track','PageView');
 <link rel="preload" as="font" type="font/woff2" href="/fontes/inter-400.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="/fontes/poppins-800.woff2" crossorigin>
 <link rel="stylesheet" href="/style.css?v=14">
+<style>
+/* A barra do topo tem 69px e fica grudada na tela. Sem isto, quem chega por um
+   link com # cai com o titulo escondido atras dela. Fica aqui dentro da pagina,
+   e nao no style.css, para nao precisar mudar o ?v= do arquivo de estilo. */
+[id]{scroll-margin-top:78px}
+</style>
+<!-- Dados estruturados: artigo (ajuda o Google a entender autor, data e tema) -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "Dor de garganta: quando é viral e quando é bacteriana",
-  "description": "A maioria das dores de garganta é causada por vírus e não precisa de antibiótico. Veja os sinais que apontam para vírus, os que levantam suspeita de bactéria.",
-  "image": "https://vemconsultai.com.br/og-image-2.png",
-  "datePublished": "2026-07-30",
-  "dateModified": "2026-07-30",
+  "headline": "Sintomas de pneumonia e quando é emergência",
+  "description": "Tosse com escarro, febre, calafrios e dor no peito ao respirar. Veja os sintomas de pneumonia, o que muda no idoso e os sinais que pedem socorro.",
+  "image": "https://vemconsultai.com.br/blog/img/sintomas-de-pneumonia.png",
+  "datePublished": "2026-08-29",
+  "dateModified": "2026-08-29",
   "inLanguage": "pt-BR",
   "author": {
     "@type": "Person",
@@ -78,11 +85,19 @@ fbq('init','1369928625011386');fbq('track','PageView');
   "publisher": {
     "@type": "Organization",
     "name": "Consultaí",
-    "logo": { "@type": "ImageObject", "url": "https://vemconsultai.com.br/apple-touch-icon.png" }
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://vemconsultai.com.br/apple-touch-icon.png"
+    }
   },
-  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://vemconsultai.com.br/blog/dor-de-garganta-viral-ou-bacteriana" }
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://vemconsultai.com.br/blog/sintomas-de-pneumonia"
+  }
 }
 </script>
+<!-- Dados estruturados: perguntas frequentes (pode gerar destaque na busca).
+     Geradas a partir das perguntas que aparecem na tela, para nunca divergirem. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -90,28 +105,59 @@ fbq('init','1369928625011386');fbq('track','PageView');
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "Dor de garganta precisa de antibiótico?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Na maioria das vezes, não. Os agentes causadores mais comuns da dor de garganta são os vírus, e antibiótico não age contra vírus. O Ministério da Saúde orienta que antibióticos não sejam usados para tratar infecções virais e que ninguém tome antibiótico sem receita. O antibiótico só tem efeito quando a causa é bacteriana, e isso quem define é o médico após avaliar o caso." }
+      "name": "Quais são os primeiros sintomas de pneumonia?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Normalmente tosse que começa a produzir escarro, febre e calafrios, junto com uma dor no peito que piora ao respirar fundo ou ao tossir. Em muitos casos o quadro começa como uma gripe comum e muda de padrão depois de alguns dias, com piora em vez de melhora."
+      }
     },
     {
       "@type": "Question",
-      "name": "Como saber se a dor de garganta é viral ou bacteriana?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Não existe um sinal isolado que decida. O quadro viral costuma vir acompanhado de coriza, espirros, obstrução nasal, rouquidão e tosse, com febre baixa. O quadro bacteriano tende a começar de forma abrupta, com febre alta, dor intensa para engolir, gânglios doloridos no pescoço e às vezes pontinhos vermelhos no céu da boca, geralmente sem coriza." }
+      "name": "Pneumonia é contagiosa? Pega de uma pessoa para outra?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A pneumonia em si não passa de uma pessoa para outra como uma gripe passa. O que circula são os germes que podem causá-la, como o vírus influenza e algumas bactérias. Pegar esses germes não significa desenvolver pneumonia, e a maioria das pessoas fica só com um quadro respiratório leve."
+      }
     },
     {
       "@type": "Question",
-      "name": "Quanto tempo dura uma dor de garganta viral?",
-      "acceptedAnswer": { "@type": "Answer", "text": "A maioria dos quadros virais melhora progressivamente em poucos dias. Dor que não melhora no prazo esperado, que piora depois de alguns dias ou que vem com febre persistente merece reavaliação médica." }
+      "name": "Existe pneumonia sem febre?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Existe, e é justamente o que mais atrasa o diagnóstico. O Manual MSD registra que a febre é comum, mas pode não ocorrer em adultos mais velhos. Em idosos, confusão mental ou queda do nível de consciência podem ser o primeiro sinal, sem termômetro alterado."
+      }
     },
     {
       "@type": "Question",
-      "name": "Tomar antibiótico por precaução faz mal?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Faz. Antibiótico não age contra vírus, então em um quadro viral ele não acelera a melhora e ainda expõe você a efeitos adversos e ao risco de selecionar bactérias resistentes. O Ministério da Saúde orienta nunca usar antibiótico sem prescrição e evitar a automedicação." }
+      "name": "Quanto tempo dura uma pneumonia?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Depende do agente causador, da gravidade e da saúde de quem adoeceu, e por isso não existe um prazo único. O que se acompanha é a evolução: melhora da febre, da falta de ar e da disposição. Cansaço e tosse residual podem durar semanas mesmo depois de o quadro estar controlado."
+      }
     },
     {
       "@type": "Question",
-      "name": "Consulta online serve para dor de garganta?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Serve para avaliar o quadro, orientar as medidas de alívio, definir sinais de piora e emitir receita ou atestado quando houver indicação clínica. Se a suspeita de infecção bacteriana exigir exame direto da garganta, teste rápido ou se houver sinais de alarme, a conduta correta é o encaminhamento para avaliação presencial." }
+      "name": "Como saber se é gripe ou pneumonia?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Pela lista de sintomas ninguém separa com segurança, e é honesto dizer isso. O que levanta a suspeita de pneumonia é a dor no peito ao respirar fundo, a falta de ar e a piora depois de alguns dias de melhora. Quem fecha o diagnóstico é o exame físico, com o médico escutando o pulmão."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Tosse com catarro amarelo é sinal de pneumonia?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Não por si só. Segundo o Hospital Israelita Albert Einstein, a cor da secreção vem das células de defesa e aparece tanto em infecção viral quanto em bacteriana. Ela não indica pneumonia nem necessidade de antibiótico. O que pesa é o conjunto e a evolução."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Consulta online serve para pneumonia?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Serve para orientar e encaminhar, não para fechar o diagnóstico. Pneumonia se diagnostica no exame físico, escutando o pulmão, e isso exige presença. Na teleconsulta o médico avalia o relato, diz se o seu caso pede pronto-socorro ou avaliação presencial hoje, e emite o pedido de exame quando houver indicação."
+      }
     }
   ]
 }
@@ -144,10 +190,10 @@ fbq('init','1369928625011386');fbq('track','PageView');
 <section class="hero mini">
   <div class="blob b1"></div>
   <div class="wrap" style="position:relative">
-    <nav class="crumb" aria-label="Trilha de navegação"><a href="/">Início</a> <span>›</span> <a href="/blog">Blog</a> <span>›</span> Dor de garganta: viral ou bacteriana?</nav>
+    <nav class="crumb" aria-label="Trilha de navegação"><a href="/">Início</a> <span>›</span> <a href="/blog">Blog</a> <span>›</span> Sintomas de pneumonia</nav>
     <span class="pill">🩺 Sintomas</span>
-    <h1>Dor de garganta: quando é viral e quando é bacteriana</h1>
-    <p class="sub">A maioria das dores de garganta é causada por vírus e melhora sem antibiótico. Veja quais sinais apontam para cada causa e quando a dor precisa de avaliação médica.</p>
+    <h1>Sintomas de pneumonia: como reconhecer e quando é emergência</h1>
+    <p class="sub">Nenhum sintoma sozinho fecha o diagnóstico. O que levanta a suspeita é o conjunto, e principalmente a mudança de padrão depois de alguns dias de gripe.</p>
   </div>
 </section>
 <section>
@@ -157,94 +203,112 @@ fbq('init','1369928625011386');fbq('track','PageView');
   <span class="av">JP</span>
   <div>
     <b>Dr. João Pedro Vieira do Prado</b> · CRM-SP 281.239<br>
-    <span class="muted">Publicado em 30 de julho de 2026 · Leitura de 7 minutos</span>
+    <span class="muted">Publicado em 29 de agosto de 2026 · Leitura de 8 minutos</span>
   </div>
 </div>
 
-<p>Você acorda com a garganta raspando, dói para engolir, e a primeira pergunta que aparece é sempre a mesma: preciso de antibiótico? A pergunta é razoável, mas a resposta surpreende bastante gente.</p>
+<p>Quase toda semana chega alguém com a mesma frase: comecei com uma gripe, mas agora está diferente. A tosse mudou, apareceu uma febre que não cede, e doeu para respirar fundo. A pergunta que vem junto é sempre a mesma, e ela é a certa: será que virou pneumonia?</p>
 
-<p>Na maioria das vezes, não. A causa mais comum de dor de garganta são os vírus, e antibiótico não tem nenhum efeito sobre vírus. O que muda a conduta não é a intensidade da dor, é o conjunto de sinais que aparecem junto com ela. Neste texto eu explico quais são esses sinais, em linguagem clara, para você saber o que observar e quando procurar ajuda.</p>
+<p>A resposta honesta é que ninguém fecha esse diagnóstico só pela lista de sintomas, nem por telefone, nem lendo um texto na internet. O que dá para fazer, e é muito, é reconhecer o conjunto que levanta a suspeita, saber quais sinais não podem esperar até amanhã, e entender o que separa uma gripe que está seguindo o curso normal de uma que saiu do trilho.</p>
 
 <div class="takeaways">
   <b>Resumo rápido</b>
   <ul>
-    <li>A maior parte das dores de garganta é viral, melhora em poucos dias e não responde a antibiótico.</li>
-    <li>Quadro viral costuma vir com coriza, espirros, nariz entupido, rouquidão e tosse, com febre baixa.</li>
-    <li>Quadro bacteriano tende a começar de repente, com febre alta, dor forte para engolir e gânglios doloridos no pescoço, geralmente sem coriza.</li>
-    <li>Nenhum sinal isolado fecha o diagnóstico. Quem avalia o conjunto é o médico.</li>
-    <li>Baba escorrendo, dificuldade para respirar ou para abrir a boca e inchaço no pescoço são sinais de pronto-socorro, não de espera.</li>
+    <li>Pneumonia é uma infecção dos alvéolos, os pequenos sacos de ar do pulmão, e não é a mesma coisa que uma gripe forte.</li>
+    <li>O conjunto clássico é tosse com secreção, febre, calafrios e dor no peito que piora ao respirar fundo ou ao tossir.</li>
+    <li>Em idoso o quadro engana: pode não haver febre, e confusão mental pode ser o primeiro sinal.</li>
+    <li>Falta de ar, confusão, lábios ou dedos arroxeados e queda de pressão pedem atendimento imediato, não consulta agendada.</li>
+    <li>O diagnóstico é clínico: quem fecha é o exame físico, com o médico escutando o pulmão. A radiografia serve principalmente para avaliar complicações.</li>
   </ul>
 </div>
 
-<h2>O que dizem as fontes oficiais sobre antibiótico na dor de garganta</h2>
-<p>Vale começar por aqui, porque esse ponto costuma gerar discussão em casa e na farmácia. O material da <a href="https://www.medicina.ufmg.br/observaped/dor-de-garganta-amigdalite-faringite-infeccao-da-garganta/" target="_blank" rel="noopener">Faculdade de Medicina da UFMG sobre dor de garganta</a> é direto ao apontar a causa: os agentes causadores mais comuns são os vírus, ainda que, principalmente em crianças maiores, a dor de garganta possa ser causada por bactérias.</p>
-<p>Sobre a conduta, o Ministério da Saúde é igualmente direto na página sobre resistência aos antimicrobianos: antibióticos não devem ser usados para tratar infecções virais, como gripes ou resfriados, e nunca se deve tomar antibiótico sem receita.</p>
-<p>Isso não significa que dor de garganta nunca precise de antibiótico. Significa que o antibiótico é a exceção, reservada aos casos em que existe uma bactéria envolvida. Antibiótico não age contra vírus, e nenhuma dose maior muda essa realidade biológica.</p>
+<h2>O que é pneumonia, e por que não é só uma gripe forte</h2>
+<p>A gripe é uma infecção das vias respiratórias. A pneumonia é outra coisa: o <a href="https://www.msdmanuals.com/pt/casa/dist%C3%BArbios-pulmonares-e-das-vias-respirat%C3%B3rias/pneumonia/considera%C3%A7%C3%B5es-gerais-sobre-pneumonia" target="_blank" rel="noopener">Manual MSD</a> a define como uma infecção dos pequenos sacos de ar do pulmão, os alvéolos, e do tecido em volta deles. São eles que fazem a troca de oxigênio, e é por isso que a pneumonia cansa e tira o fôlego de um jeito que o resfriado não tira.</p>
+<p>As duas coisas se encontram com frequência. O <a href="https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/g/gripe-influenza" target="_blank" rel="noopener">Ministério da Saúde</a> é direto ao dizer que a principal complicação da gripe são as pneumonias, responsáveis por um grande número de internações hospitalares no país. Ou seja, aquela sensação de que "a gripe virou outra coisa" tem base real, e merece atenção em vez de paciência.</p>
 
-<h2>Os sinais que apontam para vírus</h2>
-<p>No <a href="https://saude.curitiba.pr.gov.br/images/DOR%20DE%20GARGANTA%20NA%20APS.pdf" target="_blank" rel="noopener">protocolo de dor de garganta da atenção primária de Curitiba</a>, o quadro viral tem uma assinatura razoavelmente reconhecível. Ele raramente vem sozinho, quase sempre traz companhia do resto das vias respiratórias.</p>
-<p>Costuma aparecer com <b>coriza, espirros, nariz entupido, rouquidão e tosse</b>. A febre, quando existe, é mais baixa. A dor para engolir é mais um incômodo do que uma barreira, e o mal-estar geral é moderado, você fica abatido mas não prostrado. A instalação é gradual, começa como um raspar na garganta e vai se definindo ao longo de um ou dois dias.</p>
-<p>Esse é o cenário mais comum, especialmente no inverno, quando os vírus respiratórios circulam mais. E é o cenário em que o corpo resolve sozinho, com o tempo e com medidas simples de alívio.</p>
-
-<h2>Os sinais que levantam suspeita de bactéria</h2>
-<p>O quadro bacteriano, em especial a faringite causada por estreptococo, tende a se apresentar de outro jeito. A palavra que melhor descreve é <b>abrupto</b>. A pessoa passa bem de manhã e à tarde já está com febre alta e dor forte.</p>
-<p>Os elementos que chamam atenção são <b>febre alta de início súbito, dor intensa para engolir, dor de cabeça, mal-estar acentuado, gânglios do pescoço aumentados e doloridos ao toque</b> e, ao exame da garganta, às vezes placas de pus nas amígdalas e pontinhos vermelhos no céu da boca. Em crianças, é comum aparecer também dor de barriga e vômito.</p>
-<p>Um detalhe que ajuda muito: a <b>ausência</b> de coriza e tosse aumenta a suspeita de bactéria. Quando o nariz está escorrendo, o cenário viral fica mais provável.</p>
-<p>Ainda assim, e isso é importante, nenhum desses itens fecha o diagnóstico sozinho. Eles são peças de um conjunto, e existe sobreposição real entre os dois quadros. Mononucleose, por exemplo, é viral e pode cursar com placas na garganta e gânglios grandes, imitando bem um quadro bacteriano.</p>
+<h2>Os sintomas que formam a suspeita</h2>
+<p>Nenhum sintoma sozinho fecha o quadro. É o conjunto, e principalmente a mudança de padrão, que chama atenção. Segundo o Manual MSD, na pneumonia adquirida na comunidade a tosse normalmente produz escarro, que é o muco espesso ou com a cor alterada, em adultos e crianças mais velhas, e costuma vir acompanhada de febre e calafrios.</p>
+<p>O sintoma que mais ajuda a separar é a dor. O Manual registra que a dor no peito da pneumonia <b>geralmente piora ao respirar ou ao tossir</b>. Aquela pontada que aparece justamente quando você tenta encher o pulmão é diferente da dor muscular difusa da gripe, e é ela que costuma fazer a pessoa procurar ajuda.</p>
+<p>Some a isso a falta de ar, o cansaço para tarefas que antes não cansavam, e uma febre que não cede como cedia. Em bebês, crianças pequenas e idosos a tosse pode ser seca, sem escarro nenhum, o que confunde bastante.</p>
 
 <figure>
-  <img src="/blog/img/dor-de-garganta-viral-bacteriana.png" width="1080" height="1619" loading="lazy" alt="Infográfico comparando dor de garganta viral e bacteriana. Sinais mais comuns na viral: início gradual, febre baixa ou ausente, coriza, espirros e nariz entupido, rouquidão e tosse, dor moderada para engolir. Sinais que levantam suspeita de bactéria: início abrupto, febre alta, dor intensa para engolir, gânglios do pescoço doloridos, placas nas amígdalas e pontinhos vermelhos no céu da boca, geralmente sem coriza. Sinais de pronto-socorro: dificuldade para respirar, baba escorrendo por não conseguir engolir a saliva, dificuldade para abrir a boca, inchaço ou vermelhidão no pescoço, voz abafada e desidratação.">
-  <figcaption>Comparação dos sinais mais comuns em cada quadro e os sinais que pedem pronto-socorro imediato.</figcaption>
+  <img src="/blog/img/sintomas-de-pneumonia.png" width="1080" height="1693" loading="lazy" alt="Infográfico da Consultaí sobre os sintomas de pneumonia. Mostra o conjunto clássico do adulto, que é tosse com escarro, febre, calafrios, dor no peito que piora ao respirar fundo ou ao tossir, falta de ar e cansaço fora do normal. Ao lado, o quadro que engana no idoso, em que a febre pode não aparecer, a tosse costuma ser seca e a confusão mental ou a queda do nível de consciência podem ser o primeiro sinal. Traz ainda os cinco sinais que pedem atendimento imediato, que são falta de ar em repouso, confusão mental, lábios ou pontas dos dedos arroxeados, dor no peito forte e persistente, e pressão muito baixa com sensação de desmaio, com o lembrete de ligar 192 para o SAMU. No rodapé, o aviso de que a cor do catarro não decide entre vírus e bactéria e de que o diagnóstico é clínico e se fecha no exame físico, com o médico escutando o pulmão, enquanto a radiografia de tórax entra principalmente para avaliar a extensão e procurar complicações.">
+  <figcaption>O conjunto de sintomas levanta a suspeita. Quem fecha o diagnóstico é o exame físico, escutando o pulmão.</figcaption>
 </figure>
 
-<h2>Por que tomar antibiótico por precaução prejudica você</h2>
-<p>Essa é a parte que mais vale a pena entender, porque o prejuízo não é abstrato, é seu.</p>
-<p>Quando você toma antibiótico num quadro viral, três coisas acontecem e nenhuma é boa. A primeira é que a melhora não acelera, porque não havia bactéria para combater. A segunda é que você se expõe a efeitos adversos sem necessidade, como diarreia, alergia e alteração da flora intestinal. A terceira é a mais séria a longo prazo: cada uso desnecessário ajuda a selecionar bactérias resistentes, aquelas que o antibiótico deixa de matar.</p>
-<p>O Ministério da Saúde trata a <a href="https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/r/ram" target="_blank" rel="noopener">resistência aos antimicrobianos</a> como um problema de saúde pública de primeira grandeza, apontando que ela já figura entre as principais causas de morte no mundo, e orienta de forma explícita: nunca tome antibiótico sem prescrição e evite a automedicação.</p>
-<p>Traduzindo para o cotidiano: guardar meia cartela de antibiótico da última gripe e tomar por conta própria na próxima dor de garganta é um dos hábitos mais comuns e mais prejudiciais que existem. Se um antibiótico for realmente indicado, a receita tem regras próprias, e você pode entender melhor no nosso texto sobre <a href="/blog/receita-digital-como-funciona">como funciona a receita digital e seus prazos de validade</a>.</p>
+<h2>Em idoso o quadro engana, e isso custa tempo</h2>
+<p>Esta é a parte que mais gera atraso, e vale ler com atenção se você cuida de alguém mais velho. O Manual MSD registra que <b>a febre é comum, mas pode não ocorrer em adultos mais velhos</b>, e que eles podem ficar confusos ou apresentar diminuição do nível de consciência.</p>
+<p>Na prática isso significa que uma pessoa idosa pode estar com pneumonia sem febre nenhuma e sem se queixar de dor. O que a família nota é outra coisa: ficou mais quieta, mais desorientada, parou de comer, dormiu o dia inteiro, caiu em casa. O Manual acrescenta que idosos e crianças pequenas podem simplesmente não conseguir comunicar que sentem dor no peito e falta de ar.</p>
+<p>Então a regra prática muda: em idoso, mudança de comportamento sem explicação já é motivo para avaliar o pulmão, mesmo com o termômetro marcando normal.</p>
 
-<div class="note"><b>Sinais que pedem pronto-socorro, não espera:</b> dificuldade para respirar, baba escorrendo porque não consegue engolir a própria saliva, dificuldade para abrir a boca, voz abafada como se houvesse algo na garganta, inchaço ou vermelhidão no pescoço, incapacidade de beber líquidos com sinais de desidratação, ou placas branco-acinzentadas espessas e aderidas na garganta. Esses achados podem indicar abscesso ou obstrução de via aérea e exigem avaliação presencial imediata. Em caso de emergência, procure um pronto-socorro ou ligue <b>192 (SAMU)</b>.</div>
+<h2>Os sinais que não podem esperar</h2>
+<p>Aqui não existe meio-termo, e este é o trecho mais importante do texto. O Manual MSD lista, entre os sinais que podem indicar necessidade de hospitalização imediata, a falta de ar, os níveis baixos de oxigênio no sangue, a pressão arterial muito baixa e a confusão em pessoas idosas.</p>
+<p>Traduzindo para o que dá para perceber em casa, procure atendimento de urgência agora se houver:</p>
+<ul>
+  <li>falta de ar em repouso, ou dificuldade para completar uma frase sem parar para respirar;</li>
+  <li>confusão mental, sonolência excessiva ou dificuldade para acordar a pessoa;</li>
+  <li>lábios, rosto ou pontas dos dedos arroxeados;</li>
+  <li>dor no peito forte e que não passa;</li>
+  <li>sensação de desmaio, palidez com suor frio, ou pressão muito baixa.</li>
+</ul>
+<p>Nesses casos o caminho é pronto-socorro ou 192, o número do SAMU. Não é consulta agendada, nem online nem presencial, porque o que essas situações precisam é de oxigênio, exame e observação no mesmo lugar.</p>
 
-<h2>O que costuma ajudar enquanto o corpo resolve</h2>
-<p>No quadro viral, o tratamento é de suporte, e ele funciona melhor do que a fama sugere. As medidas que ajudam de verdade são simples.</p>
-<p><b>Hidratação constante</b>, porque a mucosa inflamada dói mais quando está seca. <b>Líquidos frios ou gelados</b> e alimentos em temperatura amena costumam aliviar mais do que quente. <b>Gargarejo com água morna e sal</b>, que reduz o incômodo por algumas horas. <b>Repouso da voz</b>, evitando falar alto ou forçar. <b>Umidificar o ambiente</b>, principalmente em quarto com ar-condicionado, que resseca muito.</p>
-<p>Sobre medicamento, uma ressalva importante e honesta: analgésicos e antitérmicos podem aliviar bastante, mas a escolha, a dose e a duração precisam ser definidas pelo médico, considerando seu histórico, outras doenças e o que você já usa. Pastilhas e sprays de garganta dão alívio local temporário e não tratam a causa.</p>
+<h2>A cor do catarro não decide nada</h2>
+<p>Catarro amarelo ou esverdeado é provavelmente o sintoma mais mal interpretado da medicina de consultório. Ele não é sinal de pneumonia, e nem prova de infecção por bactéria.</p>
+<p>O <a href="https://www.einstein.br/n/vida-saudavel/catarro-verde-entenda-o-que-a-cor-da-secrecao-indica-sobre-a-saude" target="_blank" rel="noopener">Hospital Israelita Albert Einstein</a> explica que a cor vem das células de defesa e das enzimas que elas liberam, e aparece tanto em infecção viral quanto em bacteriana. É o mesmo raciocínio que já usamos ao separar <a href="/blog/sinusite-ou-resfriado">sinusite de resfriado comum</a>: o que informa é o tempo e o conjunto, não a cor.</p>
+<p>O que muda a conversa não é a cor da secreção. É a dor ao respirar fundo, a falta de ar e a febre que não cede.</p>
 
-<h2>Como funciona a consulta na Consultaí</h2>
-<p>A consulta é por vídeo, custa R$ 40 no Pix e dura em média de 10 a 15 minutos. Na dor de garganta, a conversa resolve uma parte grande do raciocínio: quando começou, se foi de repente ou aos poucos, se há coriza e tosse, como está a febre, se dói mais de um lado, se há gânglios doloridos, se você já teve quadros parecidos.</p>
-<p>Ao final, receita, atestado e pedido de exames são emitidos <b>quando há indicação clínica</b>, com assinatura digital ICP-Brasil, o mesmo padrão dos documentos oficiais no Brasil. Reforçando o que sempre digo: <b>não comercializamos documentos médicos</b>, o documento é a conclusão de uma consulta de verdade.</p>
-<p>E aqui está o limite honesto desta modalidade. A consulta online avalia bem o quadro, orienta o alívio e define os sinais de piora que você precisa vigiar. Mas quando a suspeita de infecção bacteriana depende de olhar a garganta de perto, apalpar o pescoço ou fazer teste rápido, e sempre que aparecer qualquer sinal de alarme, a conduta correta é encaminhar para avaliação presencial. Prefiro dizer isso antes de você pagar do que depois.</p>
+<h2>Pneumonia pega de uma pessoa para outra?</h2>
+<p>Esta é uma das dúvidas mais buscadas, e a resposta é menos assustadora do que parece. A pneumonia em si não se transmite como uma gripe se transmite. O Manual MSD descreve que ela se desenvolve quando micro-organismos que já circulam nas vias aéreas superiores chegam aos alvéolos e vencem as defesas do pulmão.</p>
+<p>O que circula de pessoa para pessoa são os germes que <i>podem</i> causar pneumonia, como o vírus da gripe e algumas bactérias respiratórias. Pegar esses germes não significa desenvolver pneumonia: a maioria das pessoas fica só com um quadro respiratório comum. Quem tem mais chance de evoluir são os grupos que o Manual lista como de risco, entre eles pessoas acima de 65 anos, fumantes, e quem convive com diabetes, insuficiência cardíaca, DPOC ou imunidade baixa.</p>
+<p>Sobre prevenção, o Manual é seco e direto: a maneira mais eficaz de prevenir a pneumonia é parar de fumar. Depois disso vêm as vacinas, entre elas as que protegem contra o pneumococo e contra a gripe. O Ministério da Saúde reforça que a vacinação anual é a forma mais eficaz de prevenção contra a influenza, que é justamente a porta de entrada de boa parte das pneumonias.</p>
+
+<h2>O que a consulta online resolve, e o que ela não resolve</h2>
+<p>Aqui eu preciso ser honesto, mesmo que não seja o que interessa comercialmente. <b>Suspeita de pneumonia não se confirma por vídeo.</b> O diagnóstico de pneumonia é clínico, e o exame essencial é o exame físico: o <a href="https://www.msdmanuals.com/pt/casa/dist%C3%BArbios-pulmonares-e-das-vias-respirat%C3%B3rias/pneumonia/pneumonia-adquirida-na-comunidade" target="_blank" rel="noopener">Manual MSD</a> descreve que o médico escuta o tórax com estetoscópio para chegar ao diagnóstico. É exatamente isso que não tem versão por câmera, e já dissemos o mesmo ao listar <a href="/blog/o-que-consulta-online-nao-resolve">o que a consulta online não resolve</a>. A radiografia de tórax não é o que faz o diagnóstico: ela entra principalmente para avaliar a extensão do acometimento e procurar complicações.</p>
+<p>O que a teleconsulta faz bem, e faz rápido, é a etapa anterior. Ela serve para você descrever o que está acontecendo e receber uma orientação clara sobre o que fazer agora: se o caso pede pronto-socorro imediato, se pede avaliação presencial ainda hoje, ou se o quadro é compatível com uma virose seguindo o curso normal. Quando é indicado, o médico também pode emitir o <a href="/blog/pedido-de-exame-online">pedido de radiografia de tórax</a> para você já chegar com o exame em mãos, e o atestado para os dias em que você não tiver condição de trabalhar.</p>
+<p>Receita, atestado e pedido de exame saem quando o médico indicar, depois da avaliação. Não comercializamos documentos, e não existe diagnóstico de pneumonia por encomenda.</p>
 
 <div class="leia">
   <b>Leia também</b>
-  <a href="/blog/receita-digital-como-funciona">Receita digital: como funciona e onde é aceita</a>
-  <a href="/blog/infeccao-urinaria-sintomas">Infecção urinária: sinais comuns e quando procurar um médico</a>
+  <a href="/blog/o-que-consulta-online-nao-resolve">O que a consulta online não resolve</a>
   <a href="/blog/sinusite-ou-resfriado">Sinusite ou resfriado? O tempo separa os dois</a>
-  <a href="/blog/sintomas-de-pneumonia">Sintomas de pneumonia e quando é emergência</a>
+  <a href="/blog/quantos-dias-atestado-gripe-ou-virose">Quantos dias de atestado para gripe ou virose?</a>
+  <a href="/blog/pedido-de-exame-online">Pedido de exame online: como funciona</a>
 </div>
 
-<div class="note"><b>Precisa se afastar do trabalho por causa do quadro?</b> Não existe tabela de dias, o período sai da avaliação médica. Os critérios estão no texto sobre <a href="/blog/quantos-dias-atestado-dor-nas-costas">quantos dias de atestado</a>, e o <a href="/atestado-medico-online">atestado médico online</a> é emitido quando há indicação clínica.</div>
-
 <h2>Perguntas frequentes</h2>
-<h3>Dor de garganta precisa de antibiótico?</h3>
-<p>Na maioria das vezes, não. A causa mais comum é viral, e antibiótico não age contra vírus. Ele entra em cena quando a avaliação médica aponta causa bacteriana.</p>
-<h3>Placa branca na garganta significa bactéria?</h3>
-<p>Não necessariamente. Placas podem aparecer em quadros virais, como na mononucleose. É um sinal que aumenta a atenção, não uma prova.</p>
-<h3>Quanto tempo dura uma dor de garganta viral?</h3>
-<p>A tendência é de melhora progressiva em poucos dias. Se não melhorar no prazo esperado, se piorar depois de alguns dias ou se a febre persistir, procure reavaliação.</p>
-<h3>Posso tomar o antibiótico que sobrou de outra vez?</h3>
-<p>Não. Além de provavelmente não ser o medicamento certo para esse quadro, sobra de cartela costuma vir em quantidade insuficiente, o que é justamente a condição que mais favorece bactéria resistente.</p>
-<h3>Dor de garganta dá atestado?</h3>
-<p>Pode dar, quando o médico avalia o caso e conclui que existe indicação clínica para o afastamento. O período é definido na consulta, conforme a necessidade de recuperação, e não por tabela.</p>
 
-<div class="note"><b>Importante:</b> este conteúdo é informativo e serve para você entender melhor o que está sentindo. Ele não substitui a consulta médica, não serve para diagnóstico próprio e não indica medicamento. Se estiver com dor de garganta, procure avaliação médica.</div>
+<h3>Quais são os primeiros sintomas de pneumonia?</h3>
+<p>Normalmente tosse que começa a produzir escarro, febre e calafrios, junto com uma dor no peito que piora ao respirar fundo ou ao tossir. Em muitos casos o quadro começa como uma gripe comum e muda de padrão depois de alguns dias, com piora em vez de melhora.</p>
+
+<h3>Pneumonia é contagiosa? Pega de uma pessoa para outra?</h3>
+<p>A pneumonia em si não passa de uma pessoa para outra como uma gripe passa. O que circula são os germes que podem causá-la, como o vírus influenza e algumas bactérias. Pegar esses germes não significa desenvolver pneumonia, e a maioria das pessoas fica só com um quadro respiratório leve.</p>
+
+<h3>Existe pneumonia sem febre?</h3>
+<p>Existe, e é justamente o que mais atrasa o diagnóstico. O Manual MSD registra que a febre é comum, mas pode não ocorrer em adultos mais velhos. Em idosos, confusão mental ou queda do nível de consciência podem ser o primeiro sinal, sem termômetro alterado.</p>
+
+<h3>Quanto tempo dura uma pneumonia?</h3>
+<p>Depende do agente causador, da gravidade e da saúde de quem adoeceu, e por isso não existe um prazo único. O que se acompanha é a evolução: melhora da febre, da falta de ar e da disposição. Cansaço e tosse residual podem durar semanas mesmo depois de o quadro estar controlado.</p>
+
+<h3>Como saber se é gripe ou pneumonia?</h3>
+<p>Pela lista de sintomas ninguém separa com segurança, e é honesto dizer isso. O que levanta a suspeita de pneumonia é a dor no peito ao respirar fundo, a falta de ar e a piora depois de alguns dias de melhora. Quem fecha o diagnóstico é o exame físico, com o médico escutando o pulmão.</p>
+
+<h3>Tosse com catarro amarelo é sinal de pneumonia?</h3>
+<p>Não por si só. Segundo o Hospital Israelita Albert Einstein, a cor da secreção vem das células de defesa e aparece tanto em infecção viral quanto em bacteriana. Ela não indica pneumonia nem necessidade de antibiótico. O que pesa é o conjunto e a evolução.</p>
+
+<h3>Consulta online serve para pneumonia?</h3>
+<p>Serve para orientar e encaminhar, não para fechar o diagnóstico. Pneumonia se diagnostica no exame físico, escutando o pulmão, e isso exige presença. Na teleconsulta o médico avalia o relato, diz se o seu caso pede pronto-socorro ou avaliação presencial hoje, e emite o pedido de exame quando houver indicação.</p>
+
+<div class="note">
+  <b>Isto aqui não é consulta marcada.</b> Falta de ar em repouso, confusão mental, lábios ou dedos arroxeados, dor no peito forte que não passa ou sensação de desmaio pedem atendimento imediato: vá a um pronto-socorro ou ligue <b>192 (SAMU)</b>. Este texto é informativo e não substitui a avaliação médica.
+</div>
 
   </div></div>
 </section>
 <div class="bandwrap">
   <div class="band">
-    <h2>Com a garganta doendo e sem saber se precisa de médico?</h2>
-    <p>Consulta médica online por R$ 40, com médico de CRM ativo, de qualquer lugar do Brasil. Receita, atestado e pedido de exames quando indicados.</p>
+    <h2>Com tosse e febre, sem saber se precisa de atendimento hoje?</h2>
+    <p>Consulta médica online por R$ 40, com médico de CRM ativo, de qualquer lugar do Brasil. Receita, atestado e pedido de exames quando indicados pelo médico.</p>
     <a class="btn" href="/agendamento" style="background:#fff;color:var(--deep)">Quero me consultar</a>
   </div>
 </div>
@@ -252,12 +316,12 @@ fbq('init','1369928625011386');fbq('track','PageView');
   <div class="wrap">
     <h2>Fontes e referências</h2>
     <ul>
-      <li><a href="https://www.medicina.ufmg.br/observaped/dor-de-garganta-amigdalite-faringite-infeccao-da-garganta/" target="_blank" rel="noopener">Faculdade de Medicina da UFMG, ObservaPed — dor de garganta, amigdalite e faringite: agentes causadores e indicação de antibiótico</a></li>
-      <li><a href="https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/r/ram" target="_blank" rel="noopener">Ministério da Saúde — Resistência aos antimicrobianos, uso de antibióticos e riscos da automedicação</a></li>
-      <li><a href="https://saude.curitiba.pr.gov.br/images/DOR%20DE%20GARGANTA%20NA%20APS.pdf" target="_blank" rel="noopener">Secretaria Municipal da Saúde de Curitiba — Avaliação da Dor de Garganta na atenção primária, versão 2, 2022: fatores preditivos e sinais de alarme</a></li>
-      <li><a href="https://www.gov.br/anvisa/pt-br/assuntos/servicosdesaude/prevencao-e-controle-de-infeccao-e-resistencia-microbiana/gerenciamento-de-antimicrobianos-em-servicos-de-saude/copy_of_gerenciamento-do-uso-de-antimicrobianos-em-servicos-de-saude" target="_blank" rel="noopener">Anvisa — gerenciamento do uso de antimicrobianos na atenção primária</a></li>
+      <li><a href="https://www.msdmanuals.com/pt/casa/dist%C3%BArbios-pulmonares-e-das-vias-respirat%C3%B3rias/pneumonia/pneumonia-adquirida-na-comunidade" target="_blank" rel="noopener">Manual MSD, versão saúde para a família — Pneumonia adquirida na comunidade: tosse com escarro, febre e calafrios, dor torácica que piora ao respirar ou tossir, o quadro atípico do idoso com confusão e sem febre, e o médico escutando o tórax com estetoscópio para chegar ao diagnóstico</a></li>
+      <li><a href="https://www.msdmanuals.com/pt/casa/dist%C3%BArbios-pulmonares-e-das-vias-respirat%C3%B3rias/pneumonia/considera%C3%A7%C3%B5es-gerais-sobre-pneumonia" target="_blank" rel="noopener">Manual MSD, versão saúde para a família — Considerações gerais sobre pneumonia: definição como infecção dos alvéolos, fatores de risco, sinais que indicam hospitalização imediata, e a prevenção começando por parar de fumar</a></li>
+      <li><a href="https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/g/gripe-influenza" target="_blank" rel="noopener">Ministério da Saúde — Gripe (influenza): a principal complicação são as pneumonias, responsáveis por um grande número de internações hospitalares no país, e a vacinação anual como forma mais eficaz de prevenção</a></li>
+      <li><a href="https://www.einstein.br/n/vida-saudavel/catarro-verde-entenda-o-que-a-cor-da-secrecao-indica-sobre-a-saude" target="_blank" rel="noopener">Hospital Israelita Albert Einstein — a cor do catarro vem das células de defesa e das enzimas que elas liberam, e aparece tanto em infecção viral quanto em bacteriana</a></li>
     </ul>
-    <p class="rev">Conteúdo escrito e revisado pelo Dr. João Pedro Vieira do Prado — Médico — CRM-SP 281.239. Publicado em 30 de julho de 2026. Material informativo, não substitui avaliação médica.</p>
+    <p class="rev">Conteúdo escrito e revisado pelo Dr. João Pedro Vieira do Prado — Médico — CRM-SP 281.239. Publicado em 29 de agosto de 2026. Material informativo, não substitui avaliação médica.</p>
   </div>
 </section>
 </main>
