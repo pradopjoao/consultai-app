@@ -2,22 +2,36 @@
 <!--
   Mapa do site do clinicogeralonline.com.br
 
-  Tem UM endereco so, e isso esta certo. E uma pagina de pre-venda com um
-  objetivo unico, e nao um site de conteudo.
+  ATUALIZADO EM 13/11/2026: entrou o /agendamento.
 
-  Por que /agendamento, /privacidade e /termos NAO entram aqui:
-  esses tres arquivos sao da Consultai e ja trazem, dentro deles, a
-  etiqueta de endereco canonico apontando para vemconsultai.com.br. Eles
-  continuam abrindo neste dominio para o visitante, mas quem deve
-  aparecer na busca por eles e o dominio principal. Coloca-los neste mapa
-  seria pedir ao Google para indexar conteudo duplicado, que e justamente
-  o que a politica do Google Ads pune.
+  Por que ele NAO estava aqui antes, e por que passou a estar.
+  Ate 13/11/2026 o /agendamento deste dominio era, byte a byte, o mesmo
+  arquivo da Consultai, com a etiqueta de endereco canonico apontando
+  para vemconsultai.com.br. Pedir ao Google para indexar aquilo seria
+  pedir para indexar conteudo duplicado.
+
+  Agora e outra pagina. Ela mora em public/clinico/agendamento.html,
+  tem preco proprio (R$ 29,60), marca propria e, principalmente, a
+  etiqueta de canonico apontando para o endereco DESTE dominio. Deixar
+  de fora do mapa seria esconder do Google uma pagina legitima.
+
+  Por que /privacidade e /termos continuam fora: esses dois ainda sao os
+  arquivos unicos da Consultai, com o canonico apontando para
+  vemconsultai.com.br. Eles continuam abrindo neste dominio para o
+  visitante, mas quem deve aparecer na busca por eles e o dominio
+  principal.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://clinicogeralonline.com.br/</loc>
-    <lastmod>2026-08-22</lastmod>
+    <lastmod>2026-11-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://clinicogeralonline.com.br/agendamento</loc>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>
