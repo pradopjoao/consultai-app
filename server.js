@@ -79,23 +79,44 @@ const GADS_CSV_USER    = process.env.GADS_CSV_USER    || 'googleads';
 
 const GADS_CACHE = new Map();   // caminho do arquivo -> { mtime, html }
 
-/* O trecho que vai para dentro do <head>. Monta uma vez, na subida. */
-const GADS_TRECHO = !GADS_TAG_ID ? '' : `
-<!-- Google Ads: tag base, captura do gclid e conversão de agendamento (29/08/2026) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=${GADS_TAG_ID}"></script>
+/* ======================================================================
+   CAPTURA DO IDENTIFICADOR DE CLIQUE, SEPARADA DA TAG     (13/11/2026)
+   ----------------------------------------------------------------------
+   POR QUE ISTO VIROU UM BLOCO SÓ DELE. Até hoje a captura do gclid morava
+   dentro do GADS_TRECHO, e o GADS_TRECHO só é injetado em página que AINDA
+   NÃO tem a tag do Google ("já tem a tag: não duplica", mais abaixo).
+
+   Só que as três páginas que importam, index.html, agendamento.html e
+   clinico/index.html, têm a tag do Google escrita à mão no próprio HTML.
+   Resultado: a injeção inteira era pulada justamente nelas, e a captura
+   do gclid nunca rodou em lugar nenhum. Conferido no ar em 13/11/2026,
+   abrindo /agendamento?gclid=... : a tag estava lá, o cookie cs_gclid não.
+
+   Com a captura nunca rodando, "const gclid = req.body.gclid ||
+   lerCookie(req,'cs_gclid')" lá no /api/checkout dava vazio SEMPRE. O
+   gclid nunca entrou no metadata do pagamento, e por isso o CSV de
+   conversões pagas nunca teve uma linha real desde agosto: só a AMOSTRA.
+   A campanha podia trazer cem pacientes que o Google continuaria sem
+   saber de nenhum.
+
+   ESTE BLOCO NÃO CHAMA gtag(). Ele só lê a URL e escreve um cookie
+   próprio. Por isso pode ser injetado em TODA página, inclusive nas que
+   já têm a tag, sem risco nenhum de carregar a biblioteca duas vezes nem
+   de disparar conversão repetida. A conversão continua onde sempre
+   esteve: no gtag('event','conversion') do próprio agendamento.html.
+
+   Escrever o mesmo cookie duas vezes é inofensivo: sobrescreve com o
+   mesmo valor.
+   ====================================================================== */
+const GADS_CAPTURA = `
+<!-- Consultaí: guarda o identificador do clique no anúncio (13/11/2026) -->
 <script>
 (function () {
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){ dataLayer.push(arguments); }
-  window.gtag = window.gtag || gtag;
-  gtag('js', new Date());
-  gtag('config', '${GADS_TAG_ID}');
-
-  /* 1) GUARDA O IDENTIFICADOR DO CLIQUE NO ANÚNCIO.
-        O Google carimba ?gclid=... na URL de quem chega pelo anúncio. Ele
-        vive só naquela primeira página, e o agendamento acontece em outra.
-        Guardamos por 90 dias, que é a janela de conversão configurada na
-        conta. Cookie próprio, do mesmo domínio, sem terceiros. */
+  /* O Google carimba ?gclid=... na URL de quem chega pelo anúncio. Ele
+     vive só naquela primeira página, e o pagamento acontece em outra.
+     Guardamos por 90 dias, que é a janela de conversão da conta. Cookie
+     próprio, do mesmo domínio, sem terceiros. O servidor lê este cookie
+     no /api/checkout e o manda junto no metadata do pagamento. */
   try {
     var q = new URLSearchParams(location.search);
     ['gclid', 'wbraid', 'gbraid'].forEach(function (n) {
@@ -105,6 +126,23 @@ const GADS_TRECHO = !GADS_TAG_ID ? '' : `
         ';max-age=' + (90 * 24 * 3600) + ';path=/;SameSite=Lax;Secure';
     });
   } catch (e) {}
+})();
+</script>`;
+
+/* O trecho que vai para dentro do <head>. Monta uma vez, na subida. */
+const GADS_TRECHO = !GADS_TAG_ID ? '' : `
+<!-- Google Ads: tag base e conversão de agendamento (29/08/2026) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${GADS_TAG_ID}"></script>
+<script>
+(function () {
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  window.gtag = window.gtag || gtag;
+  gtag('js', new Date());
+  gtag('config', '${GADS_TAG_ID}');
+
+  /* A captura do gclid saiu daqui em 13/11/2026 e virou o GADS_CAPTURA,
+     que é injetado em toda página. O motivo está no comentário dele. */
 
   /* 2) DISPARA A CONVERSÃO DE AGENDAMENTO.
         Não olha o HTML da página, de propósito: escuta a resposta de
@@ -143,7 +181,10 @@ const GADS_TRECHO = !GADS_TAG_ID ? '' : `
 </script>`;
 
 app.use((req, res, next) => {
-  if (!GADS_TRECHO) return next();
+  // A captura do gclid vale mesmo sem GADS_TAG_ID, porque as páginas já
+  // trazem a tag do Google escritas à mão. Por isso não há mais "return
+  // next()" quando GADS_TRECHO está vazio: o GADS_CAPTURA sozinho já
+  // justifica passar por aqui.
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
   const caminho = req.path;
   if (caminho.startsWith('/api/')) return next();
@@ -152,9 +193,19 @@ app.use((req, res, next) => {
   // Descobre qual arquivo o express.static entregaria para este endereço.
   const raiz = path.join(__dirname, 'public');
   const clinico = (req.headers.host || '').toLowerCase().includes('clinicogeralonline');
-  const candidatos = caminho === '/'
-    ? [path.join(raiz, clinico ? 'clinico' : '', 'index.html')]
-    : [path.join(raiz, caminho + '.html'), path.join(raiz, caminho, 'index.html')];
+  /* QUAL ARQUIVO ESTE ENDEREÇO ENTREGA.                     (13/11/2026)
+     Pelo domínio do clínico, public/clinico/ tem a PREFERÊNCIA, e o que
+     não existir lá cai no arquivo compartilhado de public/. Antes disso
+     só a raiz "/" era trocada, e por isso os dois domínios dividiam o
+     MESMO /agendamento, o que impedia preço e marca diferentes.
+     Assim, /agendamento vai para public/clinico/agendamento.html, e
+     /privacidade, que não existe lá, continua vindo do arquivo único. */
+  const porPrefixo = (prefixo) => (caminho === '/'
+    ? [path.join(raiz, prefixo, 'index.html')]
+    : [path.join(raiz, prefixo, caminho + '.html'), path.join(raiz, prefixo, caminho, 'index.html')]);
+  const candidatos = clinico
+    ? (caminho === '/' ? porPrefixo('clinico') : [...porPrefixo('clinico'), ...porPrefixo('')])
+    : porPrefixo('');
 
   for (const arquivo of candidatos) {
     // Cinto de segurança contra path traversal: nada fora de public/.
@@ -171,9 +222,21 @@ app.use((req, res, next) => {
       html = guardado.html;
     } else {
       try { html = fs.readFileSync(arquivo, 'utf8'); } catch (e) { return next(); }
-      html = html.includes('googletagmanager.com/gtag/js')
-        ? html                                   // já tem a tag: não duplica
-        : html.replace(/<head([^>]*)>/i, '<head$1>' + GADS_TRECHO);
+      /* Duas injeções, com regras diferentes de propósito:
+
+         - GADS_CAPTURA vai SEMPRE. Só escreve cookie, não chama gtag, não
+           dispara conversão. Repetir é inofensivo, faltar é o bug de
+           13/11/2026 que deixou o gclid sumir em todas as páginas.
+         - GADS_TRECHO (biblioteca + config + conversão) continua entrando
+           SÓ onde a página não tem tag própria. Injetar onde já existe
+           carregaria a biblioteca duas vezes e poderia contar a mesma
+           conversão duas vezes. */
+      if (!html.includes('Consultaí: guarda o identificador')) {
+        html = html.replace(/<head([^>]*)>/i, '<head$1>' + GADS_CAPTURA);
+      }
+      if (GADS_TRECHO && !html.includes('googletagmanager.com/gtag/js')) {
+        html = html.replace(/<head([^>]*)>/i, '<head$1>' + GADS_TRECHO);
+      }
       GADS_CACHE.set(arquivo, { mtime: st.mtimeMs, html });
     }
     res.set('Cache-Control', 'public, max-age=0, must-revalidate');
@@ -244,6 +307,36 @@ app.get('/blog', (req, res, next) => {
    ====================================================================== */
 const ehClinico = (req) =>
   (req.headers.host || '').toLowerCase().includes('clinicogeralonline');
+
+/* ======================================================================
+   PREÇO POR DOMÍNIO                                        (13/11/2026)
+   ----------------------------------------------------------------------
+   São dois endereços e dois preços, servidos pelo MESMO servidor:
+
+     vemconsultai.com.br ........ R$ 40,00   (PRECO)
+     clinicogeralonline.com.br .. R$ 29,60   (PRECO_CLINICO)
+
+   O preço é decidido UMA vez, no /api/checkout, a partir do domínio que
+   o paciente abriu. Depois disso ele viaja no metadata do pagamento,
+   junto com a marca, e é de lá que todo o resto lê: o e-mail de
+   confirmação, os e-mails de recuperação e o evento de venda.
+
+   POR QUE NO METADATA E NÃO NUMA VARIÁVEL. Os e-mails de recuperação
+   saem horas depois, de um laço que roda sozinho, sem pedido nenhum do
+   navegador. Naquela hora não existe mais "domínio do paciente" para
+   consultar. O Mercado Pago é a única memória que sobrevive a um
+   reinício do Render, e já era assim para o horário e para o gclid.
+
+   Ler o preço do pagamento, e não recalcular, também evita o pior tipo
+   de erro: cobrar um valor e escrever outro no e-mail.
+   ====================================================================== */
+const marcaDoPedido = (req) => (ehClinico(req) ? 'clinico' : 'consultai');
+const precoDaMarca  = (marca) => (marca === 'clinico' ? PRECO_CLINICO : PRECO);
+const siteDaMarca   = (marca) => (marca === 'clinico' ? 'clinicogeralonline.com.br' : 'vemconsultai.com.br');
+const nomeDaMarca   = (marca) => (marca === 'clinico' ? 'Clínico Geral Online' : 'Consultaí');
+/* "40" -> "40,00" e "29.60" -> "29,60". Sempre com os centavos, porque
+   agora existe um preço quebrado e "R$ 29,6" ficaria feio no e-mail. */
+const precoBR = (v) => Number(v).toFixed(2).replace('.', ',');
 
 app.get('/', (req, res, next) => {
   if (!ehClinico(req)) return next();
@@ -357,6 +450,11 @@ const {
   // servidor só REGISTRA no log quando a assinatura não bate, sem bloquear nada.
   MP_WEBHOOK_STRICT = '',
   PRECO = '40',
+  /* Preço do segundo domínio.                              (13/11/2026)
+     Quem chega por clinicogeralonline.com.br paga este valor; quem chega
+     por vemconsultai.com.br continua pagando PRECO. Os dois saem daqui e
+     não de dentro do código, para mudar preço não exigir publicação. */
+  PRECO_CLINICO = '29.60',
   PORT = 3000,
   BREVO_API_KEY = '',      // chave da API do Brevo (envio de e-mail por HTTPS)
   NOTIF_EMAIL_FROM = '',   // remetente validado no Brevo
@@ -459,6 +557,44 @@ function registrarEmailFalha(motivo) {
   emailEstado.ultimoErro = { quando: new Date().toISOString(), motivo: limparSegredo(motivo) };
 }
 
+/* ======================================================================
+   TERMOMETRO DO GOOGLE ADS                                  (13/11/2026)
+   ----------------------------------------------------------------------
+   Mesma ideia do termometro do e-mail, para a outra coisa que ja quebrou
+   sem ninguem perceber: o caminho que leva a consulta paga de volta ao
+   Google Ads.
+
+   SAO DUAS PONTAS, e so as duas juntas significam alguma coisa:
+
+     1. O CHECKOUT. Toda vez que alguem comeca um pagamento, anotamos se
+        veio com identificador de clique de anuncio ou nao. Se a captura
+        quebrar de novo, este contador trava em zero e aparece aqui.
+     2. O CSV. O Google busca o arquivo uma vez por dia. Anotamos quando
+        foi a ultima busca, quantas linhas de verdade sairam e, se deu
+        erro, qual foi.
+
+   O QUE NAO SAI DAQUI. Nenhum numero de faturamento, nenhum dado de
+   paciente, nenhuma chave. O /api/health e publico, entao o bloco do
+   Google Ads so diz SITUACAO e QUANDO, nunca quantos pacientes pagaram.
+   Os numeros continuam no log do Render, que e privado.
+   ====================================================================== */
+const gadsEstado = {
+  checkouts: 0,          // quantos pagamentos comecaram desde que o servidor subiu
+  checkoutsComClique: 0, // destes, quantos traziam gclid/wbraid/gbraid
+  ultimoCsv: null,       // ISO da ultima vez que o Google buscou o arquivo
+  ultimoCsvLinhas: null, // quantas linhas reais tinha aquele arquivo
+  ultimoCsvErro: null,   // { quando, motivo }
+};
+function registrarCheckout(temClique) {
+  gadsEstado.checkouts++;
+  if (temClique) gadsEstado.checkoutsComClique++;
+}
+function registrarCsv(linhasReais, erro) {
+  gadsEstado.ultimoCsv = new Date().toISOString();
+  gadsEstado.ultimoCsvLinhas = linhasReais;
+  if (erro) gadsEstado.ultimoCsvErro = { quando: new Date().toISOString(), motivo: limparSegredo(erro) };
+}
+
 /* --------- E-mails via Brevo (API HTTPS — o Render bloqueia SMTP) -------- */
 async function enviarEmail(para, assunto, html, replyTo) {
   if (!BREVO_API_KEY || !NOTIF_EMAIL_FROM) {
@@ -494,9 +630,18 @@ async function enviarEmail(para, assunto, html, replyTo) {
 }
 function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function dataBR(iso) { const [y, m, d] = String(iso).split('-'); return d + '/' + m + '/' + y; }
-/* Moldura padrão dos e-mails — identidade visual da Consultaí */
+/* Moldura padrão dos e-mails — identidade visual da Consultaí.
+   ----------------------------------------------------------------------
+   A MARCA DO E-MAIL CONTINUA SENDO A CONSULTAÍ, de propósito, inclusive
+   para quem agendou pelo Clínico Geral Online. É a mesma empresa, é o
+   nome que aparece no banco, e o chatbot do clínico avisa disso logo no
+   cabeçalho: "Atendimento realizado pela Consultaí".
+
+   O que MUDA por marca é só o que seria mentira: o preço e o endereço
+   do site no rodapé. Um paciente que pagou R$ 29,60 não pode receber um
+   e-mail dizendo que a consulta custa R$ 40.          (13/11/2026) */
 const LOGO_URL = 'https://vemconsultai.com.br/apple-touch-icon.png';
-function emailShell(headline, corpo, corHeader) {
+function emailShell(headline, corpo, corHeader, marca) {
   return `
   <div style="background:#F1FBF9;padding:26px 12px;font-family:Arial,Helvetica,sans-serif">
     <div style="max-width:540px;margin:0 auto;background:#ffffff;border:1px solid #E3EFEC;border-radius:16px;overflow:hidden">
@@ -510,7 +655,7 @@ function emailShell(headline, corpo, corHeader) {
       <div style="padding:26px;color:#14333A;font-size:15px;line-height:1.7">${corpo}</div>
       <div style="background:#F1FBF9;border-top:1px solid #E3EFEC;padding:16px 26px;color:#5C7178;font-size:12px;line-height:1.7">
         <b style="color:#0C4A52">Consultaí</b> · uma iniciativa Octa Health<br>
-        Consulta médica online por R$ 40 · <a href="https://vemconsultai.com.br" style="color:#15A39A;text-decoration:none">vemconsultai.com.br</a><br>
+        Consulta médica online por R$ ${precoBR(precoDaMarca(marca))} · <a href="https://${siteDaMarca(marca)}" style="color:#15A39A;text-decoration:none">${siteDaMarca(marca)}</a><br>
         Telemedicina conforme a Resolução CFM nº 2.314/2022
       </div>
     </div>
@@ -647,7 +792,7 @@ async function avisarWhatsRecuperacao(m, qual) {
   try {
     await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM,
       titulo + ' — ' + (m.nome || 'paciente'),
-      emailShell(titulo, corpo, qual === 1 ? '#FF6B4A' : '#0F766E'));
+      emailShell(titulo, corpo, qual === 1 ? '#FF6B4A' : '#0F766E', m.marca));
     console.log('[whats] aviso ' + qual + ' enviado ao médico — ' + (m.nome || ''));
   } catch (e) { console.error('[whats] falha no aviso ' + qual + ': ' + e.message); }
 }
@@ -681,7 +826,7 @@ async function confirmarPaciente(p, protocolo) {
     ${itemLista('Tenha em mãos seus exames ou receitas anteriores, se tiver.')}
     <p style="margin:12px 0 0;color:#5C7178;font-size:13px">Precisa reagendar? É só chamar no WhatsApp <a href="https://wa.me/5511976544002" style="color:#0F766E;text-decoration:none"><b>(11) 97654-4002</b></a>.</p>`;
   try {
-    if (await enviarEmail(p.paciente.email, 'Consulta confirmada — ' + dt + ' às ' + p.slot.horario + ' | Consultaí', emailShell('Consulta confirmada', corpo))) {
+    if (await enviarEmail(p.paciente.email, 'Consulta confirmada — ' + dt + ' às ' + p.slot.horario + ' | Consultaí', emailShell('Consulta confirmada', corpo, null, p.marca))) {
       console.log('[email] confirmação enviada ao paciente ' + p.paciente.email);
     }
   } catch (e) { console.error('[email] falha na confirmação ao paciente: ' + e.message); }
@@ -1054,7 +1199,14 @@ async function efetivarAgendamento(paymentId) {
           slot: { data: m.data, horario: m.horario, codigoHorario: m.codigohorario },
           // ip e ua também viajam no metadata: sem eles, o evento recuperado
           // chegaria à Meta com menos sinais de casamento (EMQ mais baixo).
-          tracking: { ip: m.ip, ua: m.ua, fbp: m.fbp, fbc: m.fbc, eventSourceUrl: 'https://vemconsultai.com.br/agendamento' },
+          tracking: { ip: m.ip, ua: m.ua, fbp: m.fbp, fbc: m.fbc,
+            eventSourceUrl: 'https://' + siteDaMarca(m.marca) + '/agendamento' },
+          // Marca e preço também voltam do metadata. Sem isto, um reinício
+          // do servidor faria o paciente do clínico receber e-mail com o
+          // preço da Consultaí. O "|| " cobre pagamentos antigos, de antes
+          // de 13/11/2026, que não têm estes dois campos.
+          marca: m.marca || 'consultai',
+          preco: m.preco || PRECO,
           booked: false,
         };
         pendentes.set(String(paymentId), p);
@@ -1096,8 +1248,11 @@ async function efetivarAgendamento(paymentId) {
   avisarNovaConsulta(p, p.protocolo, paymentId); // aviso interno em segundo plano
   confirmarPaciente(p, p.protocolo);             // confirmação ao paciente em segundo plano
   // VENDA pela CAPI: mesmo event_id do pixel do navegador ('purchase_'+protocolo) → sem contagem dupla.
-  enviarEventoCapi('Purchase', 'purchase_' + p.protocolo, p.paciente, p.tracking, { content_name: 'Consulta médica online' })
-    .catch(() => {}); // em segundo plano — não trava o agendamento
+  enviarEventoCapi('Purchase', 'purchase_' + p.protocolo, p.paciente, p.tracking, {
+    content_name: p.marca === 'clinico' ? 'Consulta com clínico geral online' : 'Consulta médica online',
+    // o valor REAL cobrado, não o preço padrão da casa
+    value: Number(p.preco || PRECO),
+  }).catch(() => {}); // em segundo plano — não trava o agendamento
   return { agendado: true, protocolo: p.protocolo };
 }
 /* Alerta urgente ao médico quando um pagamento aprovado NÃO virou agenda */
@@ -1165,23 +1320,36 @@ app.post('/api/checkout', rateLimit(8, 10 * 60 * 1000), async (req, res) => {
     const gclid  = String(req.body.gclid  || lerCookie(req, 'cs_gclid')  || '').slice(0, 200);
     const wbraid = String(req.body.wbraid || lerCookie(req, 'cs_wbraid') || '').slice(0, 200);
     const gbraid = String(req.body.gbraid || lerCookie(req, 'cs_gbraid') || '').slice(0, 200);
+    /* De qual porta este paciente entrou, e quanto ele paga.   (13/11/2026)
+       Decidido aqui e só aqui. Daqui para a frente ninguém recalcula:
+       todo o resto lê de volta do metadata do pagamento. */
+    const marca = marcaDoPedido(req);
+    const preco = precoDaMarca(marca);
     const idem = 'consultai-' + Date.now() + '-' + Math.floor(Math.random() * 1e6);
     const pay = await mpCriarPix({
-      valor: PRECO, email, nome, idem,
+      valor: preco, email, nome, idem,
       // fbp/fbc/ip/ua viajam no metadata p/ sobreviver a um reinício do servidor
-      metadata: { nome, cpf, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario, fbp, fbc, ip, ua: ua.slice(0, 250), gclid, wbraid, gbraid },
+      metadata: { nome, cpf, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario, fbp, fbc, ip, ua: ua.slice(0, 250), gclid, wbraid, gbraid, marca, preco },
     });
     pendentes.set(String(pay.id), {
       paciente: { nome, cpf, telefone, email, dataNascimento, sexo },
       slot: { data, horario, codigoHorario },
       tracking,
+      marca,
+      preco,
       booked: false,
     });
     travar(data, horario); // reserva SÓ este horário por 12 min — some da lista dos outros
-    console.log('[checkout] Pix criado — pagamento ' + pay.id + ' — ' + data + ' ' + horario + ' — ' + nome + ' (horário travado)');
+    /* Anota se este paciente chegou por anúncio. É o sinal mais cedo que
+       existe de que a captura do gclid está viva: se voltar a quebrar,
+       este contador trava em zero e aparece no /api/health, em vez de a
+       gente só descobrir meses depois, pelo CSV vazio. */
+    registrarCheckout(!!(gclid || wbraid || gbraid));
+    console.log('[checkout] Pix criado — pagamento ' + pay.id + ' — ' + data + ' ' + horario + ' — ' + nome +
+      ' (horário travado' + (gclid || wbraid || gbraid ? ', veio de anúncio' : '') + ')');
     // Início de agendamento pela CAPI (mesmo id do pixel: 'ic_'+pay.id → sem duplicar).
-    enviarEventoCapi('InitiateCheckout', 'ic_' + pay.id, { nome, cpf, telefone, email }, tracking).catch(() => {});
-    res.json({ ok: true, paymentId: pay.id, copiaECola: pay.copiaECola, qrBase64: pay.qrBase64, ticketUrl: pay.ticketUrl, valor: Number(PRECO) });
+    enviarEventoCapi('InitiateCheckout', 'ic_' + pay.id, { nome, cpf, telefone, email }, tracking, { value: Number(preco) }).catch(() => {});
+    res.json({ ok: true, paymentId: pay.id, copiaECola: pay.copiaECola, qrBase64: pay.qrBase64, ticketUrl: pay.ticketUrl, valor: Number(preco) });
   } catch (e) {
     res.status(500).json({ ok: false, erro: e.message });
   }
@@ -1304,6 +1472,36 @@ app.get('/api/health', (req, res) => {
       enviadosDesdeQueSubiu: emailEstado.enviados,
       falhasDesdeQueSubiu: emailEstado.falhas,
     },
+    googleAds: (() => {
+      /* Só situação e data. Nenhum número de paciente ou faturamento sai
+         por aqui, porque este endereço é público. */
+      let situacao;
+      if (gadsEstado.ultimoCsvErro && (!gadsEstado.ultimoCsv ||
+          Date.parse(gadsEstado.ultimoCsvErro.quando) >= Date.parse(gadsEstado.ultimoCsv))) {
+        situacao = 'FALHA AO MONTAR O ARQUIVO DE CONVERSOES';
+      } else if (!gadsEstado.ultimoCsv) {
+        situacao = 'o Google ainda nao buscou o arquivo desde que o servidor subiu';
+      } else if (gadsEstado.ultimoCsvLinhas > 0) {
+        situacao = 'ok, com conversao paga no arquivo';
+      } else {
+        situacao = 'arquivo sem conversao paga vinda de anuncio';
+      }
+      return {
+        situacao,
+        ultimaBuscaDoGoogle: horarioBR(gadsEstado.ultimoCsv),
+        // Captura do clique: se houve checkout e NENHUM trouxe clique, ou a
+        // campanha está parada, ou a captura quebrou de novo.
+        capturaDoClique: gadsEstado.checkouts === 0
+          ? 'nenhum agendamento desde que o servidor subiu'
+          : (gadsEstado.checkoutsComClique > 0
+              ? 'ok, chegou agendamento vindo de anuncio'
+              : 'nenhum agendamento veio de anuncio desde que o servidor subiu'),
+        ultimoErro: gadsEstado.ultimoCsvErro ? {
+          quando: horarioBR(gadsEstado.ultimoCsvErro.quando),
+          motivo: gadsEstado.ultimoCsvErro.motivo,
+        } : null,
+      };
+    })(),
   });
 });
 /* ======================================================================
@@ -1430,11 +1628,13 @@ app.get(/^\/api\/google-ads\/conversoes[-a-z0-9]*\.csv$/i, async (req, res) => {
       comClique++;
     }
     console.log('[google-ads] CSV servido — ' + pagamentos.length + ' pagamentos aprovados, ' + comClique + ' vindos de anúncio');
+    registrarCsv(comClique, null);
   } catch (e) {
     // Devolve o cabeçalho vazio em vez de erro: um upload agendado que recebe
     // 500 é marcado como falha no Google e enche a conta de aviso. Zero linha
     // é um resultado legítimo, e o motivo real fica no log.
     console.error('[google-ads] falha ao montar o CSV: ' + e.message);
+    registrarCsv(0, e && e.message ? e.message : e);
   }
   /* LINHA DE AMOSTRA, quando ainda não existe conversão nenhuma.
      ----------------------------------------------------------------------
@@ -1539,7 +1739,7 @@ function corpoRecup1(m, copiaECola) {
   const pix = copiaECola
     ? '<div style="border:1.5px dashed #CDEBE5;background:#FAFDFC;border-radius:12px;padding:13px 15px;margin:14px 0">' +
       '<div style="font-size:11.5px;color:#5C7178;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">' +
-      'Pix copia e cola · R$ ' + escHtml(String(PRECO)) + ',00</div>' +
+      'Pix copia e cola · R$ ' + escHtml(precoBR(m.preco || PRECO)) + '</div>' +
       '<div style="font-family:monospace;font-size:11.5px;color:#14333A;word-break:break-all;line-height:1.5">' +
       escHtml(copiaECola) + '</div></div>'
     : '';
@@ -1550,7 +1750,7 @@ function corpoRecup1(m, copiaECola) {
       'Dr. João Pedro Vieira do Prado — Médico — CRM-SP 281.239') +
     '<p style="margin:0 0 12px">Esse horário fica guardado <b>por mais 5 minutos</b>. Depois disso ele volta ' +
     'para a lista e outra pessoa pode escolher.</p>' + pix +
-    botaoEmail('Pagar e confirmar minha consulta', 'https://vemconsultai.com.br/agendamento') +
+    botaoEmail('Pagar e confirmar minha consulta', 'https://' + siteDaMarca(m.marca) + '/agendamento') +
     '<p style="margin:12px 0 0;font-size:13px;color:#5C7178">Se você mudou de ideia, não precisa fazer nada. ' +
     'O horário volta sozinho para a lista e ninguém é cobrado.</p>' +
     '<p style="margin:10px 0 0;font-size:12px;color:#5C7178">Você recebeu este aviso porque iniciou um agendamento ' +
@@ -1560,9 +1760,9 @@ function corpoRecup2(m) {
   const primeiro = escHtml(String(m.nome || '').trim().split(/\s+/)[0] || 'tudo bem');
   return '<p style="margin:0 0 12px">Olá, <b>' + primeiro + '</b>! Ontem você começou a agendar uma consulta e o ' +
     'pagamento não foi concluído. O horário que você tinha escolhido já voltou para a lista, mas tem outros abertos.</p>' +
-    '<p style="margin:0 0 12px">A consulta é por vídeo, com médico de CRM ativo, custa <b>R$ ' + escHtml(String(PRECO)) +
+    '<p style="margin:0 0 12px">A consulta é por vídeo, com médico de CRM ativo, custa <b>R$ ' + escHtml(precoBR(m.preco || PRECO)) +
     ' no Pix</b> e leva de 10 a 15 minutos. Receita, atestado e pedido de exames saem quando o médico indicar.</p>' +
-    botaoEmail('Escolher um novo horário', 'https://vemconsultai.com.br/agendamento') +
+    botaoEmail('Escolher um novo horário', 'https://' + siteDaMarca(m.marca) + '/agendamento') +
     '<p style="margin:12px 0 0;font-size:13px;color:#5C7178">Se preferir falar com uma pessoa antes, é só chamar no ' +
     'WhatsApp <b>(11) 97654-4002</b>.</p>' +
     '<p style="margin:8px 0 0;font-size:13px;color:#5C7178">Não atendemos urgência nem emergência. Nesses casos, ' +
@@ -1593,14 +1793,14 @@ async function rodarRecuperacao() {
           && pg.point_of_interaction.transaction_data.qr_code) || '';
         const ok = await enviarEmail(m.email,
           'Seu horário de ' + dataBR(m.data) + ' às ' + m.horario + ' ainda está reservado',
-          emailShell('Seu horário ainda está reservado', corpoRecup1(m, copia)));
+          emailShell('Seu horário ainda está reservado', corpoRecup1(m, copia), null, m.marca));
         marca.e1 = true; recupEnviados.set(id, marca); salvarRecup(); enviados++;
         console.log('[recuperacao] e-mail 1 ' + (ok ? 'enviado' : 'FALHOU') + ' — ' + id + ' — ' + m.email);
         await avisarWhatsRecuperacao(m, 1);   // e-mail pro médico com o botão do WhatsApp
       } else if (!marca.e2 && idade >= RECUP_MIN_2 && idade < RECUP_MIN_2 + 180) {
         const ok = await enviarEmail(m.email,
           'Você começou um agendamento na ' + assinatura,
-          emailShell('Ficou faltando só o pagamento', corpoRecup2(m), '#0F766E'));
+          emailShell('Ficou faltando só o pagamento', corpoRecup2(m), '#0F766E', m.marca));
         marca.e2 = true; recupEnviados.set(id, marca); salvarRecup(); enviados++;
         console.log('[recuperacao] e-mail 2 ' + (ok ? 'enviado' : 'FALHOU') + ' — ' + id + ' — ' + m.email);
         await avisarWhatsRecuperacao(m, 2);   // e-mail pro médico com o botão do WhatsApp
