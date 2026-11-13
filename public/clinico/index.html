@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Clínico Geral Online | Consulta médica por vídeo por apenas R$ 40,00</title>
-<meta name="description" content="Consulta com clínico geral por vídeo por apenas R$ 40,00. Sem aplicativo, sem carência e sem fidelidade. Pague só quando precisar. Atendimento em todo o Brasil.">
-<meta property="og:title" content="Clínico Geral Online | Consulta por vídeo por R$ 40,00">
+<title>Clínico Geral Online | Consulta médica por vídeo por apenas R$ 29,60</title>
+<meta name="description" content="Consulta com clínico geral por vídeo por apenas R$ 29,60. Sem aplicativo, sem carência e sem fidelidade. Pague só quando precisar. Atendimento em todo o Brasil.">
+<meta property="og:title" content="Clínico Geral Online | Consulta por vídeo por R$ 29,60">
 <meta property="og:description" content="Consulta com clínico geral por vídeo. Sem aplicativo, sem carência e sem fidelidade.">
 <meta property="og:image" content="https://clinicogeralonline.com.br/clinico/img/og-image.webp">
 
@@ -328,6 +328,20 @@
     .hero .confianca svg{width:13px;height:13px}
     .apoio{font-size:14px;letter-spacing:.08em;margin-bottom:0}
   }
+
+  /* ===== BOTAO DO WHATSAPP =====                          (13/11/2026)
+     As MESMAS regras do botao da Consultai, copiadas de style.css sem
+     mudar um pixel. Vao aqui dentro porque esta pagina nao carrega o
+     style.css: ela tem folha de estilo propria.
+     Ficou de fora so a regra que some com o botao quando o menu de
+     celular abre, porque esta pagina nao tem menu de celular.
+     Existe como porta de saida: se qualquer coisa falhar no caminho do
+     agendamento, o paciente tem como falar com uma pessoa. */
+  .wa{position:fixed;bottom:22px;right:22px;width:62px;height:62px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.28);z-index:60;transition:.15s}
+  .wa:hover{transform:scale(1.07)}
+  .wa svg{width:35px;height:35px;fill:#fff}
+  .wa::before{content:'';position:absolute;inset:0;border-radius:50%;background:#25D366;opacity:.5;animation:waPulse 2.1s ease-out infinite;z-index:-1}
+  @keyframes waPulse{0%{transform:scale(1);opacity:.5}70%{transform:scale(1.7);opacity:0}100%{opacity:0}}
 </style>
 </head>
 <body>
@@ -366,7 +380,7 @@
   </div>
 </section>
 
-<div class="faixa faixa-preco">Apenas: <b>R$ 40,00</b></div>
+<div class="faixa faixa-preco">Apenas: <b>R$ 29,60</b></div>
 
 <!-- ══ selos ══ -->
 <section class="selos">
@@ -409,7 +423,7 @@
 <section class="bloco semapp">
   <div class="container centro">
     <h2>Não precisa baixar aplicativo</h2>
-    <p class="lead">Você tem um médico a um clique, no navegador que já está no seu celular, por apenas R$ 40,00.</p>
+    <p class="lead">Você tem um médico a um clique, no navegador que já está no seu celular, por apenas R$ 29,60.</p>
     <div class="cxs3">
       <div class="cx">
         <svg class="ico-cx" viewBox="0 0 40 40" fill="none" aria-hidden="true">
@@ -475,7 +489,7 @@
       <path d="M20.5 9.5h7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
       <path d="M26.8 15.5L18.5 27.5h5.4L21.2 38l8.3-12h-5.4z" fill="#15A39A"/>
     </svg><span class="n">2</span></div>
-        <h3>Pague R$ 40,00 no Pix</h3>
+        <h3>Pague R$ 29,60 no Pix</h3>
         <p>Aprovação na hora. Sem boleto e sem esperar compensar.</p>
       </div>
       <div class="passo">
@@ -496,7 +510,7 @@
 <section class="bloco alt">
   <div class="container">
     <div class="precao">
-      <p class="v">R$ 40,00</p>
+      <p class="v">R$ 29,60</p>
       <p>Valor único por consulta. Sem mensalidade, sem taxa de adesão e sem cobrança recorrente.</p>
     </div>
   </div>
@@ -508,15 +522,15 @@
     <div class="centro"><h2>Perguntas frequentes</h2></div>
     <div class="faq" style="margin-top:26px">
       <details open><summary><h3>O que é o Clínico Geral Online?</h3></summary>
-        <div class="r">É uma plataforma de teleconsulta da Octa Health. Você agenda um horário, paga R$ 40,00 no Pix e conversa por vídeo com um médico clínico geral, direto do navegador do seu celular ou computador.</div></details>
+        <div class="r">É uma plataforma de teleconsulta da Octa Health. Você agenda um horário, paga R$ 29,60 no Pix e conversa por vídeo com um médico clínico geral, direto do navegador do seu celular ou computador.</div></details>
       <details><summary><h3>Qual o valor da consulta?</h3></summary>
-        <div class="r">R$ 40,00 por consulta. É o valor cheio, sem promoção que muda depois e sem letra miúda.</div></details>
+        <div class="r">R$ 29,60 por consulta. É o valor cheio, sem promoção que muda depois e sem letra miúda.</div></details>
       <details><summary><h3>Há carência ou fidelidade?</h3></summary>
         <div class="r">Não. Não existe mensalidade, plano, carência nem tempo mínimo de permanência. Você paga apenas quando marcar uma consulta, e só por ela.</div></details>
       <details><summary><h3>Como funciona o atendimento médico?</h3></summary>
         <div class="r">Por videochamada, de 10 a 15 minutos. O médico ouve a sua queixa, avalia o que é possível avaliar por vídeo e conduz o caso, orientando o tratamento ou encaminhando para atendimento presencial quando for necessário.</div></details>
-      <details><summary><h3>Pago algo além dos R$ 40,00?</h3></summary>
-        <div class="r">Não. Os R$ 40,00 cobrem a consulta e os documentos emitidos pelo médico durante o atendimento. Não há taxa de emissão, taxa de plataforma nem cobrança posterior.</div></details>
+      <details><summary><h3>Pago algo além dos R$ 29,60?</h3></summary>
+        <div class="r">Não. Os R$ 29,60 cobrem a consulta e os documentos emitidos pelo médico durante o atendimento. Não há taxa de emissão, taxa de plataforma nem cobrança posterior.</div></details>
       <details><summary><h3>A empresa em que trabalho pode se negar a receber um atestado?</h3></summary>
         <div class="r">Não por ele ter sido emitido online. A Lei 14.510/2022, no artigo 26-B, determina que os atos do profissional de saúde praticados na modalidade telessaúde têm validade em todo o território nacional. O atestado é assinado digitalmente com certificado ICP-Brasil, que a Medida Provisória 2.200-2/2001 equipara à assinatura de próprio punho, e traz o nome do médico, o CRM e um código para conferir a autenticidade do documento.</div></details>
       <details><summary><h3>Como saber se o médico é um médico de verdade?</h3></summary>
@@ -554,16 +568,23 @@
 
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"O que é o Clínico Geral Online?","acceptedAnswer":{"@type":"Answer","text":"É uma plataforma de teleconsulta da Octa Health. Você agenda um horário, paga R$ 40,00 no Pix e conversa por vídeo com um médico clínico geral, direto do navegador do seu celular ou computador."}},
-{"@type":"Question","name":"Qual o valor da consulta?","acceptedAnswer":{"@type":"Answer","text":"R$ 40,00 por consulta. É o valor cheio, sem promoção que muda depois e sem letra miúda."}},
+{"@type":"Question","name":"O que é o Clínico Geral Online?","acceptedAnswer":{"@type":"Answer","text":"É uma plataforma de teleconsulta da Octa Health. Você agenda um horário, paga R$ 29,60 no Pix e conversa por vídeo com um médico clínico geral, direto do navegador do seu celular ou computador."}},
+{"@type":"Question","name":"Qual o valor da consulta?","acceptedAnswer":{"@type":"Answer","text":"R$ 29,60 por consulta. É o valor cheio, sem promoção que muda depois e sem letra miúda."}},
 {"@type":"Question","name":"Há carência ou fidelidade?","acceptedAnswer":{"@type":"Answer","text":"Não. Não existe mensalidade, plano, carência nem tempo mínimo de permanência. Você paga apenas quando marcar uma consulta, e só por ela."}},
 {"@type":"Question","name":"Como funciona o atendimento médico?","acceptedAnswer":{"@type":"Answer","text":"Por videochamada, de 10 a 15 minutos. O médico ouve a sua queixa, avalia o que é possível avaliar por vídeo e conduz o caso, orientando o tratamento ou encaminhando para atendimento presencial quando for necessário."}},
-{"@type":"Question","name":"Pago algo além dos R$ 40,00?","acceptedAnswer":{"@type":"Answer","text":"Não. Os R$ 40,00 cobrem a consulta e os documentos emitidos pelo médico durante o atendimento. Não há taxa de emissão, taxa de plataforma nem cobrança posterior."}},
+{"@type":"Question","name":"Pago algo além dos R$ 29,60?","acceptedAnswer":{"@type":"Answer","text":"Não. Os R$ 29,60 cobrem a consulta e os documentos emitidos pelo médico durante o atendimento. Não há taxa de emissão, taxa de plataforma nem cobrança posterior."}},
 {"@type":"Question","name":"A empresa em que trabalho pode se negar a receber um atestado?","acceptedAnswer":{"@type":"Answer","text":"Não por ele ter sido emitido online. A Lei 14.510/2022, no artigo 26-B, determina que os atos do profissional de saúde praticados na modalidade telessaúde têm validade em todo o território nacional. O atestado é assinado digitalmente com certificado ICP-Brasil, que a Medida Provisória 2.200-2/2001 equipara à assinatura de próprio punho, e traz o nome do médico, o CRM e um código para conferir a autenticidade do documento."}},
 {"@type":"Question","name":"Como saber se o médico é um médico de verdade?","acceptedAnswer":{"@type":"Answer","text":"O responsável técnico é o Dr. João Pedro Vieira do Prado, Médico, CRM-SP 281.239. O nome e o CRM do médico que atender aparecem em todos os documentos emitidos, e você pode conferir o registro no site do Conselho Regional de Medicina do respectivo estado."}},
 {"@type":"Question","name":"Posso usar meu cadastro para um familiar?","acceptedAnswer":{"@type":"Answer","text":"Cada consulta é individual e os dados precisam ser os da pessoa que vai ser atendida, porque é o nome dela que consta no prontuário e nos documentos. Você pode agendar e pagar para um familiar, informando os dados dele no agendamento. Menores de idade precisam estar acompanhados de um responsável durante a consulta."}}
 ]}
 </script>
 
+
+<!-- Botao do WhatsApp: mesmo desenho, mesmo numero e mesmo comportamento
+     do botao da Consultai. So o texto da mensagem muda, para a conversa
+     ja chegar dizendo de qual dos dois sites a pessoa veio. -->
+<a class="wa" href="https://wa.me/5511976544002?text=Ol%C3%A1%21%20Quero%20saber%20mais%20sobre%20a%20consulta%20com%20cl%C3%ADnico%20geral%20online." target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
 </body>
 </html>
