@@ -416,10 +416,54 @@ function htmlParaTexto(html) {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
+/* ======================================================================
+   TERMOMETRO DO E-MAIL                                      (13/11/2026)
+   ----------------------------------------------------------------------
+   POR QUE ISTO EXISTE. Em 18/09/2026 o envio parou e so se descobriu
+   quatro dias depois. O /api/health respondia "ok: true" o tempo todo,
+   porque ele so dizia se o servidor estava de pe, e o servidor estava.
+   Daqui pra frente toda passagem por enviarEmail deixa um registro, e o
+   /api/health mostra o ultimo envio que deu certo e o ultimo que falhou.
+   Da pra ver do celular, em segundos, sem abrir Render nem Brevo.
+
+   O QUE ELE NAO E. Nao e historico. E memoria do processo: toda
+   publicacao zera. Por isso o /api/health tambem informa desde quando o
+   servidor esta no ar, que e o que da sentido a um "nunca enviou".
+   ====================================================================== */
+const emailEstado = {
+  processoDesde: new Date().toISOString(),
+  ultimoOk: null,      // ISO do ultimo envio aceito pelo Brevo
+  ultimoErro: null,    // { quando, motivo }
+  enviados: 0,
+  falhas: 0,
+};
+function horarioBR(iso) {
+  if (!iso) return null;
+  return new Date(new Date(iso).getTime() - 3 * 3600 * 1000)
+    .toISOString().slice(0, 19).replace('T', ' ');
+}
+// O /api/health e publico. Nenhuma chave pode sair por ele, nem por
+// acidente dentro de uma mensagem de erro de terceiro.
+function limparSegredo(txt) {
+  return String(txt == null ? '' : txt)
+    .replace(/xkeysib-[A-Za-z0-9._-]+/g, '[chave omitida]')
+    .replace(/[A-Za-z0-9._-]{50,}/g, '[omitido]')
+    .slice(0, 180);
+}
+function registrarEmailOk() {
+  emailEstado.enviados++;
+  emailEstado.ultimoOk = new Date().toISOString();
+}
+function registrarEmailFalha(motivo) {
+  emailEstado.falhas++;
+  emailEstado.ultimoErro = { quando: new Date().toISOString(), motivo: limparSegredo(motivo) };
+}
+
 /* --------- E-mails via Brevo (API HTTPS — o Render bloqueia SMTP) -------- */
 async function enviarEmail(para, assunto, html, replyTo) {
   if (!BREVO_API_KEY || !NOTIF_EMAIL_FROM) {
     console.log('[email] não configurado (defina BREVO_API_KEY e NOTIF_EMAIL_FROM)');
+    registrarEmailFalha('não configurado (BREVO_API_KEY ou NOTIF_EMAIL_FROM vazia)');
     return false;
   }
   // aceita vários destinatários separados por vírgula
@@ -432,13 +476,21 @@ async function enviarEmail(para, assunto, html, replyTo) {
     textContent: htmlParaTexto(html),   // ver htmlParaTexto acima: tira a penalidade MIME_HTML_ONLY
   };
   if (replyTo) corpo.replyTo = { email: replyTo }; // "responder" vai direto pra quem escreveu
-  const r = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json', 'accept': 'application/json' },
-    body: JSON.stringify(corpo),
-  });
-  if (!r.ok) throw new Error('Brevo ' + r.status + ': ' + (await r.text()).slice(0, 200));
-  return true;
+  try {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json', 'accept': 'application/json' },
+      body: JSON.stringify(corpo),
+    });
+    if (!r.ok) throw new Error('Brevo ' + r.status + ': ' + (await r.text()).slice(0, 200));
+    registrarEmailOk();
+    return true;
+  } catch (e) {
+    // registra e RELANCA: quem chama ja tem try/catch e ja escreve no log.
+    // Engolir o erro aqui mudaria o comportamento de todo o resto.
+    registrarEmailFalha(e && e.message ? e.message : e);
+    throw e;
+  }
 }
 function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function dataBR(iso) { const [y, m, d] = String(iso).split('-'); return d + '/' + m + '/' + y; }
@@ -1213,7 +1265,47 @@ app.post('/api/contato', rateLimit(5, 10 * 60 * 1000), async (req, res) => {
     res.status(500).json({ ok: false, erro: 'não foi possível enviar agora' });
   }
 });
-app.get('/api/health', (req, res) => res.json({ ok: true, servico: 'consultai-backend' }));
+/* O /api/health continua devolvendo SEMPRE ok:true e status 200, porque
+   e ele que o Render usa para saber se o servico esta vivo. E-mail
+   parado nao e motivo para derrubar o site: quem nao esta bem aqui e o
+   envio, e isso aparece no campo "email.situacao", nao no "ok". */
+app.get('/api/health', (req, res) => {
+  const agora = Date.now();
+  const horas = ms => (ms === null ? null : Math.round(ms / 360000) / 10);
+  const msDesdeOk = emailEstado.ultimoOk ? agora - Date.parse(emailEstado.ultimoOk) : null;
+  const msDesdeErro = emailEstado.ultimoErro ? agora - Date.parse(emailEstado.ultimoErro.quando) : null;
+
+  // "falhando" = o ultimo acontecimento foi uma falha, e nao um sucesso
+  const falhando = !!emailEstado.ultimoErro && (
+    !emailEstado.ultimoOk ||
+    Date.parse(emailEstado.ultimoErro.quando) > Date.parse(emailEstado.ultimoOk)
+  );
+
+  let situacao;
+  if (falhando)                 situacao = 'E-MAIL FALHANDO';
+  else if (emailEstado.ultimoOk) situacao = 'e-mail ok';
+  else                           situacao = 'nenhum e-mail enviado desde que o servidor subiu';
+
+  res.json({
+    ok: true,
+    servico: 'consultai-backend',
+    agora: horarioBR(new Date().toISOString()),
+    servidorDesde: horarioBR(emailEstado.processoDesde),
+    email: {
+      situacao,
+      falhando,
+      ultimoEnvioOk: horarioBR(emailEstado.ultimoOk),
+      horasDesdeUltimoEnvioOk: horas(msDesdeOk),
+      ultimoErro: emailEstado.ultimoErro ? {
+        quando: horarioBR(emailEstado.ultimoErro.quando),
+        horasAtras: horas(msDesdeErro),
+        motivo: emailEstado.ultimoErro.motivo,
+      } : null,
+      enviadosDesdeQueSubiu: emailEstado.enviados,
+      falhasDesdeQueSubiu: emailEstado.falhas,
+    },
+  });
+});
 /* ======================================================================
    CONVERSÕES PAGAS PARA O GOOGLE ADS                      (29/08/2026)
    ----------------------------------------------------------------------
