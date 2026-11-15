@@ -519,14 +519,33 @@ fbq('init','1369928625011386');fbq('track','PageView');
      13/11/2026: antes daqui, abrir era tudo o que existia. A imagem cabia na
      tela e parava por aí, e num celular de 390 pontos de largura um
      infográfico de 1080 encolhe para menos de um terço: dava para ver a peça,
-     não dava para LER a peça. Agora a imagem aberta tem dois estados. Cabendo
-     na tela, para enxergar o conjunto, e no tamanho real, quando a tela vira
-     uma área que se arrasta, igual a um mapa. Tocar na imagem, tocar na lupa
-     ou apertar + alterna entre os dois, e o ponto tocado continua debaixo do
-     dedo depois de aproximar.
+     não dava para LER a peça. Entraram dois estados, cabendo na tela e
+     aproximado, com a tela virando uma área que se arrasta.
+
+     16/11/2026, depois do teste do João Pedro no computador e no celular:
+
+     1. No computador a imagem aproximada encostava na esquerda, com uma faixa
+        morta de fundo à direita. Causa: o palco virava display:block, que
+        alinha pelo começo. Agora é grid com "safe center", que centraliza
+        quando sobra espaço e NÃO corta o começo quando falta.
+
+     2. O "tamanho real" usava a largura do ARQUIVO. Quatro infográficos
+        antigos foram exportados em 2160 em vez de 1080, então esses quatro
+        aproximavam o dobro dos outros e pediam arrasto lateral até no
+        computador. Agora o alvo é a largura da JANELA, limitada pelo arquivo:
+        no computador a imagem enche a janela e o arrasto fica só na vertical,
+        nos 41 artigos, tenha o arquivo 1080 ou 2160.
+
+     3. No celular a imagem é mais estreita que o infográfico em qualquer
+        tamanho que dê para ler, então o arrasto lateral é inevitável. O que
+        dava para consertar era a imprevisibilidade: a imagem caía no meio da
+        linha e, ao arrastar para baixo, escorregava de lado junto. Agora o
+        eixo horizontal anda em colunas do tamanho exato da tela, com setas
+        para avançar e voltar, e ao soltar o dedo ele se encaixa na coluna
+        mais próxima. Descer para ler não tira mais a linha do lugar.
 
      A lupinha no canto da imagem dentro do artigo é posta por este mesmo
-     script, para não precisar mexer no <figure> de 40 arquivos. Ela não
+     script, para não precisar mexer no <figure> de 41 arquivos. Ela não
      recebe clique: quem recebe é a imagem embaixo.
 
      Fecha de quatro jeitos: no X, tocando fora da imagem quando ela está
@@ -544,15 +563,17 @@ fbq('init','1369928625011386');fbq('track','PageView');
 
 .lbx{position:fixed;inset:0;z-index:200;display:none;background:rgba(12,74,82,.96)}
 .lbx.on{display:block}
-/* o palco e quem rola. No estado "cabe", ele centraliza a imagem.
-   No estado "perto", ele vira a area que se arrasta. */
+/* o palco e quem rola. Nos dois estados ele centraliza a imagem; "safe"
+   garante que, quando a imagem e MAIOR que o palco, o comeco dela nao fique
+   cortado fora do alcance da rolagem. */
 .lbx .palco{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch;
-  display:flex;align-items:center;justify-content:center;padding:14px;
+  display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);
+  place-items:center;place-items:safe center;padding:14px;
   overscroll-behavior:contain;touch-action:pan-x pan-y}
 .lbx img{display:block;max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;
   box-shadow:0 20px 60px rgba(0,0,0,.5);cursor:zoom-in}
-.lbx.perto .palco{display:block;padding:0}
-.lbx.perto img{max-width:none;max-height:none;width:auto;border-radius:0;
+.lbx.perto .palco{padding:0}
+.lbx.perto img{max-width:none;max-height:none;border-radius:0;
   box-shadow:none;cursor:zoom-out}
 .lbx .fechar,.lbx .mais{position:absolute;width:44px;height:44px;border-radius:50%;
   background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.4);color:#fff;
@@ -560,17 +581,34 @@ fbq('init','1369928625011386');fbq('track','PageView');
 .lbx .fechar{top:12px;right:12px;font-size:26px;line-height:1}
 .lbx .mais{top:12px;left:12px}
 .lbx .mais svg{width:22px;height:22px;display:block}
+/* as setas de coluna. So aparecem quando a imagem aproximada e mais larga que
+   a tela, que na pratica e o caso do celular. */
+.lbx .lado{position:absolute;bottom:62px;width:46px;height:52px;border-radius:12px;
+  background:rgba(12,74,82,.92);border:1.5px solid rgba(255,255,255,.55);color:#fff;
+  display:none;align-items:center;justify-content:center;cursor:pointer;z-index:2;
+  box-shadow:0 2px 10px rgba(0,0,0,.35);padding:0}
+.lbx .lado svg{width:22px;height:22px;display:block}
+.lbx .lado.ant{left:8px}
+.lbx .lado.pro{right:8px}
+.lbx.perto.largo .lado{display:flex}
+.lbx .lado[disabled]{opacity:.32;cursor:default}
 /* aproximado, o traco vertical some e o + vira -, dizendo no desenho o
    mesmo que o aria-label ja diz */
 .lbx.perto .mais svg .v{display:none}
 /* o X recebe o foco ao abrir (leitor de tela e teclado). O anel padrao do
    navegador e laranja e destoa aqui dentro, entao trocamos por um branco,
    que continua visivel para quem navega pelo teclado. */
-.lbx .fechar:focus,.lbx .mais:focus{outline:none}
-.lbx .fechar:focus-visible,.lbx .mais:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.lbx .fechar:focus,.lbx .mais:focus,.lbx .lado:focus{outline:none}
+.lbx .fechar:focus-visible,.lbx .mais:focus-visible,.lbx .lado:focus-visible{outline:2px solid #fff;outline-offset:3px}
 .lbx .dica{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:rgba(255,255,255,.72);
   font-family:'Inter',sans-serif;font-size:13px;padding:0 16px;pointer-events:none}
 @media(min-width:821px){ .lbx .dica{font-size:14px} }
+/* com as setas no ar, a dica recua para nao passar por baixo delas */
+.lbx.perto.largo .dica{padding:0 66px}
+/* aproximado, a dica some sozinha depois de alguns segundos: ja foi lida, e
+   dali em diante ela so atrapalha a leitura do infografico */
+.lbx .dica{transition:opacity .45s}
+.lbx.sumiu .dica{opacity:0}
 /* Aproximada, a imagem cobre a tela inteira e o fundo verde-escuro some de
    baixo dos botoes. Como o infografico e claro, botao branco translucido sobre
    ele fica quase invisivel: foi o que apareceu quando eu olhei a tela cheia
@@ -589,6 +627,12 @@ fbq('init','1369928625011386');fbq('track','PageView');
   <button class="mais" id="lbxMais" type="button" aria-label="Aproximar a imagem" aria-pressed="false">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path><path d="M8 11h6"></path><path class="v" d="M11 8v6"></path></svg>
   </button>
+  <button class="lado ant" id="lbxAnt" type="button" aria-label="Coluna anterior da imagem">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+  </button>
+  <button class="lado pro" id="lbxPro" type="button" aria-label="Próxima coluna da imagem">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+  </button>
   <button class="fechar" type="button" aria-label="Fechar">&times;</button>
   <div class="dica" id="lbxDica"><span>Toque na imagem para aproximar</span></div>
 </div>
@@ -600,10 +644,12 @@ fbq('init','1369928625011386');fbq('track','PageView');
   var img = document.getElementById('lbxImg');
   var btn = cx.querySelector('.fechar');
   var mais = document.getElementById('lbxMais');
+  var ant = document.getElementById('lbxAnt');
+  var pro = document.getElementById('lbxPro');
   var dica = document.getElementById('lbxDica');
   var alvos = document.querySelectorAll('.article figure img');
   if(!alvos.length) return;
-  var aberto = false, quemAbriu = null, perto = false;
+  var aberto = false, quemAbriu = null, perto = false, colunas = 1, coluna = 0;
 
   var LUPA = '<svg viewBox="0 0 24 24" fill="none" stroke="#0C4A52" stroke-width="2.1" '
            + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
@@ -621,17 +667,85 @@ fbq('init','1369928625011386');fbq('track','PageView');
     fig.appendChild(selo);
   });
 
+  var somem = null;
+  function dicaSomeDepois(){
+    if(somem){ clearTimeout(somem); somem = null; }
+    cx.classList.remove('sumiu');
+    if(perto) somem = setTimeout(function(){ cx.classList.add('sumiu'); }, 4200);
+  }
   function textoDica(){
     /* escreve dentro do <span>, que e quem carrega a pilula escura no estado
        aproximado. Se por algum motivo o span nao existir, escreve na div. */
     var onde = dica.querySelector('span') || dica;
-    onde.textContent = perto
-      ? 'Arraste para percorrer a imagem. Toque nela para afastar.'
-      : 'Toque na imagem para aproximar';
+    onde.textContent = !perto
+      ? 'Toque na imagem para aproximar'
+      : (colunas > 1
+          ? 'Arraste para cima e para baixo. As setas andam uma tela de lado.'
+          : 'Arraste para percorrer a imagem. Toque nela para afastar.');
+    dicaSomeDepois();
   }
 
+  /* De quanto a imagem cresce ao aproximar.
+
+     A regra e a largura da JANELA, nunca a largura do arquivo: e isso que faz
+     os 41 artigos aproximarem igual, inclusive os quatro cujo PNG foi
+     exportado em 2160. Num computador a imagem passa a caber na largura e o
+     arrasto fica so na vertical.
+
+     Num celular a imagem ja ocupa a largura inteira quando "cabe", entao
+     encher a largura nao aumentaria nada. So nesse caso ela passa da tela, e
+     para em DUAS TELAS exatas. Duas e uma escolha medida: a tres telas, que e
+     o tamanho do arquivo, a letra fica maior mas cada linha do infografico
+     precisa de tres idas e vindas; a duas, a letra ainda le bem e a linha se
+     resolve com um toque na seta. */
+  function larguraPerto(){
+    var pw = palco.clientWidth, ph = palco.clientHeight;
+    var nw = img.naturalWidth || 1080, nh = img.naturalHeight || 1;
+    var esc = Math.min((pw - 28) / nw, (ph - 28) / nh);
+    var cabeW = nw * esc;
+    var alvo = Math.min(nw, pw);
+    if(alvo < cabeW * 1.15) alvo = Math.max(cabeW, Math.min(nw, pw * 2));
+    return Math.round(alvo);
+  }
+
+  /* quantas telas de largura a imagem aproximada ocupa, e onde cada uma comeca */
+  function medirColunas(){
+    var sobra = palco.scrollWidth - palco.clientWidth;
+    colunas = sobra > 2 ? Math.ceil(palco.scrollWidth / palco.clientWidth) : 1;
+    cx.classList.toggle('largo', perto && colunas > 1);
+  }
+  function passo(){
+    var sobra = palco.scrollWidth - palco.clientWidth;
+    return colunas > 1 ? sobra / (colunas - 1) : 0;
+  }
+  function irColuna(i, suave){
+    if(colunas < 2) return;
+    coluna = Math.max(0, Math.min(colunas - 1, i));
+    var x = Math.round(coluna * passo());
+    try{ palco.scrollTo({ left: x, behavior: suave ? 'smooth' : 'auto' }); }
+    catch(e){ palco.scrollLeft = x; }
+    ant.disabled = coluna === 0;
+    pro.disabled = coluna === colunas - 1;
+  }
+  /* ao soltar o dedo, encaixa na coluna mais proxima: e isso que impede a
+     linha de escorregar de lado enquanto se arrasta para baixo */
+  var relogio = null;
+  palco.addEventListener('scroll', function(){
+    if(!perto || colunas < 2) return;
+    if(relogio) clearTimeout(relogio);
+    relogio = setTimeout(function(){
+      var p = passo();
+      if(!p) return;
+      var i = Math.round(palco.scrollLeft / p);
+      if(Math.abs(palco.scrollLeft - i * p) > 1) irColuna(i, true);
+      else { coluna = i; ant.disabled = i === 0; pro.disabled = i === colunas - 1; }
+    }, 140);
+  }, { passive: true });
+
   /* Aproxima mantendo debaixo do dedo o ponto que foi tocado. px e py sao a
-     posicao do toque na tela; se nao vierem, usa o centro. */
+     posicao do toque na tela; se nao vierem, usa o centro. Na horizontal, o
+     resultado e arredondado para a coluna mais proxima, para a linha nunca
+     comecar cortada no meio de uma palavra. */
   function aproximar(px, py){
     var r = img.getBoundingClientRect();
     var fx = r.width  ? ((px == null ? r.left + r.width/2  : px) - r.left) / r.width  : .5;
@@ -640,17 +754,27 @@ fbq('init','1369928625011386');fbq('track','PageView');
     if(fy < 0) fy = 0; if(fy > 1) fy = 1;
     perto = true;
     cx.classList.add('perto');
+    img.style.width = larguraPerto() + 'px';
+    img.style.height = 'auto';
     mais.setAttribute('aria-pressed','true');
     mais.setAttribute('aria-label','Afastar a imagem');
-    textoDica();
-    /* depois do navegador recalcular o tamanho, centraliza no ponto tocado */
+    /* depois do navegador recalcular o tamanho, posiciona */
     var w = img.offsetWidth, h = img.offsetHeight;
-    palco.scrollLeft = fx * w - palco.clientWidth / 2;
-    palco.scrollTop  = fy * h - palco.clientHeight / 2;
+    palco.scrollTop = fy * h - palco.clientHeight / 2;
+    medirColunas();
+    if(colunas > 1){
+      var p = passo();
+      irColuna(p ? Math.round((fx * w - palco.clientWidth / 2) / p) : 0, false);
+    }
+    textoDica();
   }
   function afastar(){
     perto = false;
     cx.classList.remove('perto');
+    cx.classList.remove('largo');
+    img.style.width = '';
+    img.style.height = '';
+    colunas = 1; coluna = 0;
     mais.setAttribute('aria-pressed','false');
     mais.setAttribute('aria-label','Aproximar a imagem');
     textoDica();
@@ -689,6 +813,8 @@ fbq('init','1369928625011386');fbq('track','PageView');
   });
   btn.addEventListener('click', function(){ fechar(false); });
   mais.addEventListener('click', function(){ alternar(null, null); });
+  ant.addEventListener('click', function(e){ e.stopPropagation(); irColuna(coluna - 1, true); });
+  pro.addEventListener('click', function(e){ e.stopPropagation(); irColuna(coluna + 1, true); });
   img.addEventListener('click', function(e){
     e.stopPropagation();
     alternar(e.clientX, e.clientY);
@@ -697,6 +823,8 @@ fbq('init','1369928625011386');fbq('track','PageView');
      Aproximado, arrastar para ler nao pode fechar sem querer. */
   cx.addEventListener('click', function(e){
     if(e.target === img || e.target === mais || mais.contains(e.target)) return;
+    if(e.target === ant || ant.contains(e.target)) return;
+    if(e.target === pro || pro.contains(e.target)) return;
     if(!perto) fechar(false);
   });
   document.addEventListener('keydown', function(e){
@@ -704,6 +832,12 @@ fbq('init','1369928625011386');fbq('track','PageView');
     if(e.key === 'Escape' || e.key === 'Esc') fechar(false);
     else if(e.key === '+' || e.key === '=' ) aproximar(null, null);
     else if(e.key === '-' || e.key === '_' ) afastar();
+    else if(perto && colunas > 1 && e.key === 'ArrowRight') irColuna(coluna + 1, true);
+    else if(perto && colunas > 1 && e.key === 'ArrowLeft')  irColuna(coluna - 1, true);
+  });
+  /* girar o celular muda a largura da tela, e com ela o tamanho aproximado */
+  window.addEventListener('resize', function(){
+    if(aberto && perto){ img.style.width = larguraPerto() + 'px'; medirColunas(); irColuna(coluna, false); }
   });
   window.addEventListener('popstate', function(){ if(aberto) fechar(true); });
 })();
