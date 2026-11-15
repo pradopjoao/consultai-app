@@ -436,49 +436,157 @@ fbq('init','1369928625011386');fbq('track','PageView');
 })();
 </script>
 <!-- ===== LIGHTBOX DO INFOGRÁFICO =====
-     Ao tocar no infográfico ele abre em tela cheia, para dar para ler no
-     celular sem apertar os olhos. Escrito à mão, sem biblioteca de fora:
-     nenhum script de terceiro entra no site (LGPD, dado de saúde).
-     Fecha de quatro jeitos: no X, tocando fora da imagem, com Esc e com o
-     botão "voltar" do celular (por isso o pushState). -->
+     Ao tocar no infográfico ele abre em tela cheia. Escrito à mão, sem
+     biblioteca de fora: nenhum script de terceiro entra no site (LGPD, dado
+     de saúde).
+
+     13/11/2026: antes daqui, abrir era tudo o que existia. A imagem cabia na
+     tela e parava por aí, e num celular de 390 pontos de largura um
+     infográfico de 1080 encolhe para menos de um terço: dava para ver a peça,
+     não dava para LER a peça. Agora a imagem aberta tem dois estados. Cabendo
+     na tela, para enxergar o conjunto, e no tamanho real, quando a tela vira
+     uma área que se arrasta, igual a um mapa. Tocar na imagem, tocar na lupa
+     ou apertar + alterna entre os dois, e o ponto tocado continua debaixo do
+     dedo depois de aproximar.
+
+     A lupinha no canto da imagem dentro do artigo é posta por este mesmo
+     script, para não precisar mexer no <figure> de 40 arquivos. Ela não
+     recebe clique: quem recebe é a imagem embaixo.
+
+     Fecha de quatro jeitos: no X, tocando fora da imagem quando ela está
+     cabendo na tela, com Esc e com o botão "voltar" do celular (por isso o
+     pushState). Fora da imagem não fecha enquanto está aproximado, senão
+     arrastar para ler fecharia sem querer. -->
 <style>
+.article figure{position:relative}
 .article figure img{cursor:zoom-in}
-.lbx{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
-  padding:14px;background:rgba(12,74,82,.96)}
-.lbx.on{display:flex}
-.lbx img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;
-  box-shadow:0 20px 60px rgba(0,0,0,.5)}
-.lbx .fechar{position:absolute;top:12px;right:12px;width:44px;height:44px;border-radius:50%;
+/* o selo da lupa, para quem olha no celular saber que ali da para tocar */
+.article figure .lupa{position:absolute;right:14px;top:14px;width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,.94);box-shadow:0 2px 10px rgba(12,74,82,.28);
+  display:flex;align-items:center;justify-content:center;pointer-events:none}
+.article figure .lupa svg{width:21px;height:21px;display:block}
+
+.lbx{position:fixed;inset:0;z-index:200;display:none;background:rgba(12,74,82,.96)}
+.lbx.on{display:block}
+/* o palco e quem rola. No estado "cabe", ele centraliza a imagem.
+   No estado "perto", ele vira a area que se arrasta. */
+.lbx .palco{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch;
+  display:flex;align-items:center;justify-content:center;padding:14px;
+  overscroll-behavior:contain;touch-action:pan-x pan-y}
+.lbx img{display:block;max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);cursor:zoom-in}
+.lbx.perto .palco{display:block;padding:0}
+.lbx.perto img{max-width:none;max-height:none;width:auto;border-radius:0;
+  box-shadow:none;cursor:zoom-out}
+.lbx .fechar,.lbx .mais{position:absolute;width:44px;height:44px;border-radius:50%;
   background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.4);color:#fff;
-  font-size:26px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+.lbx .fechar{top:12px;right:12px;font-size:26px;line-height:1}
+.lbx .mais{top:12px;left:12px}
+.lbx .mais svg{width:22px;height:22px;display:block}
+/* aproximado, o traco vertical some e o + vira -, dizendo no desenho o
+   mesmo que o aria-label ja diz */
+.lbx.perto .mais svg .v{display:none}
 /* o X recebe o foco ao abrir (leitor de tela e teclado). O anel padrao do
    navegador e laranja e destoa aqui dentro, entao trocamos por um branco,
    que continua visivel para quem navega pelo teclado. */
-.lbx .fechar:focus{outline:none}
-.lbx .fechar:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.lbx .fechar:focus,.lbx .mais:focus{outline:none}
+.lbx .fechar:focus-visible,.lbx .mais:focus-visible{outline:2px solid #fff;outline-offset:3px}
 .lbx .dica{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:rgba(255,255,255,.72);
-  font-family:'Inter',sans-serif;font-size:13px;padding:0 16px}
+  font-family:'Inter',sans-serif;font-size:13px;padding:0 16px;pointer-events:none}
 @media(min-width:821px){ .lbx .dica{font-size:14px} }
+/* Aproximada, a imagem cobre a tela inteira e o fundo verde-escuro some de
+   baixo dos botoes. Como o infografico e claro, botao branco translucido sobre
+   ele fica quase invisivel: foi o que apareceu quando eu olhei a tela cheia
+   depois de aproximar. Entao, nesse estado, os botoes e a dica viram escuros e
+   solidos, que leem sobre qualquer imagem. */
+.lbx.perto .fechar,.lbx.perto .mais{background:rgba(12,74,82,.92);border-color:rgba(255,255,255,.55);
+  box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.lbx.perto .dica{color:#fff}
+.lbx.perto .dica span{background:rgba(12,74,82,.92);border-radius:999px;padding:7px 15px;
+  display:inline-block;box-shadow:0 2px 10px rgba(0,0,0,.35)}
 </style>
 <div class="lbx" id="lbx" role="dialog" aria-modal="true" aria-label="Infográfico ampliado">
-  <img id="lbxImg" src="" alt="">
+  <div class="palco" id="lbxPalco">
+    <img id="lbxImg" src="" alt="">
+  </div>
+  <button class="mais" id="lbxMais" type="button" aria-label="Aproximar a imagem" aria-pressed="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path><path d="M8 11h6"></path><path class="v" d="M11 8v6"></path></svg>
+  </button>
   <button class="fechar" type="button" aria-label="Fechar">&times;</button>
-  <div class="dica">Toque fora da imagem para fechar</div>
+  <div class="dica" id="lbxDica"><span>Toque na imagem para aproximar</span></div>
 </div>
 <script>
 (function(){
   var cx = document.getElementById('lbx');
   if(!cx) return;
+  var palco = document.getElementById('lbxPalco');
   var img = document.getElementById('lbxImg');
   var btn = cx.querySelector('.fechar');
+  var mais = document.getElementById('lbxMais');
+  var dica = document.getElementById('lbxDica');
   var alvos = document.querySelectorAll('.article figure img');
   if(!alvos.length) return;
-  var aberto = false, quemAbriu = null;
+  var aberto = false, quemAbriu = null, perto = false;
+
+  var LUPA = '<svg viewBox="0 0 24 24" fill="none" stroke="#0C4A52" stroke-width="2.1" '
+           + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+           + '<circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path>'
+           + '<path d="M8 11h6M11 8v6"></path></svg>';
+
+  /* o selo da lupa entra por aqui, e nao no HTML de cada artigo */
+  alvos.forEach(function(o){
+    var fig = o.closest && o.closest('figure');
+    if(!fig || fig.querySelector('.lupa')) return;
+    var selo = document.createElement('span');
+    selo.className = 'lupa';
+    selo.setAttribute('aria-hidden','true');
+    selo.innerHTML = LUPA;
+    fig.appendChild(selo);
+  });
+
+  function textoDica(){
+    /* escreve dentro do <span>, que e quem carrega a pilula escura no estado
+       aproximado. Se por algum motivo o span nao existir, escreve na div. */
+    var onde = dica.querySelector('span') || dica;
+    onde.textContent = perto
+      ? 'Arraste para percorrer a imagem. Toque nela para afastar.'
+      : 'Toque na imagem para aproximar';
+  }
+
+  /* Aproxima mantendo debaixo do dedo o ponto que foi tocado. px e py sao a
+     posicao do toque na tela; se nao vierem, usa o centro. */
+  function aproximar(px, py){
+    var r = img.getBoundingClientRect();
+    var fx = r.width  ? ((px == null ? r.left + r.width/2  : px) - r.left) / r.width  : .5;
+    var fy = r.height ? ((py == null ? r.top  + r.height/2 : py) - r.top ) / r.height : .5;
+    if(fx < 0) fx = 0; if(fx > 1) fx = 1;
+    if(fy < 0) fy = 0; if(fy > 1) fy = 1;
+    perto = true;
+    cx.classList.add('perto');
+    mais.setAttribute('aria-pressed','true');
+    mais.setAttribute('aria-label','Afastar a imagem');
+    textoDica();
+    /* depois do navegador recalcular o tamanho, centraliza no ponto tocado */
+    var w = img.offsetWidth, h = img.offsetHeight;
+    palco.scrollLeft = fx * w - palco.clientWidth / 2;
+    palco.scrollTop  = fy * h - palco.clientHeight / 2;
+  }
+  function afastar(){
+    perto = false;
+    cx.classList.remove('perto');
+    mais.setAttribute('aria-pressed','false');
+    mais.setAttribute('aria-label','Aproximar a imagem');
+    textoDica();
+    palco.scrollLeft = 0; palco.scrollTop = 0;
+  }
+  function alternar(px, py){ perto ? afastar() : aproximar(px, py); }
 
   function abrir(o){
     img.src = o.currentSrc || o.src;
     img.alt = o.alt || '';
     cx.classList.add('on');
+    afastar();
     /* trava so o body, nunca o <html>: no Safari do iPhone travar o <html>
        deixa a pagina presa. Dentro de try para nunca derrubar o resto. */
     try{ document.body.style.overflow = 'hidden'; }catch(e){}
@@ -491,6 +599,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
   function fechar(veioDoVoltar){
     if(!aberto) return;
     cx.classList.remove('on');
+    afastar();
     try{ document.body.style.overflow = ''; }catch(e){}
     aberto = false;
     if(quemAbriu){ quemAbriu.focus && quemAbriu.focus(); quemAbriu = null; }
@@ -503,9 +612,22 @@ fbq('init','1369928625011386');fbq('track','PageView');
     o.addEventListener('click', function(){ abrir(o); });
   });
   btn.addEventListener('click', function(){ fechar(false); });
-  cx.addEventListener('click', function(e){ if(e.target !== img) fechar(false); });
+  mais.addEventListener('click', function(){ alternar(null, null); });
+  img.addEventListener('click', function(e){
+    e.stopPropagation();
+    alternar(e.clientX, e.clientY);
+  });
+  /* tocar fora da imagem fecha, mas SO quando ela esta cabendo na tela.
+     Aproximado, arrastar para ler nao pode fechar sem querer. */
+  cx.addEventListener('click', function(e){
+    if(e.target === img || e.target === mais || mais.contains(e.target)) return;
+    if(!perto) fechar(false);
+  });
   document.addEventListener('keydown', function(e){
-    if(aberto && (e.key === 'Escape' || e.key === 'Esc')) fechar(false);
+    if(!aberto) return;
+    if(e.key === 'Escape' || e.key === 'Esc') fechar(false);
+    else if(e.key === '+' || e.key === '=' ) aproximar(null, null);
+    else if(e.key === '-' || e.key === '_' ) afastar();
   });
   window.addEventListener('popstate', function(){ if(aberto) fechar(true); });
 })();
