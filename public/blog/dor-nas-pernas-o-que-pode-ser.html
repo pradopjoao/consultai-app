@@ -557,9 +557,15 @@ fbq('init','1369928625011386');fbq('track','PageView');
         tamanho que dê para ler, então o arrasto lateral é inevitável. O que
         dava para consertar era a imprevisibilidade: a imagem caía no meio da
         linha e, ao arrastar para baixo, escorregava de lado junto. Agora o
-        eixo horizontal anda em colunas do tamanho exato da tela, com setas
-        para avançar e voltar, e ao soltar o dedo ele se encaixa na coluna
-        mais próxima. Descer para ler não tira mais a linha do lugar.
+        imagem passou a abrir no ponto tocado e ganhou duas setas, que andam
+        uma tela inteira de lado a partir de onde a leitura está.
+
+     4. Ainda em 19/11, segundo teste do João Pedro no celular: a primeira
+        versão das setas também encaixava a rolagem horizontal na coluna mais
+        próxima quando o dedo saía da tela, e isso prendia a leitura sempre na
+        borda esquerda ou na direita. O encaixe saiu. O arrasto voltou a ser
+        livre nos dois eixos, e as setas continuam ali para quem prefere andar
+        de tela em tela.
 
      A lupinha no canto da imagem dentro do artigo é posta por este mesmo
      script, para não precisar mexer no <figure> de 41 arquivos. Ela não
@@ -666,7 +672,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
   var dica = document.getElementById('lbxDica');
   var alvos = document.querySelectorAll('.article figure img');
   if(!alvos.length) return;
-  var aberto = false, quemAbriu = null, perto = false, colunas = 1, coluna = 0;
+  var aberto = false, quemAbriu = null, perto = false, colunas = 1;
 
   var LUPA = '<svg viewBox="0 0 24 24" fill="none" stroke="#0C4A52" stroke-width="2.1" '
            + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
@@ -697,7 +703,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
     onde.textContent = !perto
       ? 'Toque na imagem para aproximar'
       : (colunas > 1
-          ? 'Arraste para cima e para baixo. As setas andam uma tela de lado.'
+          ? 'Arraste em qualquer direção. As setas andam uma tela de lado.'
           : 'Arraste para percorrer a imagem. Toque nela para afastar.');
     dicaSomeDepois();
   }
@@ -725,44 +731,42 @@ fbq('init','1369928625011386');fbq('track','PageView');
     return Math.round(alvo);
   }
 
-  /* quantas telas de largura a imagem aproximada ocupa, e onde cada uma comeca */
+  /* A imagem aproximada cabe em quantas telas de largura. Serve so para
+     decidir se as setas aparecem. */
   function medirColunas(){
     var sobra = palco.scrollWidth - palco.clientWidth;
     colunas = sobra > 2 ? Math.ceil(palco.scrollWidth / palco.clientWidth) : 1;
     cx.classList.toggle('largo', perto && colunas > 1);
+    marcarPontas();
   }
-  function passo(){
-    var sobra = palco.scrollWidth - palco.clientWidth;
-    return colunas > 1 ? sobra / (colunas - 1) : 0;
+
+  /* 19/11: a primeira versao encaixava a rolagem horizontal na coluna mais
+     proxima assim que o dedo saia da tela. Isso deixava a leitura presa: a
+     imagem terminava sempre colada na esquerda ou na direita, mesmo quando a
+     pessoa queria parar no meio. O encaixe saiu. Agora o arrasto e livre nos
+     dois eixos, do jeito que a pessoa quiser, e as setas continuam ali para
+     quem prefere andar de tela em tela. Elas andam uma tela a partir de ONDE
+     A LEITURA ESTA, nao para uma posicao fixa, entao as duas formas de ler
+     convivem sem brigar. */
+  function marcarPontas(){
+    var max = palco.scrollWidth - palco.clientWidth;
+    ant.disabled = palco.scrollLeft <= 1;
+    pro.disabled = palco.scrollLeft >= max - 1;
   }
-  function irColuna(i, suave){
+  function andar(dir){
     if(colunas < 2) return;
-    coluna = Math.max(0, Math.min(colunas - 1, i));
-    var x = Math.round(coluna * passo());
-    try{ palco.scrollTo({ left: x, behavior: suave ? 'smooth' : 'auto' }); }
-    catch(e){ palco.scrollLeft = x; }
-    ant.disabled = coluna === 0;
-    pro.disabled = coluna === colunas - 1;
+    var max = palco.scrollWidth - palco.clientWidth;
+    var x = palco.scrollLeft + dir * palco.clientWidth;
+    if(x < 0) x = 0; if(x > max) x = max;
+    try{ palco.scrollTo({ left: Math.round(x), behavior: 'smooth' }); }
+    catch(e){ palco.scrollLeft = Math.round(x); }
   }
-  /* ao soltar o dedo, encaixa na coluna mais proxima: e isso que impede a
-     linha de escorregar de lado enquanto se arrasta para baixo */
-  var relogio = null;
   palco.addEventListener('scroll', function(){
-    if(!perto || colunas < 2) return;
-    if(relogio) clearTimeout(relogio);
-    relogio = setTimeout(function(){
-      var p = passo();
-      if(!p) return;
-      var i = Math.round(palco.scrollLeft / p);
-      if(Math.abs(palco.scrollLeft - i * p) > 1) irColuna(i, true);
-      else { coluna = i; ant.disabled = i === 0; pro.disabled = i === colunas - 1; }
-    }, 140);
+    if(perto && colunas > 1) marcarPontas();
   }, { passive: true });
 
   /* Aproxima mantendo debaixo do dedo o ponto que foi tocado. px e py sao a
-     posicao do toque na tela; se nao vierem, usa o centro. Na horizontal, o
-     resultado e arredondado para a coluna mais proxima, para a linha nunca
-     comecar cortada no meio de uma palavra. */
+     posicao do toque na tela; se nao vierem, usa o centro. */
   function aproximar(px, py){
     var r = img.getBoundingClientRect();
     var fx = r.width  ? ((px == null ? r.left + r.width/2  : px) - r.left) / r.width  : .5;
@@ -777,12 +781,9 @@ fbq('init','1369928625011386');fbq('track','PageView');
     mais.setAttribute('aria-label','Afastar a imagem');
     /* depois do navegador recalcular o tamanho, posiciona */
     var w = img.offsetWidth, h = img.offsetHeight;
-    palco.scrollTop = fy * h - palco.clientHeight / 2;
+    palco.scrollTop  = fy * h - palco.clientHeight / 2;
+    palco.scrollLeft = fx * w - palco.clientWidth / 2;
     medirColunas();
-    if(colunas > 1){
-      var p = passo();
-      irColuna(p ? Math.round((fx * w - palco.clientWidth / 2) / p) : 0, false);
-    }
     textoDica();
   }
   function afastar(){
@@ -791,7 +792,7 @@ fbq('init','1369928625011386');fbq('track','PageView');
     cx.classList.remove('largo');
     img.style.width = '';
     img.style.height = '';
-    colunas = 1; coluna = 0;
+    colunas = 1;
     mais.setAttribute('aria-pressed','false');
     mais.setAttribute('aria-label','Aproximar a imagem');
     textoDica();
@@ -830,8 +831,8 @@ fbq('init','1369928625011386');fbq('track','PageView');
   });
   btn.addEventListener('click', function(){ fechar(false); });
   mais.addEventListener('click', function(){ alternar(null, null); });
-  ant.addEventListener('click', function(e){ e.stopPropagation(); irColuna(coluna - 1, true); });
-  pro.addEventListener('click', function(e){ e.stopPropagation(); irColuna(coluna + 1, true); });
+  ant.addEventListener('click', function(e){ e.stopPropagation(); andar(-1); });
+  pro.addEventListener('click', function(e){ e.stopPropagation(); andar(1); });
   img.addEventListener('click', function(e){
     e.stopPropagation();
     alternar(e.clientX, e.clientY);
@@ -849,12 +850,12 @@ fbq('init','1369928625011386');fbq('track','PageView');
     if(e.key === 'Escape' || e.key === 'Esc') fechar(false);
     else if(e.key === '+' || e.key === '=' ) aproximar(null, null);
     else if(e.key === '-' || e.key === '_' ) afastar();
-    else if(perto && colunas > 1 && e.key === 'ArrowRight') irColuna(coluna + 1, true);
-    else if(perto && colunas > 1 && e.key === 'ArrowLeft')  irColuna(coluna - 1, true);
+    else if(perto && colunas > 1 && e.key === 'ArrowRight') andar(1);
+    else if(perto && colunas > 1 && e.key === 'ArrowLeft')  andar(-1);
   });
   /* girar o celular muda a largura da tela, e com ela o tamanho aproximado */
   window.addEventListener('resize', function(){
-    if(aberto && perto){ img.style.width = larguraPerto() + 'px'; medirColunas(); irColuna(coluna, false); }
+    if(aberto && perto){ img.style.width = larguraPerto() + 'px'; medirColunas(); }
   });
   window.addEventListener('popstate', function(){ if(aberto) fechar(true); });
 })();
