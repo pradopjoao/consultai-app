@@ -595,6 +595,57 @@ function registrarCsv(linhasReais, erro) {
   if (erro) gadsEstado.ultimoCsvErro = { quando: new Date().toISOString(), motivo: limparSegredo(erro) };
 }
 
+/* ======================================================================
+   TERMOMETRO DO LEMBRETE DE 10 MINUTOS                      (25/11/2026)
+   ----------------------------------------------------------------------
+   POR QUE ISTO EXISTE. O lembrete parou de sair e ninguem percebeu por
+   dias. Ele nao deu erro, nao caiu, nao apareceu em lugar nenhum: a busca
+   de pagamentos vinha cortada em 50 e os pagamentos do dia ficavam de
+   fora, entao a rotina rodava, nao achava nada e terminava calada.
+
+   SILENCIO ERA O ESTADO PERIGOSO. Este termometro existe para que
+   silencio nunca mais seja invisivel. Ele responde tres perguntas:
+
+     1. O RELOGIO AINDA BATE? "ultimaVarredura" e carimbada toda vez que a
+        rotina roda inteira. Se envelhecer, o relogio parou.
+     2. A LISTA AINDA ENXERGA O FUTURO? "enxergaConsultaFutura" diz se a
+        ultima varredura viu ao menos uma consulta ainda por vir. Com a
+        busca cortada, isso vira false, que era exatamente o sintoma.
+     3. ALGUM LEMBRETE SAIU? "ultimoLembreteEnviado" guarda o ultimo.
+
+   O QUE NAO SAI DAQUI. Nenhum nome, nenhum telefone, nenhum numero de
+   pagamento e nenhuma contagem de pacientes. O /api/health e publico,
+   entao aqui so saem SITUACAO e QUANDO. Os numeros continuam no log do
+   Render, que e privado.
+   ====================================================================== */
+
+/* Quanto a rotina olha PARA TRAS na lista de pagamentos aprovados.
+   ISTO NAO E O PRAZO DO E-MAIL. O e-mail continua saindo 10 minutos antes
+   da consulta. Esta janela existe porque o paciente paga num dia e
+   consulta em outro: quem pagou na segunda para consultar na quinta
+   precisa que, na quinta, a busca ainda alcance o pagamento de segunda.
+   A agenda mostra 14 dias de horarios (ver /api/horarios, "dias = 14"),
+   entao 16 dias cobrem a agenda inteira com folga. Se um dia a agenda
+   passar a mostrar mais dias, este numero sobe junto. */
+const LEMBRETE_DIAS = 16;
+
+const lembreteEstado = {
+  ultimaVarredura: null,  // ISO da ultima vez que a rotina rodou inteira
+  enxergouFuturo: null,   // a ultima varredura viu alguma consulta ainda por vir?
+  ultimoEnvio: null,      // ISO do ultimo lembrete que saiu
+  ultimoErro: null,       // { quando, motivo }
+};
+function registrarVarreduraLembrete(enxergouFuturo) {
+  lembreteEstado.ultimaVarredura = new Date().toISOString();
+  lembreteEstado.enxergouFuturo = enxergouFuturo;
+}
+function registrarLembreteEnviado() {
+  lembreteEstado.ultimoEnvio = new Date().toISOString();
+}
+function registrarLembreteErro(motivo) {
+  lembreteEstado.ultimoErro = { quando: new Date().toISOString(), motivo: limparSegredo(motivo) };
+}
+
 /* --------- E-mails via Brevo (API HTTPS — o Render bloqueia SMTP) -------- */
 async function enviarEmail(para, assunto, html, replyTo) {
   if (!BREVO_API_KEY || !NOTIF_EMAIL_FROM) {
@@ -1502,6 +1553,38 @@ app.get('/api/health', (req, res) => {
         } : null,
       };
     })(),
+    lembretes: (() => {
+      /* Só situação e data. Nenhum dado de paciente e nenhuma contagem de
+         pagamento sai por aqui, porque este endereço é público. */
+      const msVarredura = lembreteEstado.ultimaVarredura
+        ? agora - Date.parse(lembreteEstado.ultimaVarredura) : null;
+      const falhando = !!lembreteEstado.ultimoErro && (
+        !lembreteEstado.ultimaVarredura ||
+        Date.parse(lembreteEstado.ultimoErro.quando) >= Date.parse(lembreteEstado.ultimaVarredura)
+      );
+
+      let situacao;
+      if (falhando)                           situacao = 'LEMBRETE FALHANDO';
+      else if (msVarredura === null)          situacao = 'a rotina ainda nao rodou desde que o servidor subiu';
+      // A varredura roda de 3 em 3 minutos. Passou de 15, o relogio parou.
+      else if (msVarredura > 15 * 60 * 1000)  situacao = 'RELOGIO DO LEMBRETE PAROU';
+      // Foi este o sintoma de 25/11: rodando, sem erro, e sem enxergar nada.
+      else if (lembreteEstado.enxergouFuturo === false)
+                                              situacao = 'RODANDO MAS SEM ENXERGAR NENHUMA CONSULTA FUTURA';
+      else                                    situacao = 'ok, varrendo a agenda';
+
+      return {
+        situacao,
+        ultimaVarredura: horarioBR(lembreteEstado.ultimaVarredura),
+        enxergaConsultaFutura: lembreteEstado.enxergouFuturo,
+        ultimoLembreteEnviado: horarioBR(lembreteEstado.ultimoEnvio),
+        janelaDeBuscaEmDias: LEMBRETE_DIAS,
+        ultimoErro: lembreteEstado.ultimoErro ? {
+          quando: horarioBR(lembreteEstado.ultimoErro.quando),
+          motivo: lembreteEstado.ultimoErro.motivo,
+        } : null,
+      };
+    })(),
   });
 });
 /* ======================================================================
@@ -1810,16 +1893,23 @@ async function rodarRecuperacao() {
     if (recupEnviados.size > 400) { recupEnviados.clear(); salvarRecup(); }
   } catch (e) { console.error('[recuperacao] erro: ' + e.message); }
 }
-async function mpBuscarAprovados() {
-  const fim = new Date().toISOString();
-  const ini = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-  const url = 'https://api.mercadopago.com/v1/payments/search?status=approved&range=date_approved' +
-    '&begin_date=' + encodeURIComponent(ini) + '&end_date=' + encodeURIComponent(fim) + '&limit=50';
-  const r = await fetch(url, { headers: { Authorization: 'Bearer ' + MP_ACCESS_TOKEN } });
-  const d = await r.json();
-  if (!r.ok) throw new Error('MP search ' + r.status + ': ' + JSON.stringify(d).slice(0, 150));
-  return d.results || [];
-}
+/* AQUI EXISTIA UMA SEGUNDA FUNÇÃO CHAMADA mpBuscarAprovados.    (25/11/2026)
+   ----------------------------------------------------------------------
+   Ela buscava 7 dias com limite de 50 e sem paginação, e tinha o mesmo
+   nome da função da linha 1618, a paginada. Em JavaScript isso não dá
+   erro nenhum: a declaração de baixo apaga a de cima em silêncio, para o
+   arquivo inteiro. Duas coisas quebraram por causa disso.
+
+     1. O CSV DO GOOGLE ADS passou a buscar 7 dias e no máximo 50
+        pagamentos, em vez dos 89 dias paginados que o código dele pedia.
+     2. O LEMBRETE DE 10 MINUTOS parou de sair. Quando o volume passou de
+        50 pagamentos aprovados por semana, os pagamentos do dia ficaram
+        fora da fatia devolvida pelo Mercado Pago. A rotina rodava, não
+        achava nenhuma consulta perto de começar e terminava calada, sem
+        erro e sem rastro.
+
+   A função foi apagada. Agora existe UMA SÓ, a paginada da linha 1618,
+   usada pelos dois, cada um com a sua janela. Não recrie esta aqui. */
 function minutosAteConsulta(dataISO, horario) {
   const agoraSP = new Date(Date.now() - 3 * 3600 * 1000); // São Paulo = UTC-3
   const alvo = new Date(dataISO + 'T' + horario + ':00Z');  // interpretado no "relógio SP"
@@ -1843,19 +1933,40 @@ async function enviarLembreteWhats(m, paymentId) {
 async function rodarLembretes() {
   try {
     if (!BREVO_API_KEY || !NOTIF_EMAIL_FROM || !MP_ACCESS_TOKEN) return;
-    const pagos = await mpBuscarAprovados();
+    const desde = new Date(Date.now() - LEMBRETE_DIAS * 24 * 3600 * 1000).toISOString();
+    const pagos = await mpBuscarAprovados(desde);   // paginada: sem teto de 50
+    let futuras = 0;
     for (const pg of pagos) {
       const m = pg.metadata || {};
       if (!m.data || !m.horario || !m.telefone) continue;
       const id = String(pg.id);
-      if (lembretesEnviados.has(id)) continue;
       const min = minutosAteConsulta(m.data, m.horario);
+      // Data ou horário estranhos viram NaN, e NaN some em toda comparação.
+      // Sem esta linha, um formato quebrado seria descartado em silêncio.
+      if (!Number.isFinite(min)) {
+        console.error('[lembrete] data ou horário ilegível no pagamento ' + id);
+        continue;
+      }
+      if (min > 2) futuras++;
+      if (lembretesEnviados.has(id)) continue;
       if (min > 2 && min <= 12) {
         lembretesEnviados.add(id);
         await enviarLembreteWhats(m, id);
+        registrarLembreteEnviado();
       }
     }
-  } catch (e) { console.error('[lembrete] erro: ' + e.message); }
+    registrarVarreduraLembrete(futuras > 0);
+    /* Log só quando a varredura não enxerga nenhuma consulta por vir, que é
+       a assinatura da busca cortada. Em dia normal isto não escreve nada, e
+       o log não enche com 480 linhas por dia. */
+    if (futuras === 0) {
+      console.log('[lembrete] varredura sem nenhuma consulta futura — ' + pagos.length +
+        ' pagamentos aprovados na janela de ' + LEMBRETE_DIAS + ' dias');
+    }
+  } catch (e) {
+    registrarLembreteErro(e && e.message ? e.message : e);
+    console.error('[lembrete] erro: ' + e.message);
+  }
 }
 setInterval(rodarLembretes, 3 * 60 * 1000);
 /* Recuperação de Pix: varre a cada minuto. Nasce desligada; ligue com
