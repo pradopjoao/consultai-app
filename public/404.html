@@ -6,16 +6,31 @@
 <title>Página não encontrada | Consultaí</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css?v=5">
+<!-- Fontes proprias, servidas por nos. Sem servidor de terceiro no
+     caminho critico. As cinco que o site realmente usa vem com preload,
+     desde 25/11/2026: sem isso, tres delas chegavam depois que a pagina
+     ja tinha aparecido e trocavam de desenho na frente do leitor. -->
+<link rel="preload" as="font" type="font/woff2" href="/fontes/inter-400.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/fontes/poppins-800.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/fontes/inter-600.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/fontes/poppins-700.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/fontes/poppins-600.woff2" crossorigin>
+<link rel="stylesheet" href="/style.css?v=15">
 <style>
 .nf{min-height:calc(100vh - 69px);display:flex;align-items:center;justify-content:center;text-align:center;
-  background:linear-gradient(160deg,#15A39A,#0C4A52);color:#fff;padding:40px 22px}
+  /* Mesmo degrade do banner da home, escurecido na vistoria de contraste de
+     04/08/2026. O antigo, de #15A39A a #0C4A52, reprovava com estes mesmos
+     tres textos claros em cima: o 404 em pessego, o titulo branco e o
+     paragrafo em #D9F2EF. */
+  background:linear-gradient(160deg,#0D7F79,#08383F);color:#fff;padding:40px 22px}
 .nf .code{font-family:'Poppins',sans-serif;font-weight:800;font-size:110px;line-height:1;letter-spacing:-4px;color:#FFD7CC}
 .nf h1{font-size:30px;margin:10px 0 12px;letter-spacing:-.5px}
 .nf p{color:#D9F2EF;max-width:420px;margin:0 auto 28px}
+/* No celular os dois botoes empilham, e sem esta folga eles ficavam encostados
+   um no outro, sem nenhum espaco entre as duas sombras. No computador eles
+   ficam lado a lado e a folga so sobra embaixo, sem efeito. Medido em
+   iPhone 13, iPhone SE e 1280 de largura, em 25/11/2026. */
+.nf .btn{margin-bottom:10px}
 </style>
 </head>
 <body>
