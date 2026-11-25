@@ -54,11 +54,15 @@ fbq('init','1369928625011386');fbq('track','PageView');
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1369928625011386&ev=PageView&noscript=1"/></noscript>
 <!-- End Meta Pixel -->
 <!-- Fontes proprias, servidas por nos. Sem servidor de terceiro no
-     caminho critico. As duas mais usadas vem com preload: a Inter 400,
-     que e o texto do corpo, e a Poppins 800, que e o titulo grande. -->
+     caminho critico. As cinco que o site realmente usa vem com preload,
+     desde 25/11/2026: sem isso, tres delas chegavam depois que a pagina
+     ja tinha aparecido e trocavam de desenho na frente do leitor. -->
 <link rel="preload" as="font" type="font/woff2" href="/fontes/inter-400.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="/fontes/poppins-800.woff2" crossorigin>
-<link rel="stylesheet" href="/style.css?v=14">
+<link rel="preload" as="font" type="font/woff2" href="/fontes/inter-600.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/fontes/poppins-700.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/fontes/poppins-600.woff2" crossorigin>
+<link rel="stylesheet" href="/style.css?v=15">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
