@@ -681,6 +681,37 @@ async function enviarEmail(para, assunto, html, replyTo) {
 }
 function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function dataBR(iso) { const [y, m, d] = String(iso).split('-'); return d + '/' + m + '/' + y; }
+/* De onde o paciente veio, para aparecer no aviso que chega ao médico.
+   ----------------------------------------------------------------------
+   Desde 25/11/2026 os botões dos artigos de atestado apontam para
+   /agendamento?de=<slug-do-artigo>, e o navegador já mandava o endereço
+   inteiro no campo pageUrl do checkout. Só que esse endereço era usado
+   apenas pela API da Meta, que não está mais em uso, então a informação
+   chegava ao servidor e morria ali: o aviso de agendamento trazia nome,
+   telefone, e-mail, data e protocolo, e nunca de onde a pessoa veio.
+
+   Daqui para a frente a origem vira uma linha do aviso. Ela viaja também
+   no metadata do pagamento, pelo mesmo motivo que o ip, o ua e a marca já
+   viajam: o Mercado Pago é a única memória que sobrevive a um reinício do
+   servidor, e sem isso um reinício entre o Pix e a confirmação apagaria a
+   origem justamente dos agendamentos que deram certo.
+
+   A validação é fechada de propósito. O que entra aqui vem do navegador do
+   paciente, ou seja, de fora, e qualquer um pode digitar o que quiser
+   depois do "?de=". Só passa o que tem cara de endereço de artigo nosso:
+   letras minúsculas, números e hífen, de 3 a 80 caracteres. Qualquer outra
+   coisa é tratada como se não tivesse origem nenhuma. */
+function origemDoPedido(pageUrl) {
+  try {
+    const u = new URL(String(pageUrl || ''), 'https://vemconsultai.com.br');
+    const de = String(u.searchParams.get('de') || '').trim().toLowerCase();
+    if (/^[a-z0-9][a-z0-9-]{1,78}[a-z0-9]$/.test(de)) return de;
+  } catch (e) { /* endereço inválido: segue sem origem */ }
+  return '';
+}
+function origemLegivel(origem) {
+  return origem ? 'artigo do blog: ' + origem : 'entrou direto, sem artigo';
+}
 /* Moldura padrão dos e-mails — identidade visual da Consultaí.
    ----------------------------------------------------------------------
    A MARCA DO E-MAIL CONTINUA SENDO A CONSULTAÍ, de propósito, inclusive
@@ -857,6 +888,7 @@ async function avisarNovaConsulta(p, protocolo, paymentId) {
       <tr><td style="padding:5px 0;color:#5C7178">E-mail</td><td>${escHtml(p.paciente.email || '—')}</td></tr>
       <tr><td style="padding:5px 0;color:#5C7178">Nascimento</td><td>${escHtml(p.paciente.dataNascimento || '—')}</td></tr>
       <tr><td style="padding:5px 0;color:#5C7178">Pagamento MP</td><td>${escHtml(String(paymentId))}</td></tr>
+      <tr><td style="padding:5px 0;color:#5C7178">Veio de</td><td>${escHtml(origemLegivel(p.origem))}</td></tr>
     </table>
     <p style="margin:16px 0 0;color:#5C7178;font-size:13px">Já está na agenda do Shosp. Abra a consulta e <b>confirme o paciente</b> para gerar o link da telemedicina.</p>
     ${botaoWhats(p.paciente.telefone, textoWhatsConfirmada(p.paciente.nome, p.slot.data, p.slot.horario), 'Enviar confirmação no WhatsApp')}`;
@@ -1252,6 +1284,11 @@ async function efetivarAgendamento(paymentId) {
           // chegaria à Meta com menos sinais de casamento (EMQ mais baixo).
           tracking: { ip: m.ip, ua: m.ua, fbp: m.fbp, fbc: m.fbc,
             eventSourceUrl: 'https://' + siteDaMarca(m.marca) + '/agendamento' },
+          // A origem também volta do metadata. Sem isto, um reinício do
+          // servidor entre o Pix e a confirmação apagaria de qual artigo o
+          // paciente veio, justo nos agendamentos que deram certo. O "|| ''"
+          // cobre pagamentos de antes de 25/11/2026, que não têm o campo.
+          origem: m.origem || '',
           // Marca e preço também voltam do metadata. Sem isto, um reinício
           // do servidor faria o paciente do clínico receber e-mail com o
           // preço da Consultaí. O "|| " cobre pagamentos antigos, de antes
@@ -1317,6 +1354,7 @@ async function alertarFalhaAgendamento(p, paymentId, motivo) {
         <tr><td style="padding:5px 0;color:#5C7178">WhatsApp</td><td>${escHtml(p.paciente.telefone || '—')}</td></tr>
         <tr><td style="padding:5px 0;color:#5C7178">E-mail</td><td>${escHtml(p.paciente.email || '—')}</td></tr>
         <tr><td style="padding:5px 0;color:#5C7178">Pagamento MP</td><td>${paymentId}</td></tr>
+        <tr><td style="padding:5px 0;color:#5C7178">Veio de</td><td>${escHtml(origemLegivel(p.origem))}</td></tr>
         <tr><td style="padding:5px 0;color:#5C7178">Motivo</td><td>${String(motivo).slice(0, 160)}</td></tr>
       </table>`;
     await enviarEmail(NOTIF_EMAIL_TO || NOTIF_EMAIL_FROM, 'URGENTE: pagamento sem agenda — ' + (p.paciente.nome || 'paciente'), emailShell('Pagamento sem agenda', corpo, '#c0392b'));
@@ -1361,6 +1399,9 @@ app.post('/api/checkout', rateLimit(8, 10 * 60 * 1000), async (req, res) => {
     let fbc = req.body._fbc || '';
     if (!fbc && req.body.fbclid) fbc = 'fb.1.' + Date.now() + '.' + req.body.fbclid;
     const tracking = { ip, ua, fbp, fbc, eventSourceUrl: req.body.pageUrl || 'https://vemconsultai.com.br/agendamento' };
+    // De qual artigo este paciente veio, lido do "?de=" do endereço. Vazio
+    // quando ele entrou direto. Ver origemDoPedido, lá em cima.  (25/11/2026)
+    const origem = origemDoPedido(req.body.pageUrl);
     /* Identificador do clique no Google Ads.                (29/08/2026)
        Lido do cookie que a tag injetada gravou quando o paciente chegou
        pelo anúncio. Vem pelo cabeçalho Cookie sozinho, então NÃO foi
@@ -1380,12 +1421,13 @@ app.post('/api/checkout', rateLimit(8, 10 * 60 * 1000), async (req, res) => {
     const pay = await mpCriarPix({
       valor: preco, email, nome, idem,
       // fbp/fbc/ip/ua viajam no metadata p/ sobreviver a um reinício do servidor
-      metadata: { nome, cpf, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario, fbp, fbc, ip, ua: ua.slice(0, 250), gclid, wbraid, gbraid, marca, preco },
+      metadata: { nome, cpf, telefone, email, datanascimento: dataNascimento, sexo, data, horario, codigohorario: codigoHorario, fbp, fbc, ip, ua: ua.slice(0, 250), gclid, wbraid, gbraid, marca, preco, origem },
     });
     pendentes.set(String(pay.id), {
       paciente: { nome, cpf, telefone, email, dataNascimento, sexo },
       slot: { data, horario, codigoHorario },
       tracking,
+      origem,
       marca,
       preco,
       booked: false,
@@ -1397,7 +1439,8 @@ app.post('/api/checkout', rateLimit(8, 10 * 60 * 1000), async (req, res) => {
        gente só descobrir meses depois, pelo CSV vazio. */
     registrarCheckout(!!(gclid || wbraid || gbraid));
     console.log('[checkout] Pix criado — pagamento ' + pay.id + ' — ' + data + ' ' + horario + ' — ' + nome +
-      ' (horário travado' + (gclid || wbraid || gbraid ? ', veio de anúncio' : '') + ')');
+      ' (horário travado' + (gclid || wbraid || gbraid ? ', veio de anúncio' : '') +
+      (origem ? ', veio do artigo ' + origem : '') + ')');
     // Início de agendamento pela CAPI (mesmo id do pixel: 'ic_'+pay.id → sem duplicar).
     enviarEventoCapi('InitiateCheckout', 'ic_' + pay.id, { nome, cpf, telefone, email }, tracking, { value: Number(preco) }).catch(() => {});
     res.json({ ok: true, paymentId: pay.id, copiaECola: pay.copiaECola, qrBase64: pay.qrBase64, ticketUrl: pay.ticketUrl, valor: Number(preco) });
