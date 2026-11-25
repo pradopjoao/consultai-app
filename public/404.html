@@ -26,22 +26,36 @@
 .nf .code{font-family:'Poppins',sans-serif;font-weight:800;font-size:110px;line-height:1;letter-spacing:-4px;color:#FFD7CC}
 .nf h1{font-size:30px;margin:10px 0 12px;letter-spacing:-.5px}
 .nf p{color:#D9F2EF;max-width:420px;margin:0 auto 28px}
-/* No celular os dois botoes empilham, e sem esta folga eles ficavam encostados
-   um no outro, sem nenhum espaco entre as duas sombras. No computador eles
-   ficam lado a lado e a folga so sobra embaixo, sem efeito. Medido em
-   iPhone 13, iPhone SE e 1280 de largura, em 25/11/2026. */
-.nf .btn{margin-bottom:10px}
+/* OS DOIS BOTOES, CENTRADOS E DO MESMO TAMANHO.
+   Antes eles eram dois links soltos, um com "margin-right:10px" no proprio
+   atributo style. Isso dava dois defeitos ao mesmo tempo: no celular, onde eles
+   empilham, essa margem da direita empurrava o de cima 5 pixels para a
+   ESQUERDA do centro, e as larguras eram diferentes, 183 contra 187 pixels,
+   porque cada uma seguia o tamanho do proprio texto. O resultado ficava torto.
+   Agora os dois ficam numa faixa flexivel centrada, com a mesma largura
+   minima e a mesma folga entre eles, em pe ou lado a lado. Medido em iPhone
+   SE, iPhone 13 e 1280 de largura, em 25/11/2026. */
+.nf .acoes{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.nf .acoes .btn{margin:0;min-width:220px;text-align:center}
 </style>
 </head>
 <body>
 <header>
   <div class="wrap nav">
-    <a class="logo" href="/">
-      <svg viewBox="0 0 120 120"><rect x="14" y="16" width="92" height="74" rx="22" fill="#15A39A"/><path d="M34 86 L34 104 L52 86 Z" fill="#15A39A"/><polyline points="26,55 45,55 54,38 64,72 73,55 96,55" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="99" cy="27" r="16" fill="#FF6B4A"/><path d="M99 19 v16 M91 27 h16" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>
-      <span class="w">Consult<span class="d">aí</span></span>
-    </a>
+    <a class="logo" href="/"><svg viewBox="0 0 120 120"><rect x="14" y="16" width="92" height="74" rx="22" fill="#15A39A"/><path d="M34 86 L34 104 L52 86 Z" fill="#15A39A"/><polyline points="26,55 45,55 54,38 64,72 73,55 96,55" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="99" cy="27" r="16" fill="#FF6B4A"/><path d="M99 19 v16 M91 27 h16" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg><span class="w">Consult<span class="d">aí</span></span></a>
+    <nav class="menu">
+      <a href="/">Início</a>
+      <a href="/#como-funciona">Como funciona</a>
+      <a href="/consulta-medica-online">Consulta online</a>
+      <a href="/atestado-medico-online">Atestado online</a>
+      <a href="/#faq">Dúvidas</a>
+      <a href="/blog">Blog</a>
+      <a href="/sobre">Sobre</a>
+      <a class="mobcta" href="/agendamento">Agendar consulta</a>
+    </nav>
     <div class="nav-right">
       <a class="btn ghost" href="/agendamento">Agendar consulta</a>
+      <button class="hamburger" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
     </div>
   </div>
 </header>
@@ -50,9 +64,113 @@
     <div class="code">404</div>
     <h1>Essa página não existe (ou mudou de endereço)</h1>
     <p>Mas a sua consulta continua a um clique de distância. Volte para o início ou agende agora mesmo.</p>
-    <a class="btn" href="/" style="background:#fff;color:var(--deep);margin-right:10px">← Voltar ao início</a>
-    <a class="btn" href="/agendamento">Agendar consulta</a>
+    <div class="acoes">
+      <a class="btn" href="/" style="background:#fff;color:var(--deep)">← Voltar ao início</a>
+      <a class="btn" href="/agendamento">Agendar consulta</a>
+    </div>
   </div>
 </div>
+<!-- O mesmo script de menu das outras 52 paginas, copiado do sobre.html
+     sem alteracao. Sem ele o hamburguer aparece e nao abre. -->
+<script>
+/* Menu mobile (hambúrguer).
+   REESCRITO EM 03/08/2026 e AJUSTADO no mesmo dia.
+
+   Historico curto, para nao se repetir:
+   1) A primeira versao so fechava no X. Quem tocava em "Duvidas", um link de
+      ancora, via o menu continuar cobrindo a tela.
+   2) A segunda versao consertou isso, mas eu acrescentei
+      document.documentElement.style.overflow = 'hidden', que trava a rolagem
+      na raiz da pagina. No Safari do iPhone isso briga com o .menu, que e
+      position:fixed com height:calc(100vh - 68px), e prende a pagina. Tirado.
+      Nao volta. Se precisar travar rolagem, so no body e dentro de try.
+   3) Tambem usei nav.classList.toggle('open', aberto), a forma com DOIS
+      argumentos. WebKit antigo lanca TypeError e a funcao inteira morre, ou
+      seja, o menu nao abre. Trocado por add() e remove().
+   4) Eu tinha tirado o "fechar ao tocar fora" alegando que nao existia fora.
+      ERREI: medi um unico ponto, (20,600), que calhou de cair em cima de um
+      link. Medindo de verdade, sobra painel vazio abaixo do ultimo link:
+          iPhone SE 55px · iPhone 13 151px · Pixel 7 326px · iPad Mini 511px
+      Mais a faixa de 69px do cabecalho, que fica acima do painel.
+      Entao "fora" existe e e onde o dedo cai naturalmente. Voltou.
+
+   COMO O "FORA" FOI FEITO, e por que nao e um listener no document:
+   no Safari do iPhone, clique em elemento nao interativo muitas vezes nao
+   chega ate o document. Por isso os ouvintes ficam PRESOS NO PROPRIO
+   elemento tocado: um no painel do menu, outro no cabecalho. E, enquanto o
+   menu esta aberto, o painel recebe cursor:pointer, que e o truque que faz o
+   WebKit tratar a area como clicavel. So no celular, e desfeito ao fechar.
+
+   O botao de abrir e fechar e registrado ANTES de tudo. O resto vai dentro de
+   um try. Se qualquer coisa falhar, o menu continua abrindo e fechando. */
+(function(){
+  var botoes = document.querySelectorAll('.hamburger');
+  for (var i = 0; i < botoes.length; i++) {
+    (function(h){
+      var nav = h.closest ? h.closest('.nav') : null;
+      if (!nav) {
+        nav = h.parentNode;
+        while (nav && !(nav.classList && nav.classList.contains('nav'))) nav = nav.parentNode;
+      }
+      if (!nav) return;
+      var menu = nav.querySelector('.menu');
+
+      /* so vale como "celular" quando o hamburguer esta na tela */
+      function ehCelular(){
+        try { return getComputedStyle(h).display !== 'none'; } catch (e) { return false; }
+      }
+      function abrir(){
+        nav.classList.add('open');
+        h.setAttribute('aria-expanded', 'true');
+        if (menu && ehCelular()) menu.style.cursor = 'pointer';
+      }
+      function fechar(){
+        nav.classList.remove('open');
+        h.setAttribute('aria-expanded', 'false');
+        if (menu) menu.style.cursor = '';
+      }
+
+      /* o essencial vem primeiro, para nunca depender do resto */
+      h.addEventListener('click', function(){
+        if (nav.classList.contains('open')) fechar(); else abrir();
+      });
+
+      try {
+        if (menu) {
+          /* qualquer link fecha, inclusive os de ancora da propria pagina */
+          var links = menu.getElementsByTagName('a');
+          for (var j = 0; j < links.length; j++) {
+            links[j].addEventListener('click', fechar);
+          }
+          /* toque no fundo do painel, fora dos links */
+          menu.addEventListener('click', function(e){
+            if (e.target === menu) fechar();
+          });
+        }
+
+        /* toque na faixa do cabecalho, que fica acima do painel */
+        var cab = h.closest ? h.closest('header') : null;
+        if (cab) {
+          cab.addEventListener('click', function(e){
+            if (!nav.classList.contains('open')) return;
+            if (menu && menu.contains(e.target)) return;
+            if (h === e.target || h.contains(e.target)) return;
+            var alvo = e.target;
+            while (alvo && alvo !== cab) {
+              if (alvo.tagName === 'A') return; /* o logo navega sozinho */
+              alvo = alvo.parentNode;
+            }
+            fechar();
+          });
+        }
+
+        document.addEventListener('keydown', function(e){
+          if (e.keyCode === 27 || e.key === 'Escape') fechar();
+        });
+      } catch (err) { /* silencio: o menu ja funciona sem isso */ }
+    })(botoes[i]);
+  }
+})();
+</script>
 </body>
 </html>
