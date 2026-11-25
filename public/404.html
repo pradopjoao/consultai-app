@@ -17,7 +17,7 @@
 <link rel="preload" as="font" type="font/woff2" href="/fontes/poppins-600.woff2" crossorigin>
 <link rel="stylesheet" href="/style.css?v=15">
 <style>
-.nf{min-height:calc(100vh - 69px);display:flex;align-items:center;justify-content:center;text-align:center;
+.nf{min-height:calc(100vh - 69px);display:flex;flex-direction:column;align-items:center;text-align:center;
   /* Mesmo degrade do banner da home, escurecido na vistoria de contraste de
      04/08/2026. O antigo, de #15A39A a #0C4A52, reprovava com estes mesmos
      tres textos claros em cima: o 404 em pessego, o titulo branco e o
@@ -37,6 +37,30 @@
    SE, iPhone 13 e 1280 de largura, em 25/11/2026. */
 .nf .acoes{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
 .nf .acoes .btn{margin:0;min-width:220px;text-align:center}
+/* RODAPE MINIMO, DENTRO DA FAIXA VERDE.
+   O rodape completo do site tem 14 links e nao caberia aqui sem empurrar a
+   faixa para cima, ou ficaria escondido abaixo dela, so para quem rolasse.
+   Esta linha fica no fim da propria faixa, sempre visivel, e carrega o que
+   uma pagina de erro ainda precisa carregar: a assinatura da empresa e os
+   dois documentos legais. O "margin:auto 0" do miolo e o que mantem o 404
+   centrado no espaco que sobra, com a linha presa embaixo. */
+.nf .miolo{margin:auto 0}
+.nf .rodapinho{margin-top:28px;font-size:12.5px;line-height:1.7;color:#A9D5D0}
+.nf .rodapinho a{color:#A9D5D0;text-decoration:none;border-bottom:1px solid rgba(169,213,208,.4)}
+.nf .rodapinho a:hover{color:#fff;border-bottom-color:#fff}
+.nf .rodapinho .sep{opacity:.5;padding:0 7px}
+/* Em tela pequena a linha do rodape sozinha fazia a pagina passar a rolar: no
+   iPhone 13 ela somava 45 pixels a mais do que cabia. Em vez de tirar a linha,
+   encolhi o "404" e o titulo, que estavam generosos demais para um celular
+   pequeno de qualquer forma. Medido em 25/11/2026: iPhone 13 volta a caber
+   inteiro, e o iPhone SE, que ja rolava 71 pixels antes desta entrega, passa a
+   rolar menos do que rolava. */
+@media(max-width:430px){
+  .nf .code{font-size:84px;letter-spacing:-3px}
+  .nf h1{font-size:26px;margin:6px 0 10px}
+  .nf p{font-size:15.5px;margin-bottom:22px}
+  .nf .rodapinho{margin-top:20px}
+}
 </style>
 </head>
 <body>
@@ -60,7 +84,7 @@
   </div>
 </header>
 <div class="nf">
-  <div>
+  <div class="miolo">
     <div class="code">404</div>
     <h1>Essa página não existe (ou mudou de endereço)</h1>
     <p>Mas a sua consulta continua a um clique de distância. Volte para o início ou agende agora mesmo.</p>
@@ -68,6 +92,10 @@
       <a class="btn" href="/" style="background:#fff;color:var(--deep)">← Voltar ao início</a>
       <a class="btn" href="/agendamento">Agendar consulta</a>
     </div>
+  </div>
+  <div class="rodapinho">
+    © 2026 Octa Health. Todos os direitos reservados.<br>
+    <a href="/privacidade">Privacidade</a><span class="sep">·</span><a href="/termos">Termos de uso</a>
   </div>
 </div>
 <!-- O mesmo script de menu das outras 52 paginas, copiado do sobre.html
