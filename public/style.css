@@ -85,10 +85,15 @@ header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);backdro
 .nav.open .hamburger span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
 
 /* Hero */
-/* ATENCAO ao mexer no degrade abaixo. Ele nao e so decoracao, e o fundo que
-   sustenta QUATRO textos claros: o h1 branco, o destaque em pessego (.hl), o
-   subtitulo (#D9F2EF) e os itens com visto (.trust). Se clarear, os quatro
-   perdem contraste de uma vez.
+/* HISTORICO, do tempo em que o banner era ESCURO. Vale ler antes de pensar em
+   voltar atras: em 26/11/2026 o banner ficou claro e os textos inverteram, mas
+   a conta abaixo continua sendo a razao de o verde escuro ser aquele verde
+   escuro, e nao outro. Quem quiser o fundo escuro de volta herda este problema
+   inteiro de novo.
+   ATENCAO ao mexer no degrade de entao. Ele nao era so decoracao, era o fundo
+   que sustentava QUATRO textos claros: o h1 branco, o destaque em pessego
+   (.hl), o subtitulo (#D9F2EF) e os itens com visto (.trust). Clarear o fundo
+   fazia os quatro perderem contraste de uma vez.
    Medicao de 04/08/2026 no banner de verdade, pior caso do degrade (o tom mais
    claro entre os 40 mais frequentes atras de cada texto), PC 1280 e iPhone 13:
      com o verde antigo (#15A39A -> #0C4A52) e bolha branca em .12
@@ -103,21 +108,35 @@ header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);backdro
    Clarear o texto NAO resolve: testado, o pessego so passaria virando quase
    branco, o que apaga o destaque. Escolha do Dr. Joao em 04/08/2026 (opcao B).
    Se um dia alguem quiser o verde antigo de volta, tem que refazer esta conta. */
-.hero{background:linear-gradient(160deg,#0D7F79,#08383F);color:#fff;padding:72px 0 84px;position:relative;overflow:hidden}
-.hero .blob{position:absolute;border-radius:50%;opacity:.07;background:#fff}
+/* BANNER CLARO, desde 26/11/2026. Antes era um degrade verde escuro, de
+   #0D7F79 a #08383F, com todo o texto em branco por cima. O Dr. Joao achou
+   que pesava na tela, comparou com o clinicogeralonline, e escolheu esta
+   versao entre tres: o tom mais claro da propria familia verde, que ja era
+   usado como fundo de secao no resto da home.
+   TUDO que era texto claro aqui dentro inverteu junto. Se um dia alguem
+   quiser o fundo escuro de volta, tem de inverter os sete textos tambem, e
+   refazer a conta de contraste dos quatro que ja reprovavam em 04/08/2026. */
+.hero{background:linear-gradient(160deg,#F4FCFA,#E6F5F1);color:var(--ink);padding:72px 0 84px;position:relative;overflow:hidden}
+/* As bolhas eram brancas sobre o verde escuro. Num fundo claro, branco some:
+   viraram verde, bem apagadas. */
+.hero .blob{position:absolute;border-radius:50%;opacity:.07;background:#15A39A}
 .hero .b1{width:520px;height:520px;top:-180px;right:-140px}
-.hero .b2{width:340px;height:340px;bottom:-160px;left:-120px;background:#FF6B4A;opacity:.18}
+.hero .b2{width:340px;height:340px;bottom:-160px;left:-120px;background:#FF6B4A;opacity:.09}
 .hero .grid{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
-.pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.16);padding:8px 18px;border-radius:40px;font-size:14px;font-weight:600;margin-bottom:18px}
+/* A etiqueta era branco translucido sobre o verde escuro. Virou branca
+   solida com o verde fechado por cima, que da 5,98:1. */
+.pill{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#0F6B63;box-shadow:0 2px 10px rgba(12,74,82,.07);padding:8px 18px;border-radius:40px;font-size:14px;font-weight:600;margin-bottom:18px}
 .pill svg{width:17px;height:17px}
 .hero h1{font-size:52px;line-height:1.06;font-weight:800;letter-spacing:-1.5px}
-.hero h1 .hl{color:#FFD7CC}
-.hero p.sub{font-size:20px;color:#D9F2EF;margin:20px 0 28px;max-width:520px}
+/* O destaque do titulo era pessego, que so funciona sobre fundo escuro.
+   Virou o laranja fechado da marca: 4,99:1 sobre o fundo claro. */
+.hero h1 .hl{color:#C23A14}
+.hero p.sub{font-size:20px;color:#4A5F66;margin:20px 0 28px;max-width:520px}
 .cta-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .price-tag{display:flex;align-items:baseline;gap:8px}
 .price-tag .v{font-family:'Poppins';font-weight:800;font-size:34px}
-.price-tag .s{font-size:14px;color:#CFEFEA}
-.trust{margin-top:22px;font-size:14px;color:#CFEFEA;display:flex;gap:18px;flex-wrap:wrap}
+.price-tag .s{font-size:14px;color:#4A5F66}
+.trust{margin-top:22px;font-size:14px;color:#4A5F66;display:flex;gap:18px;flex-wrap:wrap}
 .trust span{display:flex;align-items:center;gap:6px}
 
 /* Hero sub-page (internal pages) */
@@ -125,7 +144,9 @@ header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);backdro
 .hero.mini h1{font-size:40px}
 
 /* Phone mock */
-.mock{background:#fff;border-radius:26px;padding:14px;box-shadow:0 30px 60px rgba(3,30,34,.35);color:var(--ink)}
+/* A sombra era forte para a maquete branca se destacar do verde escuro.
+   Num fundo claro, sombra forte vira sujeira: foi aliviada. */
+.mock{background:#fff;border-radius:26px;padding:14px;box-shadow:0 24px 50px rgba(12,74,82,.16);color:var(--ink)}
 .mock .bar{background:linear-gradient(135deg,var(--teal),var(--deep));border-radius:16px 16px 0 0;padding:12px 14px;color:#fff;display:flex;align-items:center;gap:8px;margin:-14px -14px 12px}
 .mock .bar svg{width:26px;height:26px}
 .mock .bar b{font-family:'Poppins';font-size:15px}
@@ -364,10 +385,11 @@ footer .legal{border-top:1px solid #24484f;padding-top:18px;font-size:12.5px;lin
 .chip svg{width:17px;height:17px}
 
 /* ===== Blog ===== */
-.crumb{font-size:13px;color:#D9F2EF;margin-bottom:34px}
+/* A trilha fica DENTRO do banner, nos 44 artigos. Acompanhou a inversao. */
+.crumb{font-size:13px;color:#4A5F66;margin-bottom:34px}
 .article a{color:var(--teal);text-decoration:underline;text-underline-offset:2px}
 .article a:hover{color:var(--deep)}
-.crumb a{color:#fff;text-decoration:none;opacity:.9}
+.crumb a{color:#0F6B63;text-decoration:none;opacity:1}
 .crumb a:hover{text-decoration:underline}
 .crumb span{margin:0 6px;opacity:.6}
 
